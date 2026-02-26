@@ -1,3 +1,6 @@
+@app.get("/")
+def root():
+	return {"message": "API NativaGo Backoffice funcionando"}
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
