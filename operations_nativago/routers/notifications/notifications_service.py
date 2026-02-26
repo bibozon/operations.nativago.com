@@ -1,0 +1,3 @@
+class NotificationsService:
+    """Service for internal notifications and communication."""
+    # ...existing code...

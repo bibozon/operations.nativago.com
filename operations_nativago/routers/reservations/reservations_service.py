@@ -1,0 +1,3 @@
+class ReservationsService:
+    """Service for managing reservations."""
+    # ...existing code...

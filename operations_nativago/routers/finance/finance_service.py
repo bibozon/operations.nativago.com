@@ -1,0 +1,3 @@
+class FinanceService:
+    """Service for commissions, payments, and financial reports."""
+    # ...existing code...

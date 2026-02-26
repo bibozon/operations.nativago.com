@@ -1,0 +1,3 @@
+class OperatorsService:
+    """Service for managing operators and partners."""
+    # ...existing code...

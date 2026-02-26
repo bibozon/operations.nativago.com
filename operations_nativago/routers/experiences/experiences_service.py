@@ -1,0 +1,3 @@
+class ExperiencesService:
+    """Service for managing experiences."""
+    # ...existing code...
