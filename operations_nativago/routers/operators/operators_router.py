@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from operations-nativago.models.operator import Operator, OperatorCreate, OperatorUpdate
-from operations-nativago.services.operator_service import OperatorService
+from operations_nativago.models.operator import Operator, OperatorCreate, OperatorUpdate
+from operations_nativago.services.operator_service import OperatorService
 
 router = APIRouter()
 

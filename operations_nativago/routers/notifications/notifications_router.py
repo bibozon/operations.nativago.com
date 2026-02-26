@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from operations-nativago.models.notification import Notification, NotificationCreate, NotificationUpdate
-from operations-nativago.services.notification_service import NotificationService
+from operations_nativago.models.notification import Notification, NotificationCreate, NotificationUpdate
+from operations_nativago.services.notification_service import NotificationService
 
 router = APIRouter()
 

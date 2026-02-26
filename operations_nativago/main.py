@@ -1,7 +1,3 @@
-@app.get("/")
-def root():
-	return {"message": "API NativaGo Backoffice funcionando"}
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from operations_nativago.routers.dashboard.dashboard_router import router as dashboard_router
@@ -15,6 +11,10 @@ from operations_nativago.routers.finance.finance_router import router as finance
 from operations_nativago.routers.audit.audit_router import router as audit_router
 
 app = FastAPI(title="Operations NativaGo Backoffice")
+
+@app.get("/")
+def root():
+	return {"message": "API NativaGo Backoffice funcionando"}
 
 app.add_middleware(
 	CORSMiddleware,

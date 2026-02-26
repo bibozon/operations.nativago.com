@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
-from operations-nativago.services.role_service import RoleService
+from operations_nativago.services.role_service import RoleService
 def require_operations_role(user_role: str = "operations"):
 	if not RoleService.has_role(user_role, ["operations", "admin"]):
 		raise HTTPException(status_code=403, detail="No autorizado")
-from operations-nativago.models.reservation import Reservation, ReservationCreate, ReservationUpdate
-from operations-nativago.services.reservation_service import ReservationService
+from operations_nativago.models.reservation import Reservation, ReservationCreate, ReservationUpdate
+from operations_nativago.services.reservation_service import ReservationService
 
 router = APIRouter()
 

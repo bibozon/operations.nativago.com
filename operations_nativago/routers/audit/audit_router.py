@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from operations-nativago.models.audit import AuditLog, AuditLogCreate
-from operations-nativago.services.audit_service import AuditService
+from operations_nativago.models.audit import AuditLog, AuditLogCreate
+from operations_nativago.services.audit_service import AuditService
 
 router = APIRouter()
 

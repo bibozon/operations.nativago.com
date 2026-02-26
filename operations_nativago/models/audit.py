@@ -1,8 +1,9 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+from enum import Enum
 
-class AuditAction(str):
+class AuditAction(str, Enum):
     CREATE = "create"
     UPDATE = "update"
     DELETE = "delete"

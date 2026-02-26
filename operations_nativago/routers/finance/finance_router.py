@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from operations-nativago.models.finance import Commission, Payment, Report
-from operations-nativago.services.finance_service import FinanceService
+from operations_nativago.models.finance import Commission, Payment, Report
+from operations_nativago.services.finance_service import FinanceService
 
 router = APIRouter()
 

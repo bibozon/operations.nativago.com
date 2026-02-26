@@ -1,8 +1,9 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+from enum import Enum
 
-class NotificationType(str):
+class NotificationType(str, Enum):
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
