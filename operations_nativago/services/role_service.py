@@ -1,5 +1,5 @@
 from typing import List
-from operations-nativago.models.user import UserRole
+from operations_nativago.models.user import UserRole
 
 class RoleService:
     @staticmethod

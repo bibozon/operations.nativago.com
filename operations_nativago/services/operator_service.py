@@ -1,4 +1,4 @@
-from operations-nativago.models.operator import Operator, OperatorCreate, OperatorUpdate
+from operations_nativago.models.operator import Operator, OperatorCreate, OperatorUpdate
 
 class OperatorService:
     def create_operator(self, operator_data: OperatorCreate):

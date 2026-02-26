@@ -1,4 +1,4 @@
-from operations-nativago.models.reservation import Reservation, ReservationCreate, ReservationUpdate
+from operations_nativago.models.reservation import Reservation, ReservationCreate, ReservationUpdate
 
 class ReservationService:
     def create_reservation(self, reservation_data: ReservationCreate):

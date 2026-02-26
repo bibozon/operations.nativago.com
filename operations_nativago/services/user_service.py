@@ -1,4 +1,4 @@
-from operations-nativago.models.user import User, UserCreate, UserUpdate
+from operations_nativago.models.user import User, UserCreate, UserUpdate
 
 class UserService:
     def create_user(self, user_data: UserCreate):

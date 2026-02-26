@@ -1,4 +1,4 @@
-from operations-nativago.models.finance import Commission, Payment, Report
+from operations_nativago.models.finance import Commission, Payment, Report
 
 class FinanceService:
     def create_commission(self, commission_data):

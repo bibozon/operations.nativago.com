@@ -1,4 +1,4 @@
-from operations-nativago.models.experience import Experience, ExperienceCreate, ExperienceUpdate
+from operations_nativago.models.experience import Experience, ExperienceCreate, ExperienceUpdate
 
 class ExperienceService:
     def create_experience(self, experience_data: ExperienceCreate):

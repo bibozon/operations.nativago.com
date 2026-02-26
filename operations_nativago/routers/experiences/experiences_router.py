@@ -1,11 +1,15 @@
-from operations-nativago.services.nativago_api_service import NativagoAPIService
+
+from fastapi import APIRouter, HTTPException
+from operations_nativago.models.experience import Experience, ExperienceCreate, ExperienceUpdate
+from operations_nativago.services.experience_service import ExperienceService
+from operations_nativago.services.nativago_api_service import NativagoAPIService
+
+router = APIRouter()
+
 @router.get("/external/sync")
 def sync_experiences():
-	api_service = NativagoAPIService()
-	return api_service.get_experiences()
-from fastapi import APIRouter, HTTPException
-from operations-nativago.models.experience import Experience, ExperienceCreate, ExperienceUpdate
-from operations-nativago.services.experience_service import ExperienceService
+    api_service = NativagoAPIService()
+    return api_service.get_experiences()
 
 router = APIRouter()
 

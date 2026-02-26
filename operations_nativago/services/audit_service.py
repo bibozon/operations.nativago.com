@@ -1,4 +1,4 @@
-from operations-nativago.models.audit import AuditLog, AuditLogCreate
+from operations_nativago.models.audit import AuditLog, AuditLogCreate
 
 class AuditService:
     def log_action(self, log_data: AuditLogCreate):

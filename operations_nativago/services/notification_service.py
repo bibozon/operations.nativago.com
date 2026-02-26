@@ -1,4 +1,4 @@
-from operations-nativago.models.notification import Notification, NotificationCreate, NotificationUpdate
+from operations_nativago.models.notification import Notification, NotificationCreate, NotificationUpdate
 
 class NotificationService:
     def send_notification(self, notification_data: NotificationCreate):
