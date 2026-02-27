@@ -1,23 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { services, Service } from "./data";
+import { createExperience, listExperiencesForOperator } from "@/application/experience/experienceService";
 
-export async function GET() {
-  return NextResponse.json(services);
+export async function GET(req: NextRequest) {
+  const operatorId = req.nextUrl.searchParams.get("operatorId");
+  if (!operatorId) {
+    return NextResponse.json({ message: "operatorId required" }, { status: 400 });
+  }
+
+  const experiences = await listExperiencesForOperator(operatorId);
+  return NextResponse.json(experiences);
 }
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  const newService: Service = {
-    id: Date.now().toString(),
-    name: body.name,
+  const experience = await createExperience({
+    operatorId: body.operatorId,
+    agencyId: body.agencyId,
+    title: body.title,
     description: body.description,
-    city: body.city,
+    cityId: body.cityId,
+    categoryId: body.categoryId,
+    durationMinutes: body.durationMinutes,
     price: body.price,
-    active: body.active ?? true,
-  };
+    coveragePolicy: body.coveragePolicy,
+    coverageDescription: body.coverageDescription,
+    photos: body.photos ?? [],
+  });
 
-  services.push(newService);
-
-  return NextResponse.json(newService, { status: 201 });
+  return NextResponse.json(experience, { status: 201 });
 }

@@ -1,34 +1,49 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/infrastructure/db/client";
 
-interface Booking {
-  id: string;
-  experienceTitle: string;
-  userName: string;
-  status: string;
-  city?: string;
-  createdAt?: string;
-}
+export async function GET(req: NextRequest) {
+  const operatorId = req.nextUrl.searchParams.get("operatorId");
 
-// Datos de ejemplo en memoria para demo
-const bookings: Booking[] = [
-  {
-    id: "1",
-    experienceTitle: "Tour histórico por la ciudad",
-    userName: "Juan Pérez",
-    status: "confirmada",
-    city: "Cusco",
-    createdAt: "2026-02-20",
-  },
-  {
-    id: "2",
-    experienceTitle: "Experiencia gastronómica local",
-    userName: "María Gómez",
-    status: "pendiente",
-    city: "Lima",
-    createdAt: "2026-02-22",
-  },
-];
+  const bookings = await prisma.booking.findMany({
+    where: operatorId
+      ? {
+          experience: {
+            operatorId,
+          },
+        }
+      : undefined,
+    orderBy: { startAt: "desc" },
+    include: {
+      user: true,
+      experience: true,
+      slot: true,
+      communications: true,
+    },
+  });
 
-export async function GET() {
-  return NextResponse.json(bookings);
+  const mapped = bookings.map((b) => ({
+    id: b.id,
+    cliente: b.clientName || b.user.name,
+    clienteEmail: b.clientEmail || b.user.email,
+    experiencia: b.experience.title,
+    fecha: b.startAt,
+    estado: b.status,
+    arrival_at: b.arrivalAt,
+    deadline: b.deadline,
+    monto_85: b.amountToCollect,
+    slot: {
+      id: b.slot.id,
+      date: b.slot.date,
+      startTime: b.slot.startTime,
+      capacity: b.slot.capacity,
+    },
+    comunicaciones: b.communications.map((c) => ({
+      id: c.id,
+      channel: c.channel,
+      status: c.status,
+      sentAt: c.sentAt,
+    })),
+  }));
+
+  return NextResponse.json(mapped);
 }

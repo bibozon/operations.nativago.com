@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AppBar, Box, Toolbar, Typography, Button, Container, Tabs, Tab } from "@mui/material";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ClientProviders } from "../ClientProviders";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -32,23 +33,25 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       : false;
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <AppBar position="static" color="primary">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Operations Nativago
-          </Typography>
-          <Tabs value={currentTab} textColor="inherit" indicatorColor="secondary" sx={{ mr: 2 }}>
-            <Tab label="Servicios" component={Link} href="/dashboard/services" />
-            <Tab label="Productos Nativago" component={Link} href="/dashboard/products" />
-            <Tab label="Reservas" component={Link} href="/dashboard/bookings" />
-          </Tabs>
-          <Button color="inherit" onClick={handleLogout}>
-            Cerrar sesión
-          </Button>
-        </Toolbar>
-      </AppBar>
-      <Container sx={{ mt: 4, mb: 4, flex: 1 }}>{children}</Container>
-    </Box>
+    <ClientProviders>
+      <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        <AppBar position="static" color="primary">
+          <Toolbar>
+            <Typography variant="h6" sx={{ flexGrow: 1 }}>
+              Operations Nativago
+            </Typography>
+            <Tabs value={currentTab} textColor="inherit" indicatorColor="secondary" sx={{ mr: 2 }}>
+              <Tab label="Servicios" component={Link} href="/dashboard/services" />
+              <Tab label="Productos Nativago" component={Link} href="/dashboard/products" />
+              <Tab label="Reservas" component={Link} href="/dashboard/bookings" />
+            </Tabs>
+            <Button color="inherit" onClick={handleLogout}>
+              Cerrar sesión
+            </Button>
+          </Toolbar>
+        </AppBar>
+        <Container sx={{ mt: 4, mb: 4, flex: 1 }}>{children}</Container>
+      </Box>
+    </ClientProviders>
   );
 }
