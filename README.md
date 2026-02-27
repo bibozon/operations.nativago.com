@@ -37,6 +37,10 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB_NAME?sslmode=require"
 
 On Vercel, configure the same DATABASE_URL in the project Environment Variables.
 
+If DATABASE_URL is not set at runtime, the CMS will fail fast with the error:
+
+"DATABASE_URL not configured for NativaGo CMS"
+
 ## Database Migrations & Seed
 
 After configuring DATABASE_URL, run:
