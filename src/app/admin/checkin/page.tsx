@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { QrReader } from 'react-qr-reader';
+import { Scanner } from '@yudiel/react-qr-scanner';
 
 type ScanStatus = '' | 'OK' | 'ERROR';
 
@@ -186,22 +186,13 @@ export default function CheckinPage() {
   return (
     <div className="flex h-screen flex-col bg-black text-white">
       <div className="relative flex-1">
-        <QrReader
-          constraints={{ facingMode: 'environment' }}
-          onResult={(result, error) => {
+        <Scanner
+          onScan={(result) => {
             if (result) {
-              // Newer versions expose getText
-              // @ts-expect-error: library typings may vary
-              const text: string | null = result.getText
-                ? result.getText()
-                : // Fallback for older versions
-                  // @ts-expect-error
-                  (result.text as string | undefined) ?? null;
-              handleScan(text);
+              handleScan(result);
             }
           }}
-          containerStyle={{ width: '100%', height: '100%' }}
-          videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          constraints={{ facingMode: 'environment' }}
         />
 
         {status === 'OK' && (
