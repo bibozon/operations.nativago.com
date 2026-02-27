@@ -4,14 +4,11 @@ Backoffice de NativaGo: panel web (Next.js) con APIs internas para gestionar exp
 
 ## Estructura del repositorio
 
-- `operations_nativago/`: backend en FastAPI (API de operaciones).
-- `Frontend backoffice ongo/`: frontend del backoffice en Next.js/React.
-- `.venv`, `.venv-1`: entornos virtuales locales de Python (ignorados en Git).
+- `Frontend backoffice ongo/`: backoffice completo en Next.js/React con APIs internas.
 
 ## Requisitos previos
 
-- Python 3.10+ (recomendado usar entorno virtual).
-- Node.js 18+ y npm (para el frontend).
+- Node.js 18+ y npm.
 - Cuenta en Vercel (para despliegues en la nube).
 
 ---
@@ -64,6 +61,5 @@ Directorio: `Frontend backoffice ongo/`.
 
 ## Notas adicionales
 
-- No subir `.venv`, `.venv-1` ni `__pycache__` al repositorio (ya están en `.gitignore`).
 - Para cambios grandes, se recomienda crear ramas (`feature/...`) y luego hacer pull request a `main`.
-- Ante errores 404 en Vercel, revisar que el proyecto tenga configurado correctamente el *Root Directory* (backend: `operations_nativago`, frontend: `Frontend backoffice ongo`).
+- Ante errores 404 en Vercel, revisar que el proyecto tenga configurado correctamente el *Root Directory* (`Frontend backoffice ongo`).

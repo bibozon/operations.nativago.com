@@ -1,3 +1,0 @@
-class DashboardService:
-    """Service for dashboard metrics and logic."""
-    # ...existing code...
