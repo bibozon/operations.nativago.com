@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import type { IDetectedBarcode } from 'html5-qrcode';
 
 type ScanStatus = '' | 'OK' | 'ERROR';
 
@@ -58,15 +59,15 @@ export default function CheckinPage() {
     }
   }
 
-  async function handleScan(text: string | null) {
-    if (!text || isProcessing) return;
+  async function handleScan(qrText: string) {
+    if (!qrText || isProcessing) return;
 
     let bookingId: number | null = null;
 
     try {
       setIsProcessing(true);
 
-      const parsed = JSON.parse(text) as { bookingId?: number };
+      const parsed = JSON.parse(qrText) as { bookingId?: number };
       if (!parsed.bookingId) {
         throw new Error('QR inválido');
       }
@@ -187,9 +188,10 @@ export default function CheckinPage() {
     <div className="flex h-screen flex-col bg-black text-white">
       <div className="relative flex-1">
         <Scanner
-          onScan={(result) => {
-            if (result) {
-              handleScan(result);
+          onScan={(codes: IDetectedBarcode[]) => {
+            if (codes && codes.length > 0) {
+              const qrText = codes[0]?.rawValue || codes[0]?.data || '';
+              if (qrText) handleScan(qrText);
             }
           }}
           constraints={{ facingMode: 'environment' }}
