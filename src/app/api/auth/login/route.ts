@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     email: user.email,
     role: user.role as any,
     operatorId: user.operator?.id ?? null,
+    name: user.name ?? null,
   });
 
   const response = NextResponse.json({ ok: true });

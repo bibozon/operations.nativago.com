@@ -14,6 +14,7 @@ export interface AuthTokenPayload {
   email: string;
   role: AuthRole;
   operatorId?: number | null;
+  name?: string | null;
 }
 
 export function signAuthToken(payload: AuthTokenPayload): string {

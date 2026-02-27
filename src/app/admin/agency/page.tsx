@@ -105,7 +105,7 @@ export default async function AgencyDashboardPage() {
                 {roleLabel}
               </span>
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
-                {auth.name?.[0]?.toUpperCase?.() || 'AG'}
+                {(auth?.name ?? 'Agency')[0].toUpperCase()}
               </div>
             </div>
           </div>
