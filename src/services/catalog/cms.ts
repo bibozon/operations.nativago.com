@@ -4,6 +4,20 @@ export async function createCategory(data: { name: string; slug: string }) {
   return prisma.category.create({ data });
 }
 
+export async function updateCategory(
+  id: number,
+  data: Partial<{
+    name: string;
+    slug: string;
+  }>,
+) {
+  return prisma.category.update({ where: { id }, data });
+}
+
+export async function deleteCategory(id: number) {
+  return prisma.category.delete({ where: { id } });
+}
+
 export async function createCity(data: { name: string; country: string }) {
   return prisma.city.create({ data });
 }

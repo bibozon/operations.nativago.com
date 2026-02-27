@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -27,6 +28,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <header className="border-b border-zinc-200 bg-white/80 py-3 text-sm text-zinc-800">
+          <div className="mx-auto flex max-w-5xl items-center justify-between px-4">
+            <span className="font-semibold">NativaGo CMS</span>
+            <Link
+              href="/admin"
+              className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-500"
+            >
+              Admin CMS
+            </Link>
+          </div>
+        </header>
         {children}
       </body>
     </html>
