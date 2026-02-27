@@ -20,12 +20,14 @@ export default async function NewExperiencePage() {
     const auth = await requireOperator();
 
     const title = (formData.get('title') as string) ?? '';
+    const description = (formData.get('description') as string) ?? '';
+    const durationMinutes = Number(formData.get('durationMinutes'));
     const price = Number(formData.get('price'));
     const cityId = Number(formData.get('cityId'));
     const categoryId = Number(formData.get('categoryId'));
     const file = formData.get('image');
 
-    if (!title || !Number.isFinite(price) || !cityId || !categoryId) {
+    if (!title || !description || !Number.isFinite(durationMinutes) || !Number.isFinite(price) || !cityId || !categoryId) {
       return;
     }
 
@@ -63,6 +65,8 @@ export default async function NewExperiencePage() {
     await prisma.experience.create({
       data: {
         title,
+        description,
+        durationMinutes,
         price,
         cityId,
         categoryId,
@@ -96,6 +100,20 @@ export default async function NewExperiencePage() {
           className="w-full rounded border px-2 py-2 text-sm"
         />
 
+        <textarea
+          name="description"
+          placeholder="Descripción de la experiencia"
+          className="w-full rounded border px-2 py-2 text-sm"
+        />
+
+        <input
+          type="number"
+          name="durationMinutes"
+          placeholder="Duración en minutos"
+          className="w-full rounded border px-2 py-2 text-sm"
+          min={1}
+        />
+
         <div className="space-y-1">
           <label className="block text-sm font-medium text-slate-700">
             Preço (R$)
@@ -104,6 +122,9 @@ export default async function NewExperiencePage() {
             name="price"
             placeholder="R$ 0,00"
             className="w-full rounded border p-2 text-sm"
+            type="number"
+            min={0}
+            step={0.01}
           />
         </div>
 
