@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
-import type { IDetectedBarcode } from 'html5-qrcode';
 
 type ScanStatus = '' | 'OK' | 'ERROR';
 
@@ -188,9 +187,13 @@ export default function CheckinPage() {
     <div className="flex h-screen flex-col bg-black text-white">
       <div className="relative flex-1">
         <Scanner
-          onScan={(codes: IDetectedBarcode[]) => {
+          onScan={(codes: any[]) => {
             if (codes && codes.length > 0) {
-              const qrText = codes[0]?.rawValue || codes[0]?.data || '';
+              const qrText =
+                codes[0]?.rawValue ||
+                codes[0]?.data ||
+                codes[0]?.text ||
+                '';
               if (qrText) handleScan(qrText);
             }
           }}
