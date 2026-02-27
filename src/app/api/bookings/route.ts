@@ -20,6 +20,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
 
+  // Fetch experience price
+  const experience = await prisma.experience.findUnique({
+    where: { id: experienceId }
+  });
+
+  if (!experience) {
+    return NextResponse.json({ error: 'Experience not found' }, { status: 404 });
+  }
+
+  // Calculate amounts
+  const amount = experience.price * guests;
+  const depositAmount = Math.round(amount * 0.15);
+  const remainingAmount = amount - depositAmount;
+
   const booking = await prisma.booking.create({
     data: {
       experienceId,
@@ -27,8 +41,14 @@ export async function POST(req: NextRequest) {
       guests,
       customerName,
       customerEmail,
+      amount,
+      depositAmount,
+      remainingAmount,
     },
   });
 
-  return NextResponse.json(booking);
+  return NextResponse.json({
+    ok: true,
+    booking
+  });
 }
