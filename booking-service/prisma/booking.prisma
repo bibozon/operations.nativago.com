@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Debe apuntar al schema booking.* en Neon (por ejemplo con ?schema=booking)
+  url      = env("BOOKING_DATABASE_URL")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CANCELLED
+  COMPLETED
+}
+
+enum BookingEventType {
+  CREATED
+  CHECKIN
+  CANCELLED
+  RESCHEDULED
+  AUTO_CANCELLED
+  AUTO_COMPLETED
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  userId          String
+  experienceId    String        // referencia lógica a Experience (catalog service)
+  slotId          String        // referencia lógica a ExperienceSlot (catalog service)
+  status          BookingStatus @default(PENDING)
+  startAt         DateTime
+  arrivalAt       DateTime
+  deadline        DateTime
+  durationMinutes Int
+  checkedInAt     DateTime?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  events          BookingEvent[]
+}
+
+model BookingEvent {
+  id        String           @id @default(cuid())
+  bookingId String
+  type      BookingEventType
+  payload   Json?
+  createdAt DateTime         @default(now())
+
+  booking   Booking          @relation(fields: [bookingId], references: [id])
+}

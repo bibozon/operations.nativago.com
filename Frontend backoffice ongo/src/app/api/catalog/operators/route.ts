@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { partnerPrisma } from "@/services/partner/infrastructure/db/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const operators = await partnerPrisma.operator.findMany({
     orderBy: { createdAt: "desc" },

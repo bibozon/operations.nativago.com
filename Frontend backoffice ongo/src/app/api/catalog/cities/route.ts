@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { catalogPrisma } from "@/services/catalog/infrastructure/db/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const cities = await catalogPrisma.city.findMany({
     orderBy: { name: "asc" },

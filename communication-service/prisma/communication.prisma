@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Debe apuntar al schema communication.* en Neon (por ejemplo con ?schema=communication)
+  url      = env("COMMUNICATION_DATABASE_URL")
+}
+
+enum CommunicationChannel {
+  EMAIL
+  WHATSAPP
+}
+
+enum CommunicationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+model Communication {
+  id        String                @id @default(cuid())
+  bookingId String
+  channel   CommunicationChannel
+  template  String?
+  payload   Json?
+  status    CommunicationStatus   @default(QUEUED)
+  sentAt    DateTime?
+  createdAt DateTime              @default(now())
+}
