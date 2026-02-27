@@ -71,7 +71,14 @@ export async function POST(req: NextRequest) {
     console.error('Failed to generate QR code for booking', error);
   }
 
-  const session = await stripe.checkout.sessions.create({
+  if (!stripe) {
+    return NextResponse.json(
+      { error: "Stripe not configured" },
+      { status: 500 }
+    );
+  }
+  const stripeClient = stripe;
+  const session = await stripeClient.checkout.sessions.create({
     mode: 'payment',
     payment_method_types: ['card', 'pix'],
     line_items: [

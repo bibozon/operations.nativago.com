@@ -9,7 +9,6 @@ export async function GET() {
 
     return NextResponse.json({ ok: true, categories });
   } catch (error) {
-    console.error('GET /api/catalog/categories failed', error);
     return NextResponse.json(
       {
         ok: false,
