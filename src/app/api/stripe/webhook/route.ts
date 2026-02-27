@@ -1,21 +1,11 @@
-import Stripe from 'stripe';
+
+
+import type Stripe from 'stripe';
 import prisma from '@/lib/db';
 import { headers } from 'next/headers';
+import { getStripe } from '@/lib/stripe';
 
 export const runtime = 'nodejs';
-
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-if (!stripeSecretKey) {
-  throw new Error('STRIPE_SECRET_KEY environment variable is not set');
-}
-
-if (!webhookSecret) {
-  throw new Error('STRIPE_WEBHOOK_SECRET environment variable is not set');
-}
-
-const stripe = new Stripe(stripeSecretKey);
 
 
 export async function POST(req: Request): Promise<Response> {
@@ -27,15 +17,15 @@ export async function POST(req: Request): Promise<Response> {
     return new Response('Missing stripe-signature header', { status: 400 });
   }
 
-
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
     console.error('Missing STRIPE_WEBHOOK_SECRET');
     return new Response('Webhook not configured', { status: 500 });
   }
 
-  let event: Stripe.Event;
+  let event: any;
   try {
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       body,
       sig as string,
       webhookSecret

@@ -1,10 +1,11 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 
-const JWT_SECRET = process.env.JWT_SECRET;
 
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is not set');
+export function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET not configured');
+  return secret;
 }
 
 export type AuthRole = 'SUPERADMIN' | 'OPERATOR_AGENCY' | 'OPERATOR_FREELANCE';
@@ -18,12 +19,12 @@ export interface AuthTokenPayload {
 }
 
 export function signAuthToken(payload: AuthTokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET as string, { expiresIn: '7d' });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
 }
 
 export function verifyAuthToken(token: string): AuthTokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET as string) as AuthTokenPayload;
+    return jwt.verify(token, getJwtSecret()) as AuthTokenPayload;
   } catch {
     return null;
   }

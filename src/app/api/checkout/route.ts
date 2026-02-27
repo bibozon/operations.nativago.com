@@ -1,17 +1,9 @@
-import Stripe from 'stripe';
 import { NextRequest, NextResponse } from 'next/server';
 import QRCode from 'qrcode';
 import prisma from '@/lib/db';
+import { getStripe } from '@/lib/stripe';
 
 export const runtime = 'nodejs';
-
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-
-if (!stripeSecretKey) {
-  throw new Error('STRIPE_SECRET_KEY environment variable is not set');
-}
-
-const stripe = new Stripe(stripeSecretKey);
 
 export async function POST(req: NextRequest) {
   const data = await req.json().catch(() => null);
@@ -35,6 +27,8 @@ export async function POST(req: NextRequest) {
   const exp = await prisma.experience.findUnique({
     where: { id: experienceId },
   });
+
+  const stripe = getStripe();
 
   if (!exp) {
     return NextResponse.json({ error: 'Experience not found' }, { status: 404 });
