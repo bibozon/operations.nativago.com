@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        Int          @id @default(autoincrement())
+  name      String
+  slug      String       @unique
+  experiences Experience[]
+}
+
+model City {
+  id          Int          @id @default(autoincrement())
+  name        String
+  country     String
+  operators   Operator[]
+  experiences Experience[]
+}
+
+model Operator {
+  id          Int          @id @default(autoincrement())
+  name        String
+  email       String       @unique
+  phone       String?
+  cityId      Int
+  city        City         @relation(fields: [cityId], references: [id])
+  experiences Experience[]
+}
+
+model Experience {
+  id              Int               @id @default(autoincrement())
+  title           String
+  description     String
+  price           Decimal           @db.Decimal(10, 2)
+  durationMinutes Int
+  image           String?
+  featured        Boolean           @default(false)
+  categoryId      Int
+  category        Category          @relation(fields: [categoryId], references: [id])
+  cityId          Int
+  city            City              @relation(fields: [cityId], references: [id])
+  operatorId      Int
+  operator        Operator          @relation(fields: [operatorId], references: [id])
+  slots           AvailabilitySlot[]
+}
+
+model AvailabilitySlot {
+  id           Int        @id @default(autoincrement())
+  experienceId Int
+  experience   Experience @relation(fields: [experienceId], references: [id])
+  date         DateTime
+  startTime    DateTime
+  capacity     Int
+}

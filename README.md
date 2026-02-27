@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## NativaGo Operations CMS Backend
 
-## Getting Started
+This project is the operations CMS backend for NativaGo, built with Next.js App Router, TypeScript, Prisma, PostgreSQL (Neon), Tailwind CSS, and serverless API routes.
 
-First, run the development server:
+It powers:
+
+- Operators
+- Experiences
+- Categories
+- Cities
+- Availability calendar (slots)
+
+The public marketplace (nativago.com) consumes the public catalog API exposed by this service.
+
+## Tech Stack
+
+- Next.js App Router (TypeScript)
+- Prisma ORM + PostgreSQL (Neon)
+- Tailwind CSS
+- Serverless API routes on Vercel
+
+## Project Structure
+
+- src/lib/db.ts – Prisma client
+- src/services/catalog – catalog and CMS domain services
+- src/app/api/catalog – public + CMS API routes
+- prisma/schema.prisma – database schema
+- prisma/seed.js – development seed data
+
+## Environment Configuration
+
+Set the database connection string (for Neon) in an environment file, for example .env.local:
+
+```bash
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB_NAME?sslmode=require"
+```
+
+On Vercel, configure the same DATABASE_URL in the project Environment Variables.
+
+## Database Migrations & Seed
+
+After configuring DATABASE_URL, run:
+
+```bash
+npx prisma migrate dev --name init
+npm run db:seed
+```
+
+This will create the schema and populate:
+
+- Categories: Buceo, Aventura, Cultura
+- Cities: Cartagena, Santa Marta, San Andres
+- Operators: Ocean Divers, Caribe Tours
+- Experiences: Buceo en arrecife, Tour islas del Rosario, Caminata Tayrona
+- Availability slots: next 7 days for each experience
+
+## Public Catalog API (for marketplace)
+
+All endpoints are under /api/catalog:
+
+- GET /api/catalog/categories
+- GET /api/catalog/cities
+- GET /api/catalog/experiences
+- GET /api/catalog/experiences/[id]
+- GET /api/catalog/experiences?city=
+- GET /api/catalog/experiences?featured=true
+- GET /api/catalog/slots?experience=
+
+Responses are shaped for marketplace cards, including category, city, and operator info.
+
+## CMS CRUD API (private)
+
+- POST /api/catalog/category
+- POST /api/catalog/city
+- POST /api/catalog/operator
+- POST /api/catalog/experience
+- PUT /api/catalog/experience
+- POST /api/catalog/slot
+
+Add authentication/authorization (e.g. middleware) before exposing these endpoints publicly.
+
+## Local Development
+
+Start the dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+By default the app runs on http://localhost:3000 (or the next available port).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment on Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Push this repository to GitHub/GitLab/Bitbucket.
+- Import the project in Vercel.
+- Set DATABASE_URL in the Vercel project settings.
+- Vercel will run npm run build during deployment.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Run migrations (e.g. via prisma migrate deploy or a one-off job) against your Neon database before first production use.
