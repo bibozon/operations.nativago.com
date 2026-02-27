@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+.env
+.env.*
+.venv/
+.venv-1/
+
+# VS Code
+.vscode/
+
+# Node / Next.js
+node_modules/
+Frontend backoffice ongo/.next/
+Frontend backoffice ongo/out/
+
+# OS
+.DS_Store
+Thumbs.db

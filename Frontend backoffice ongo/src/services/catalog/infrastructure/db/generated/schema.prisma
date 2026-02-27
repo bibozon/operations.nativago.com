@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/services/catalog/infrastructure/db/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Usar una URL específica con schema=catalog o un usuario cuyo search_path sea "catalog"
+  url      = env("CATALOG_DATABASE_URL")
+}
+
+model Experience {
+  id              String           @id @default(cuid())
+  partnerId       String           // referencia lógica al Partner del servicio partner
+  title           String
+  description     String
+  durationMinutes Int
+  price           Decimal
+
+  cityId      String?
+  categoryId  String?
+
+  city        City?              @relation(fields: [cityId], references: [id])
+  category    Category?          @relation(fields: [categoryId], references: [id])
+  slots       ExperienceSlot[]
+
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model ExperienceSlot {
+  id           String     @id @default(cuid())
+  experienceId String
+  date         DateTime
+  startTime    DateTime
+  capacity     Int
+
+  experience   Experience @relation(fields: [experienceId], references: [id])
+}
+
+model City {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  country     String
+
+  experiences Experience[]
+}
+
+model Category {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+
+  experiences Experience[]
+}
