@@ -25,7 +25,7 @@ async function getAgencyDashboardData(operatorId: number) {
 }
 
 export default async function AgencyDashboardPage() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get('auth')?.value;
 
   let auth: AuthTokenPayload | null = null;

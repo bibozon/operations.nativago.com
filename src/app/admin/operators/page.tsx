@@ -22,7 +22,7 @@ async function getOperatorsData() {
 }
 
 export default async function OperatorsPage() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get('auth')?.value;
 
   let auth: AuthTokenPayload | null = null;

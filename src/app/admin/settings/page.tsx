@@ -5,7 +5,7 @@ import { verifyAuthToken, type AuthTokenPayload } from '@/lib/auth';
 const TABS = ['Marca', 'Pagos', 'Comisiones', 'Categorías', 'Ciudades'] as const;
 
 export default async function SettingsPage() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get('auth')?.value;
 
   let auth: AuthTokenPayload | null = null;
