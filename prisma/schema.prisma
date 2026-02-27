@@ -13,6 +13,17 @@ enum Role {
   OPERATOR_FREELANCE
 }
 
+enum OperatorType {
+  AGENCY
+  FREELANCE
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -20,6 +31,9 @@ model User {
   name      String
   role      Role
   createdAt DateTime @default(now())
+
+  operatorTermsAccepted   Boolean  @default(false)
+  operatorTermsAcceptedAt DateTime?
 
   operator  Operator?
 }
@@ -44,6 +58,18 @@ model Operator {
   name        String
   email       String       @unique
   phone       String?
+  type        OperatorType @default(AGENCY)
+  verificationStatus VerificationStatus @default(PENDING)
+  licenseNumber     String?
+  licenseDocument   String?
+  cnpj              String?
+  cpf               String?
+  cadastur          String?
+  contractUrl       String?
+  liabilityAccepted   Boolean  @default(false)
+  liabilityAcceptedAt DateTime?
+  contractAccepted   Boolean  @default(false)
+  contractAcceptedAt DateTime?
   cityId      Int
   city        City         @relation(fields: [cityId], references: [id])
   userId      Int?         @unique
@@ -55,7 +81,7 @@ model Experience {
   id              Int               @id @default(autoincrement())
   title           String
   description     String
-  price           Decimal           @db.Decimal(10, 2)
+  price           Float
   durationMinutes Int
   image           String?
   featured        Boolean           @default(false)
@@ -66,6 +92,7 @@ model Experience {
   operatorId      Int
   operator        Operator          @relation(fields: [operatorId], references: [id])
   slots           AvailabilitySlot[]
+  bookings        Booking[]
 }
 
 model AvailabilitySlot {
@@ -75,4 +102,39 @@ model AvailabilitySlot {
   date         DateTime
   startTime    DateTime
   capacity     Int
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model Booking {
+  id             Int           @id @default(autoincrement())
+  experienceId   Int
+  date           DateTime
+  guests         Int
+  customerName   String
+  customerEmail  String
+  status         BookingStatus @default(PENDING)
+  amount         Float
+  depositAmount  Float
+  remainingAmount Float
+  paymentStatus  PaymentStatus @default(PENDING)
+  paymentType    PaymentType   @default(DEPOSIT)
+  qrCode         String?
+  createdAt      DateTime      @default(now())
+
+  experience Experience @relation(fields: [experienceId], references: [id])
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum PaymentType {
+  DEPOSIT
 }

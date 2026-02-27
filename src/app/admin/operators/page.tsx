@@ -1,7 +1,5 @@
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import prisma from '@/lib/db';
-import { verifyAuthToken, type AuthTokenPayload } from '@/lib/auth';
+import { requireSuperadmin } from '@/lib/requireRole';
 
 async function getOperatorsData() {
   const operators = await prisma.operator.findMany({
@@ -22,21 +20,7 @@ async function getOperatorsData() {
 }
 
 export default async function OperatorsPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('auth')?.value;
-
-  let auth: AuthTokenPayload | null = null;
-  if (token) {
-    auth = verifyAuthToken(token);
-  }
-
-  if (!auth) {
-    redirect('/login');
-  }
-
-  if (auth.role !== 'SUPERADMIN') {
-    redirect('/admin');
-  }
+  await requireSuperadmin();
 
   const operators = await getOperatorsData();
 

@@ -20,7 +20,15 @@ async function main() {
       { name: 'Buceo', slug: 'buceo' },
       { name: 'Aventura', slug: 'aventura' },
       { name: 'Cultura', slug: 'cultura' },
-    ].map((data) => prisma.category.create({ data })),
+      { name: 'Paseos en barco', slug: 'paseos-barco' },
+      { name: 'Playas', slug: 'playa' },
+    ].map((data) =>
+      prisma.category.upsert({
+        where: { slug: data.slug },
+        update: {},
+        create: data,
+      }),
+    ),
   );
 
   const cities = await Promise.all(
@@ -28,6 +36,9 @@ async function main() {
       { name: 'Cartagena', country: 'Colombia' },
       { name: 'Santa Marta', country: 'Colombia' },
       { name: 'San Andres', country: 'Colombia' },
+      { name: 'Cabo Frio', country: 'Brazil' },
+      { name: 'Arraial do Cabo', country: 'Brazil' },
+      { name: 'Armação dos Búzios', country: 'Brazil' },
     ].map((data) => prisma.city.create({ data })),
   );
 
@@ -185,6 +196,140 @@ async function main() {
       });
     }),
   );
+
+  // Brazil pilot: Cabo Frio, Arraial do Cabo, Armação dos Búzios
+  const caboFrio = findCity('Cabo Frio');
+  const arraial = findCity('Arraial do Cabo');
+  const buzios = findCity('Armação dos Búzios');
+
+  if (!caboFrio) throw new Error('City not found for Brazil seed: Cabo Frio');
+  if (!arraial) throw new Error('City not found for Brazil seed: Arraial do Cabo');
+  if (!buzios) throw new Error('City not found for Brazil seed: Armação dos Búzios');
+
+  const boat = findCategory('paseos-barco');
+  const dive = findCategory('buceo');
+  const beach = findCategory('playa');
+
+  if (!boat) throw new Error('Category not found for Brazil seed: paseos-barco');
+  if (!dive) throw new Error('Category not found for Brazil seed: buceo');
+  if (!beach) throw new Error('Category not found for Brazil seed: playa');
+
+  const caboOperator = await prisma.operator.upsert({
+    where: { email: 'cabo@operador.com' },
+    update: {},
+    create: {
+      name: 'Cabo Boat Tours',
+      email: 'cabo@operador.com',
+      phone: '+55 22 99999-1111',
+      cityId: caboFrio.id,
+      type: 'AGENCY',
+      verificationStatus: 'APPROVED',
+    },
+  });
+
+  const arraialOperator = await prisma.operator.upsert({
+    where: { email: 'arraial@operador.com' },
+    update: {},
+    create: {
+      name: 'Arraial Adventures',
+      email: 'arraial@operador.com',
+      phone: '+55 22 99999-2222',
+      cityId: arraial.id,
+      type: 'AGENCY',
+      verificationStatus: 'APPROVED',
+    },
+  });
+
+  const buziosOperator = await prisma.operator.upsert({
+    where: { email: 'buzios@operador.com' },
+    update: {},
+    create: {
+      name: 'Búzios Experience',
+      email: 'buzios@operador.com',
+      phone: '+55 22 99999-3333',
+      cityId: buzios.id,
+      type: 'AGENCY',
+      verificationStatus: 'APPROVED',
+    },
+  });
+
+  await prisma.experience.createMany({
+    data: [
+      {
+        title: 'Passeio de barco pelas ilhas de Cabo Frio',
+        description: 'Tour completo pelas praias e ilhas cristalinas de Cabo Frio',
+        price: 180,
+        durationMinutes: 240,
+        cityId: caboFrio.id,
+        categoryId: boat.id,
+        operatorId: caboOperator.id,
+        featured: true,
+        image: '/experiences/cabo-boat.jpg',
+      },
+      {
+        title: 'Mergulho guiado em Cabo Frio',
+        description: 'Experiência de mergulho para iniciantes',
+        price: 250,
+        durationMinutes: 180,
+        cityId: caboFrio.id,
+        categoryId: dive.id,
+        operatorId: caboOperator.id,
+        image: '/experiences/cabo-dive.jpg',
+      },
+    ],
+  });
+
+  await prisma.experience.createMany({
+    data: [
+      {
+        title: 'Passeio de barco em Arraial do Cabo',
+        description: 'Conheça o Caribe brasileiro',
+        price: 220,
+        durationMinutes: 240,
+        cityId: arraial.id,
+        categoryId: boat.id,
+        operatorId: arraialOperator.id,
+        featured: true,
+        image: '/experiences/arraial-boat.jpg',
+      },
+      {
+        title: 'Snorkel na Prainha',
+        description: 'Snorkel em águas cristalinas',
+        price: 120,
+        durationMinutes: 120,
+        cityId: arraial.id,
+        categoryId: beach.id,
+        operatorId: arraialOperator.id,
+        image: '/experiences/arraial-snorkel.jpg',
+      },
+    ],
+  });
+
+  await prisma.experience.createMany({
+    data: [
+      {
+        title: 'Escuna por Búzios',
+        description: 'Passeio clássico pelas praias de Búzios',
+        price: 200,
+        durationMinutes: 240,
+        cityId: buzios.id,
+        categoryId: boat.id,
+        operatorId: buziosOperator.id,
+        featured: true,
+        image: '/experiences/buzios-boat.jpg',
+      },
+      {
+        title: 'Tour de praias em buggy',
+        description: 'Passeio terrestre pelas praias',
+        price: 300,
+        durationMinutes: 180,
+        cityId: buzios.id,
+        categoryId: beach.id,
+        operatorId: buziosOperator.id,
+        image: '/experiences/buzios-buggy.jpg',
+      },
+    ],
+  });
 
   const now = new Date();
 

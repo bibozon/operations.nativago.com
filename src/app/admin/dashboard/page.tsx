@@ -1,7 +1,5 @@
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import prisma from '@/lib/db';
-import { verifyAuthToken, type AuthTokenPayload } from '@/lib/auth';
+import { requireSuperadmin } from '@/lib/requireRole';
 
 async function getDashboardData() {
   const [experiencesCount, operatorsCount, citiesCount, recentExperiences] =
@@ -28,21 +26,7 @@ async function getDashboardData() {
 }
 
 export default async function SuperadminDashboardPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('auth')?.value;
-
-  let auth: AuthTokenPayload | null = null;
-  if (token) {
-    auth = verifyAuthToken(token);
-  }
-
-  if (!auth) {
-    redirect('/login');
-  }
-
-  if (auth.role !== 'SUPERADMIN') {
-    redirect('/admin');
-  }
+  const auth = await requireSuperadmin();
 
   const { experiencesCount, operatorsCount, citiesCount, recentExperiences } =
     await getDashboardData();
@@ -82,6 +66,18 @@ export default async function SuperadminDashboardPage() {
               className="mt-1 flex items-center rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-50"
             >
               Experiencias
+            </a>
+            <a
+              href="/admin/bookings"
+              className="mt-1 flex items-center rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-50"
+            >
+              Reservas
+            </a>
+            <a
+              href="/admin/checkin"
+              className="mt-1 flex items-center rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-50"
+            >
+              Check-in
             </a>
             <button className="mt-1 flex w-full items-center rounded-lg px-3 py-2 text-left text-slate-400">
               Operadores
