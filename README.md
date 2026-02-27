@@ -1,6 +1,6 @@
 # operations.nativago.com
 
-Backoffice de NativaGo: API de operaciones (FastAPI) y panel web (Next.js) para gestionar experiencias, reservas, operadores, notificaciones, finanzas y auditoría.
+Backoffice de NativaGo: panel web (Next.js) con APIs internas para gestionar experiencias, reservas, productos y operaciones.
 
 ## Estructura del repositorio
 
@@ -16,63 +16,11 @@ Backoffice de NativaGo: API de operaciones (FastAPI) y panel web (Next.js) para 
 
 ---
 
-## Backend: operations_nativago (FastAPI)
-
-Directorio: `operations_nativago/`.
-
-### Instalación y ejecución local
-
-1. Crear/activar entorno virtual (opcional pero recomendado):
-	```bash
-	python -m venv .venv
-	source .venv/bin/activate        # Linux / macOS
-	# En Windows PowerShell
-	.venv\\Scripts\\Activate.ps1
-	```
-2. Instalar dependencias:
-	```bash
-	cd operations_nativago
-	pip install -r requirements.txt
-	```
-3. Ejecutar el servidor de desarrollo:
-	```bash
-	uvicorn main:app --reload
-	```
-4. Abrir en el navegador:
-	- API raíz: http://localhost:8000/
-	- Documentación interactiva: http://localhost:8000/docs
-
-### Estructura principal del backend
-
-- `main.py`: punto de entrada de la API (`FastAPI`), configuración de CORS y registro de routers.
-- `routers/`: rutas organizadas por dominio (auth, users, dashboard, experiences, reservations, operators, notifications, finance, audit).
-- `models/`: modelos de datos (Pydantic y SQLAlchemy).
-- `services/`: lógica de negocio, acceso a base de datos, integración con APIs externas y autenticación.
-- `api/index.py`: handler que expone `app` para despliegue en Vercel.
-- `vercel.json`: configuración de Vercel para desplegar la API como función serverless.
-
-### Despliegue del backend en Vercel
-
-1. Conecta el repositorio en Vercel.
-2. En *Settings → General → Root Directory* del proyecto de API, pon:
-	```
-	operations_nativago
-	```
-3. En *Build & Development Settings*:
-	- Framework preset: `Other`.
-	- Build Command: vacío.
-	- Output directory: vacío.
-4. Guarda y despliega. Vercel usará `vercel.json` y expondrá la API en:
-	- `/` → mensaje "API NativaGo Backoffice funcionando".
-	- `/docs` → documentación automática de FastAPI.
-
----
-
-## Frontend: Frontend backoffice ongo (Next.js)
+## Frontend + API interna: Frontend backoffice ongo (Next.js)
 
 Directorio: `Frontend backoffice ongo/`.
 
-### Instalación y ejecución local
+### Instalación y ejecución local (no requiere backend Python)
 
 1. Instalar dependencias:
 	```bash
@@ -86,13 +34,20 @@ Directorio: `Frontend backoffice ongo/`.
 3. Abrir en el navegador:
 	- http://localhost:3000/
 
-### Estructura principal del frontend
+### Estructura principal
 
 - `src/app/(auth)/login/page.tsx`: pantalla de login.
 - `src/app/(dashboard)/layout.tsx`: layout general del dashboard.
 - `src/app/(dashboard)/bookings|products|services/page.tsx`: pantallas de reservas, productos y servicios.
-- `src/lib/*.ts`: clientes de API para comunicarse con el backend (bookings, products, services, etc.).
+- `src/lib/*.ts`: clientes de API que consumen las rutas internas `/api/*`.
 - `src/theme.ts` y `src/app/globals.css`: estilos globales y tema visual.
+
+### Rutas de API internas principales
+
+- `src/app/api/auth/login/route.ts`: login de super admin (demo).
+- `src/app/api/bookings/route.ts`: listado de reservas de ejemplo.
+- `src/app/api/nativago/products/route.ts`: productos provenientes de Nativago (mock).
+- `src/app/api/experiences/route.ts` y `src/app/api/experiences/[id]/route.ts`: CRUD básico de servicios en memoria.
 
 ### Despliegue del frontend en Vercel
 
@@ -103,7 +58,7 @@ Directorio: `Frontend backoffice ongo/`.
 	```
 3. Framework preset: `Next.js`.
 4. Build command por defecto (`npm run build`) y output `.next` (configuración estándar de Next).
-5. Configura variables de entorno necesarias (por ejemplo, URL de la API de backend) en *Settings → Environment Variables*.
+5. No es obligatorio definir `NEXT_PUBLIC_API_BASE_URL`; si no existe, el frontend usará el mismo dominio (`/api/*`).
 
 ---
 

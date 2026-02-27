@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+// Si NEXT_PUBLIC_API_BASE_URL no está definido, usamos mismo origen (frontend y backend juntos en Next).
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -22,6 +23,7 @@ export interface LoginResponse {
 }
 
 export async function loginOperator(email: string, password: string): Promise<LoginResponse> {
-  const { data } = await apiClient.post<LoginResponse>("/auth/login", { email, password });
+  // Usamos la ruta interna de API de Next.js
+  const { data } = await apiClient.post<LoginResponse>("/api/auth/login", { email, password });
   return data;
 }
