@@ -85,6 +85,33 @@ Add authentication/authorization (e.g. middleware) before exposing these endpoin
 
 ## Local Development
 
+
+## Test Users for Access
+
+**Super Admin:**
+
+- Email: admin@nativago.com
+- Password: nativago123
+- Role: SUPERADMIN
+
+**Operator Agency:**
+- Email: agency@nativago.com
+- Password: nativago123
+- Role: OPERATOR_AGENCY
+
+**Operator Freelance:**
+- Email: freelance@nativago.com
+- Password: nativago123
+- Role: OPERATOR_FREELANCE
+
+**Operator Entities:**
+- Ocean Divers (user: freelance@nativago.com)
+- Caribe Tours (user: agency@nativago.com)
+
+> These accounts are for development/testing only. Replace with official data before production.
+
+---
+
 Start the dev server:
 
 ```bash
