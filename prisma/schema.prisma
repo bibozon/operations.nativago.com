@@ -7,6 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  SUPERADMIN
+  OPERATOR_AGENCY
+  OPERATOR_FREELANCE
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role
+  createdAt DateTime @default(now())
+
+  operator  Operator?
+}
+
 model Category {
   id        Int          @id @default(autoincrement())
   name      String
@@ -29,6 +46,8 @@ model Operator {
   phone       String?
   cityId      Int
   city        City         @relation(fields: [cityId], references: [id])
+  userId      Int?         @unique
+  user        User?        @relation(fields: [userId], references: [id])
   experiences Experience[]
 }
 

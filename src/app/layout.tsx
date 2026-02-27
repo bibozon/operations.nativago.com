@@ -31,12 +31,20 @@ export default function RootLayout({
         <header className="border-b border-zinc-200 bg-white/80 py-3 text-sm text-zinc-800">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4">
             <span className="font-semibold">NativaGo CMS</span>
-            <Link
-              href="/admin"
-              className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-500"
-            >
-              Admin CMS
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/admin"
+                className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-500"
+              >
+                Admin CMS
+              </Link>
+              <Link
+                href="/login"
+                className="rounded-md border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+              >
+                Login
+              </Link>
+            </div>
           </div>
         </header>
         {children}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listExperiences } from '@/services/catalog/experiences';
+import { getAuthUserFromRequest } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -17,12 +18,18 @@ export async function GET(request: NextRequest) {
   const page = pageParam ? Number(pageParam) : undefined;
   const limit = limitParam ? Number(limitParam) : undefined;
 
+  const authUser = getAuthUserFromRequest(request);
+
   const experiences = await listExperiences({
     citySlug,
     categorySlug,
     featured,
     page,
     limit,
+    operatorId:
+      authUser && authUser.role !== 'SUPERADMIN' && authUser.operatorId
+        ? authUser.operatorId
+        : undefined,
   });
 
   return NextResponse.json(experiences);

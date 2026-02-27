@@ -7,8 +7,13 @@ async function main() {
   await prisma.availabilitySlot.deleteMany();
   await prisma.experience.deleteMany();
   await prisma.operator.deleteMany();
+  await prisma.user.deleteMany();
   await prisma.category.deleteMany();
   await prisma.city.deleteMany();
+
+  const superadminPasswordHash = '$2a$10$KXx4Xx1NiB0O0b.fw2Q7VeuP4I9Y8tS5W0w7tH8k8nQvXoWz1YpK';
+  const agencyPasswordHash = '$2a$10$KXx4Xx1NiB0O0b.fw2Q7VeuP4I9Y8tS5W0w7tH8k8nQvXoWz1YpK';
+  const freelancePasswordHash = '$2a$10$KXx4Xx1NiB0O0b.fw2Q7VeuP4I9Y8tS5W0w7tH8k8nQvXoWz1YpK';
 
   const categories = await Promise.all(
     [
@@ -26,6 +31,35 @@ async function main() {
     ].map((data) => prisma.city.create({ data })),
   );
 
+  const users = await Promise.all([
+    prisma.user.create({
+      data: {
+        email: 'admin@nativago.com',
+        password: superadminPasswordHash,
+        name: 'Super Admin',
+        role: 'SUPERADMIN',
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: 'agency@nativago.com',
+        password: agencyPasswordHash,
+        name: 'Agency Operator',
+        role: 'OPERATOR_AGENCY',
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: 'freelance@nativago.com',
+        password: freelancePasswordHash,
+        name: 'Freelance Operator',
+        role: 'OPERATOR_FREELANCE',
+      },
+    }),
+  ]);
+
+  const findUser = (email: string) => users.find((u) => u.email === email);
+
   const findCategory = (slug: string) => categories.find((c) => c.slug === slug);
   const findCity = (name: string) => cities.find((c) => c.name === name);
 
@@ -36,16 +70,20 @@ async function main() {
         email: 'contact@oceandivers.test',
         phone: '+57 3000000001',
         cityName: 'San Andres',
+        userEmail: 'freelance@nativago.com',
       },
       {
         name: 'Caribe Tours',
         email: 'contact@caribetours.test',
         phone: '+57 3000000002',
         cityName: 'Cartagena',
+        userEmail: 'agency@nativago.com',
       },
     ].map((o) => {
       const city = findCity(o.cityName);
+      const user = findUser(o.userEmail);
       if (!city) throw new Error(`City not found for operator seed: ${o.cityName}`);
+      if (!user) throw new Error(`User not found for operator seed: ${o.userEmail}`);
 
       return prisma.operator.create({
         data: {
@@ -53,6 +91,7 @@ async function main() {
           email: o.email,
           phone: o.phone,
           cityId: city.id,
+          userId: user.id,
         },
       });
     }),

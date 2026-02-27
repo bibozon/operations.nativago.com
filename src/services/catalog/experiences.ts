@@ -8,11 +8,12 @@ export type ExperienceFilters = {
   featured?: boolean;
   page?: number;
   limit?: number;
+  operatorId?: number;
 };
 
 export async function listExperiences(filters: ExperienceFilters = {}): Promise<ExperienceCardDTO[]> {
   try {
-    const { citySlug, categorySlug, featured, page = 1, limit = 20 } = filters;
+    const { citySlug, categorySlug, featured, page = 1, limit = 20, operatorId } = filters;
 
     const where: Prisma.ExperienceWhereInput = {};
 
@@ -32,6 +33,10 @@ export async function listExperiences(filters: ExperienceFilters = {}): Promise<
 
     if (typeof featured === 'boolean') {
       where.featured = featured;
+    }
+
+    if (typeof operatorId === 'number') {
+      where.operatorId = operatorId;
     }
 
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;

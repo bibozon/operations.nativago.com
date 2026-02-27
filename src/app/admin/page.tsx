@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 type Experience = {
   id: number;
@@ -12,10 +13,20 @@ type Experience = {
   category?: { name: string; slug: string };
 };
 
+type CurrentUser = {
+  id: number;
+  name: string | null;
+  email: string;
+  role: 'SUPERADMIN' | 'OPERATOR_AGENCY' | 'OPERATOR_FREELANCE';
+  operator?: { id: number; name: string } | null;
+};
+
 export default function AdminPage() {
+  const router = useRouter();
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   async function loadExperiences() {
     try {
@@ -41,7 +52,28 @@ export default function AdminPage() {
 
   useEffect(() => {
     loadExperiences();
+
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.user) {
+          setCurrentUser(data.user as CurrentUser);
+        }
+      } catch {
+        // ignore
+      }
+    })();
   }, []);
+
+  async function handleLogout() {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      router.push('/login');
+    }
+  }
 
   async function handleDelete(id: number) {
     if (!confirm('¿Eliminar esta experiencia?')) return;
@@ -69,14 +101,43 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto max-w-5xl px-4 py-8">
-        <header className="mb-8 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold tracking-tight">NativaGo CMS Admin</h1>
-          <Link
-            href="/admin/new"
-            className="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-500"
-          >
-            New Experience
-          </Link>
+        <header className="mb-8 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">NativaGo CMS Admin</h1>
+            {currentUser && (
+              <div className="mt-1 flex items-center gap-2 text-xs text-slate-600">
+                <span
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium ${
+                    currentUser.role === 'SUPERADMIN'
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'bg-sky-50 text-sky-700'
+                  }`}
+                >
+                  {currentUser.role}
+                </span>
+                {currentUser.operator?.name && (
+                  <span className="text-slate-500">
+                    · {currentUser.operator.name}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Logout
+            </button>
+            <Link
+              href="/admin/new"
+              className="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-500"
+            >
+              New Experience
+            </Link>
+          </div>
         </header>
 
         {error && (
