@@ -27,10 +27,19 @@ export async function POST(req: Request): Promise<Response> {
     return new Response('Missing stripe-signature header', { status: 400 });
   }
 
-  let event: Stripe.Event;
 
+  if (!webhookSecret) {
+    console.error('Missing STRIPE_WEBHOOK_SECRET');
+    return new Response('Webhook not configured', { status: 500 });
+  }
+
+  let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    event = stripe.webhooks.constructEvent(
+      body,
+      sig as string,
+      webhookSecret
+    );
   } catch (err) {
     console.error('Stripe webhook signature verification failed', err);
     return new Response('Invalid signature', { status: 400 });
