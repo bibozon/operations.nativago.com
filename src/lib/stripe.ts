@@ -1,11 +1,11 @@
 import Stripe from "stripe";
+import { getEnv } from "./env";
 
-export function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) {
-    throw new Error("STRIPE_SECRET_KEY not configured");
-  }
-  return new Stripe(key, {
+const STRIPE_SECRET_KEY = getEnv("STRIPE_SECRET_KEY", "");
+
+export function getStripe(): Stripe | null {
+  if (!STRIPE_SECRET_KEY) return null;
+  return new Stripe(STRIPE_SECRET_KEY, {
     apiVersion: "2026-02-25.clover"
   });
 }

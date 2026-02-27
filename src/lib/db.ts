@@ -1,23 +1,15 @@
 import { PrismaClient } from '@prisma/client';
 
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error('DATABASE_URL not configured for NativaGo CMS');
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined;
 }
 
-const globalForPrisma = global as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: ['error', 'warn'],
-  });
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
+const prisma = globalThis.prisma || new PrismaClient({
+  log: ['error', 'warn'],
+});
+if (typeof window === 'undefined') {
+  globalThis.prisma = prisma;
 }
 
 export default prisma;

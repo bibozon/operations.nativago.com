@@ -1,11 +1,18 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
+import { getEnv } from './env';
 
+const JWT_SECRET = getEnv('JWT_SECRET', 'dummy_secret_for_build');
 
 export function getJwtSecret() {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error('JWT_SECRET not configured');
-  return secret;
+  if (!JWT_SECRET || JWT_SECRET === 'dummy_secret_for_build') {
+    if (typeof window === 'undefined') {
+      throw new Error('JWT_SECRET not configured');
+    }
+    // Client/browser: fallback
+    return 'dummy_secret_for_build';
+  }
+  return JWT_SECRET;
 }
 
 export type AuthRole = 'SUPERADMIN' | 'OPERATOR_AGENCY' | 'OPERATOR_FREELANCE';
