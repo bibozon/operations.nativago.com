@@ -17,6 +17,10 @@ model Experience {
   durationMinutes Int
   price           Decimal
 
+  image           String?
+  rating          Float?           @default(0)
+  featured        Boolean          @default(false)
+
   cityId      String?
   categoryId  String?
 

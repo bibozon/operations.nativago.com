@@ -15,34 +15,20 @@ export async function GET(req: NextRequest) {
     orderBy: { startAt: "desc" },
     include: {
       user: true,
-      experience: true,
-      slot: true,
-      communications: true,
+      experience: {
+        include: { city: true },
+      },
     },
   });
 
+  // Adaptamos al tipo Booking que espera el frontend
   const mapped = bookings.map((b) => ({
     id: b.id,
-    cliente: b.clientName || b.user.name,
-    clienteEmail: b.clientEmail || b.user.email,
-    experiencia: b.experience.title,
-    fecha: b.startAt,
-    estado: b.status,
-    arrival_at: b.arrivalAt,
-    deadline: b.deadline,
-    monto_85: b.amountToCollect,
-    slot: {
-      id: b.slot.id,
-      date: b.slot.date,
-      startTime: b.slot.startTime,
-      capacity: b.slot.capacity,
-    },
-    comunicaciones: b.communications.map((c) => ({
-      id: c.id,
-      channel: c.channel,
-      status: c.status,
-      sentAt: c.sentAt,
-    })),
+    experienceTitle: b.experience.title,
+    userName: b.clientName || b.user.name,
+    status: b.status,
+    city: b.experience.city ? b.experience.city.name : undefined,
+    createdAt: b.createdAt.toISOString(),
   }));
 
   return NextResponse.json(mapped);

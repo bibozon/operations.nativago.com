@@ -14,7 +14,9 @@
     "prisma:generate:partner": "prisma generate --schema=prisma/partner.prisma",
     "prisma:migrate:catalog": "prisma migrate dev --schema=prisma/catalog.prisma",
     "prisma:migrate:partner": "prisma migrate dev --schema=prisma/partner.prisma",
-    "prisma:seed": "node prisma/seed.js"
+    "prisma:seed": "node prisma/seed.js",
+    "prisma:seed:catalog": "node prisma/catalog-seed.js",
+    "prisma:seed:partner": "node prisma/partner-seed.js"
   },
   "dependencies": {
     "next": "14.1.0",
