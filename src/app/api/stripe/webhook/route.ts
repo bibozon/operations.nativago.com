@@ -23,9 +23,13 @@ export async function POST(req: Request): Promise<Response> {
     return new Response('Webhook not configured', { status: 500 });
   }
 
+  const stripe = getStripe();
+  if (!stripe) {
+    return new Response("Stripe not configured", { status: 500 });
+  }
   let event: any;
   try {
-    event = getStripe().webhooks.constructEvent(
+    event = stripe.webhooks.constructEvent(
       body,
       sig as string,
       webhookSecret
