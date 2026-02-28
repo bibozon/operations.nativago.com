@@ -1,6 +1,19 @@
 import React from "react";
 
-export function ExperienceCard({ experience, onEdit, onCalendar }) {
+export interface ExperienceCardProps {
+  experience: {
+    image: string;
+    title: string;
+    city: string;
+    category: string;
+    price: number;
+    duration: number;
+  };
+  onEdit: () => void;
+  onCalendar: () => void;
+}
+
+export function ExperienceCard({ experience, onEdit, onCalendar }: ExperienceCardProps) {
   return (
     <div className="rounded-xl bg-white shadow p-4 flex flex-col gap-2">
       <img src={experience.image} alt={experience.title} className="rounded-lg h-32 w-full object-cover" />
