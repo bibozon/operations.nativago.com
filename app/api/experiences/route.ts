@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const token = verifyAuthToken(rawToken);
-  if (!isOperator(token) || typeof token.operatorId !== "number") {
+  if (!token || !isOperator(token) || typeof token.operatorId !== "number") {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
   const body = await request.json();
