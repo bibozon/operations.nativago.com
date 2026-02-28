@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { experienceId, date, guests, customerName, customerEmail } = data as {
-    experienceId?: number;
+    experienceId?: string;
     date?: string;
     guests?: number;
     customerName?: string;
@@ -20,9 +20,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
 
+  // Convert experienceId to number for Experience lookup
+  const expIdNum = Number(experienceId);
+  if (!Number.isFinite(expIdNum)) {
+    return NextResponse.json({ error: 'Invalid experienceId' }, { status: 400 });
+  }
+
   // Fetch experience price
   const experience = await prisma.experience.findUnique({
-    where: { id: experienceId }
+    where: { id: expIdNum }
   });
 
   if (!experience) {
