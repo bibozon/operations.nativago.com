@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPERADMIN
+  OPERATOR_AGENCY
+  OPERATOR_FREELANCE
+}
+
+enum OperatorType {
+  AGENCY
+  FREELANCE
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role
+  createdAt DateTime @default(now())
+
+  operatorTermsAccepted   Boolean  @default(false)
+  operatorTermsAcceptedAt DateTime?
+
+  operator  Operator?
+}
+
+model Category {
+  id        Int          @id @default(autoincrement())
+  name      String
+  slug      String       @unique
+  experiences Experience[]
+    // Prevent deleting if used by Experience (enforce in backend)
+}
+
+model City {
+  id          Int          @id @default(autoincrement())
+  name        String
+  country     String
+  operators   Operator[]
+  experiences Experience[]
+    // Prevent deleting if used by Experience (enforce in backend)
+}
+
+model Operator {
+  id          Int          @id @default(autoincrement())
+  name        String
+  email       String       @unique
+  phone       String?
+  type        OperatorType @default(AGENCY)
+  verificationStatus VerificationStatus @default(PENDING)
+  licenseNumber     String?
+  licenseDocument   String?
+  cnpj              String?
+  cpf               String?
+  cadastur          String?
+  contractUrl       String?
+  liabilityAccepted   Boolean  @default(false)
+  liabilityAcceptedAt DateTime?
+  contractAccepted   Boolean  @default(false)
+  contractAcceptedAt DateTime?
+  cityId      Int
+  city        City         @relation(fields: [cityId], references: [id])
+  userId      Int?         @unique
+  user        User?        @relation(fields: [userId], references: [id])
+  experiences Experience[]
+    // Prevent deleting if used by Experience (enforce in backend)
+}
+
+model Experience {
+  id              Int               @id @default(autoincrement())
+  title           String
+  description     String
+  price           Float
+  durationMinutes Int
+  image           String?
+  featured        Boolean           @default(false)
+  categoryId      Int
+  category        Category          @relation(fields: [categoryId], references: [id])
+  cityId          Int
+  city            City              @relation(fields: [cityId], references: [id])
+  operatorId      Int
+  operator        Operator          @relation(fields: [operatorId], references: [id])
+  slots           AvailabilitySlot[]
+  bookings        Booking[]
+}
+
+model AvailabilitySlot {
+  id           Int        @id @default(autoincrement())
+  experienceId Int
+  experience   Experience @relation(fields: [experienceId], references: [id])
+  date         DateTime
+  startTime    DateTime
+  capacity     Int        @default(1)
+  @@unique([experienceId, date, startTime])
+  // capacity: required, integer, > 0, max 50 (enforced in backend)
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model Booking {
+  id             Int           @id @default(autoincrement())
+  experienceId   Int
+  date           DateTime
+  guests         Int
+  customerName   String
+  customerEmail  String
+  status         BookingStatus @default(PENDING)
+  amount         Float
+  depositAmount  Float
+  remainingAmount Float
+  paymentStatus  PaymentStatus @default(PENDING)
+  paymentType    PaymentType   @default(DEPOSIT)
+  qrCode         String?
+  createdAt      DateTime      @default(now())
+
+  experience Experience @relation(fields: [experienceId], references: [id])
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum PaymentType {
+  DEPOSIT
+}

@@ -1,178 +1,156 @@
-# operations.nativago.com
+## NativaGo Operations CMS Backend
 
-Backoffice SaaS de NativaGo: CMS de operaciones para catálogo (partners, experiencias y slots) sobre una base de datos PostgreSQL Neon **compartida** con el marketplace.
+This project is the operations CMS backend for NativaGo, built with Next.js App Router, TypeScript, Prisma, PostgreSQL (Neon), Tailwind CSS, and serverless API routes.
 
-## Arquitectura multi‑servicio (CMS como núcleo)
+It powers:
 
-- **DB única en Neon (PostgreSQL)**, pero separada por **schemas lógicos de servicio**:
-	- `catalog.*` → servicio **Catalog** (experiencias, slots, ciudades, categorías)
-	- `partner.*` → servicio **Partner** (partners, operators)
-	- (opcional) otros schemas para marketplace/transacciones.
-- Cada servicio tiene su **propio schema Prisma** y su propio cliente Prisma:
-	- Catalog → [prisma/catalog.prisma](Frontend%20backoffice%20ongo/prisma/catalog.prisma)
-	- Partner → [prisma/partner.prisma](Frontend%20backoffice%20ongo/prisma/partner.prisma)
+- Operators
+- Experiences
+- Categories
+- Cities
+- Availability calendar (slots)
 
-### Microservicio Catalog
+The public marketplace (nativago.com) consumes the public catalog API exposed by this service.
 
-Definido en [Frontend backoffice ongo/prisma/catalog.prisma](Frontend%20backoffice%20ongo/prisma/catalog.prisma):
+## Tech Stack
 
-- Experience
-- ExperienceSlot
-- City
-- Category
+- Next.js App Router (TypeScript)
+- Prisma ORM + PostgreSQL (Neon)
+- Tailwind CSS
+- Serverless API routes on Vercel
 
-Reglas de integridad clave:
+## Project Structure
 
-- Una **Experience** siempre referencia un `partnerId` (lógico, del servicio Partner) y opcionalmente `cityId` y `categoryId`.
-- Un **ExperienceSlot** siempre referencia una `experience` y su `capacity` debe ser `> 0` (validación en [catalogService](Frontend%20backoffice%20ongo/src/services/catalog/application/catalogService.ts)).
-- No se exponen endpoints de borrado de Experience ni de Slot → se evita borrar Experience con Slots.
+- src/lib/db.ts – Prisma client
+- src/services/catalog – catalog and CMS domain services
+- src/app/api/catalog – public + CMS API routes
+- prisma/schema.prisma – database schema
+- prisma/seed.js – development seed data
 
-APIs HTTP internas del servicio Catalog (todas dentro del CMS):
+## Environment Configuration
 
-- [GET /api/catalog/experiences](Frontend%20backoffice%20ongo/src/app/api/catalog/experiences/route.ts)
-- [GET /api/catalog/experiences/{id}](Frontend%20backoffice%20ongo/src/app/api/catalog/experiences/%5Bid%5D/route.ts)
-- [GET /api/catalog/slots](Frontend%20backoffice%20ongo/src/app/api/catalog/slots/route.ts)
-- [POST /api/catalog/experience](Frontend%20backoffice%20ongo/src/app/api/catalog/experience/route.ts)
-- [PUT /api/catalog/experience](Frontend%20backoffice%20ongo/src/app/api/catalog/experience/route.ts)
-- [POST /api/catalog/slot](Frontend%20backoffice%20ongo/src/app/api/catalog/slot/route.ts)
+## Recent Updates
 
-Regla "No permitir Experience sin Partner":
+**2026-02-27:**
+- Updated minimal Next.js configuration in package.json for Vercel compatibility.
+- Ensured App Router structure and serverless Prisma client pattern.
+- Project ready for Vercel deployment and automatic Next.js detection.
 
-- Se aplica en la capa de aplicación de Catalog (ver `createOrUpdateExperience` en [catalogService](Frontend%20backoffice%20ongo/src/services/catalog/application/catalogService.ts)), donde se exige `partnerId`.
-- En un despliegue distribuido, esta función podría llamar al servicio Partner (HTTP interno) para validar la existencia del Partner antes de grabar.
+Set the database connection string (for Neon) in an environment file, for example .env.local:
 
-### Microservicio Partner
+```bash
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB_NAME?sslmode=require"
+```
 
-Definido en [Frontend backoffice ongo/prisma/partner.prisma](Frontend%20backoffice%20ongo/prisma/partner.prisma):
+On Vercel, configure the same DATABASE_URL in the project Environment Variables.
 
-- Partner
-- Operator
+If DATABASE_URL is not set at runtime, the CMS will fail fast with the error:
 
-Reglas clave:
+"DATABASE_URL not configured for NativaGo CMS"
 
-- Un **Operator** siempre referencia un `partnerId` válido.
-- No hay API de borrado de Partner, por lo que no se puede borrar un Partner con Experiences asociadas en Catalog (la regla de negocio se respeta no exponiendo delete).
+## Database Migrations & Seed
 
-Capa de aplicación de Partner: [Frontend backoffice ongo/src/services/partner/application/partnerService.ts](Frontend%20backoffice%20ongo/src/services/partner/application/partnerService.ts)
+After configuring DATABASE_URL, run:
 
-APIs HTTP internas del servicio Partner:
+```bash
+npx prisma migrate dev --name init
+npm run db:seed
+```
 
-- [GET /api/partners](Frontend%20backoffice%20ongo/src/app/api/partners/route.ts)
-- [GET /api/partners/{id}](Frontend%20backoffice%20ongo/src/app/api/partners/%5Bid%5D/route.ts)
-- [POST /api/partners](Frontend%20backoffice%20ongo/src/app/api/partners/route.ts)
-- [PUT /api/partners](Frontend%20backoffice%20ongo/src/app/api/partners/route.ts)
+This will create the schema and populate:
 
-## Conexión a Neon (schemas por servicio)
+- Categories: Buceo, Aventura, Cultura
+- Cities: Cartagena, Santa Marta, San Andres
+- Operators: Ocean Divers, Caribe Tours
+- Experiences: Buceo en arrecife, Tour islas del Rosario, Caminata Tayrona
+- Availability slots: next 7 days for each experience
 
-El CMS usa Prisma contra una única instancia de Neon, pero con **schemas separados** por servicio:
+## Public Catalog API (for marketplace)
 
-- `CATALOG_DATABASE_URL` → apunta a la misma instancia Neon pero con `schema=catalog` (o usuario con `search_path=catalog`).
-- `PARTNER_DATABASE_URL` → apunta a la misma instancia Neon pero con `schema=partner`.
+All endpoints are under /api/catalog:
 
-Pasos recomendados:
+- GET /api/catalog/categories
+- GET /api/catalog/cities
+- GET /api/catalog/experiences
+- GET /api/catalog/experiences/[id]
+- GET /api/catalog/experiences?city=
+- GET /api/catalog/experiences?featured=true
+- GET /api/catalog/slots?experience=
 
-1. Crear la base de datos en Neon (si no existe ya para el marketplace).
-2. Configurar `DATABASE_URL` en:
-	- entorno local (`.env` dentro de `Frontend backoffice ongo`)
-	- proyecto Vercel del CMS (Environment Variables).
-3. Ejecutar migraciones Prisma por servicio desde el CMS:
-	```bash
-	cd "Frontend backoffice ongo"
-	npm run prisma:migrate:catalog
-	npm run prisma:migrate:partner
-	```
+Responses are shaped for marketplace cards, including category, city, and operator info.
 
-## CMS: responsabilidades de escritura/lectura
+## CMS CRUD API (private)
 
-El CMS sólo **escribe**:
+- POST /api/catalog/category
+- POST /api/catalog/city
+- POST /api/catalog/operator
+- POST /api/catalog/experience
+- PUT /api/catalog/experience
+- POST /api/catalog/slot
 
-- Partner operativo (Operator/Agency, según el flujo que se diseñe)
-- Experience (catálogo)
-- ExperienceSlot (slots/cupos de experiencias)
+Add authentication/authorization (e.g. middleware) before exposing these endpoints publicly.
 
-El CMS sólo **lee** (read‑only):
+## Experience Types: Group and Exclusive (via Slot Capacity)
 
-- Booking
-- BookingEvent
-- Review
-- Communication
+NativaGo CMS supports both group and exclusive/private experiences using only the `capacity` field in the `AvailabilitySlot` model:
 
-Esto se refleja en las rutas API:
+- **Group experience:** `capacity > 1` (multiple participants can book the same slot)
+- **Exclusive/private experience:** `capacity = 1` (only one booking allowed for that slot)
 
-- Catálogo (escritura desde CMS):
-  - [Frontend backoffice ongo/src/app/api/experiences/route.ts](Frontend%20backoffice%20ongo/src/app/api/experiences/route.ts)
-  - [Frontend backoffice ongo/src/app/api/experience-slots/route.ts](Frontend%20backoffice%20ongo/src/app/api/experience-slots/route.ts)
-- Transaccional (sólo lectura desde CMS):
-  - [Frontend backoffice ongo/src/app/api/bookings/route.ts](Frontend%20backoffice%20ongo/src/app/api/bookings/route.ts) (no crea ni actualiza)
-  - [Frontend backoffice ongo/src/app/api/bookings/[id]/start/route.ts](Frontend%20backoffice%20ongo/src/app/api/bookings/%5Bid%5D/start/route.ts) devuelve 405 para evitar modificar bookings desde el CMS.
+No additional type field is needed. The slot's `capacity` determines if the session is shared or exclusive.
 
-## Panel de reservas del operador (lectura consistente)
+**Examples:**
 
-La pantalla del operador en:
+- Boat tour: `capacity 12` (group)
+- Diving: `capacity 4` (group)
+- Private boat: `capacity 1` (exclusive)
 
-- [Frontend backoffice ongo/src/app/[locale]/(operator)/bookings/page.tsx](Frontend%20backoffice%20ongo/src/app/%5Blocale%5D/(operator)/bookings/page.tsx)
+When a user books N participants, the slot's remaining capacity is reduced accordingly. Once capacity reaches 0, the slot is fully booked.
 
-consume la API de bookings y muestra, por cada reserva del marketplace:
+> This logic is enforced in the backend and reflected in the API responses for `/api/catalog/slots?experience=`.
 
-- `cliente` / `clienteEmail` (User/Booking)
-- `experiencia` (Experience)
-- `fecha` (inicio de la reserva)
-- `estado` (estado de Booking)
-- `arrival_at`
-- `deadline`
-- `monto_85` (campo `amountToCollect` = 85% que debe cobrar el operador offline)
-- `comunicaciones` (lista de Communications asociadas)
+## Local Development
 
-La API correspondiente:
 
-- [Frontend backoffice ongo/src/app/api/bookings/route.ts](Frontend%20backoffice%20ongo/src/app/api/bookings/route.ts)
+## Test Users for Access
 
-utiliza Prisma para hacer joins con `User`, `Experience`, `ExperienceSlot` y `Communication`, y devuelve un DTO especializado para el panel (`cliente`, `experiencia`, `monto_85`, `comunicaciones`, etc.).
+**Super Admin:**
 
-## Proyecto Next.js (CMS)
+- Email: admin@nativago.com
+- Password: nativago123
+- Role: SUPERADMIN
 
-Directorio: `Frontend backoffice ongo/`.
+**Operator Agency:**
+- Email: agency@nativago.com
+- Password: nativago123
+- Role: OPERATOR_AGENCY
 
-### Requisitos previos
+**Operator Freelance:**
+- Email: freelance@nativago.com
+- Password: nativago123
+- Role: OPERATOR_FREELANCE
 
-- Node.js 18+ y npm.
-- Cuenta en Vercel (para despliegues en la nube).
-- Base de datos Neon compartida con el marketplace.
+**Operator Entities:**
+- Ocean Divers (user: freelance@nativago.com)
+- Caribe Tours (user: agency@nativago.com)
 
-### Instalación y ejecución local
+> These accounts are for development/testing only. Replace with official data before production.
 
-1. Instalar dependencias:
-	```bash
-	cd "Frontend backoffice ongo"
-	npm install
-	```
-2. Configurar entorno (`.env` en `Frontend backoffice ongo`):
-	```env
-	DATABASE_URL=postgresql://... # misma URL que el marketplace
-	JWT_SECRET=...                # secreto para login en el CMS
-	```
-3. Ejecutar migraciones (si el schema del CMS es la fuente de verdad):
-	```bash
-	npx prisma migrate dev
-	```
-4. Ejecutar en desarrollo:
-	```bash
-	npm run dev
-	```
-5. Abrir en el navegador:
-	- http://localhost:3000/es
+---
 
-### Despliegue del CMS en Vercel
+Start the dev server:
 
-1. Crear un proyecto en Vercel apuntando a este repositorio.
-2. En *Root Directory* del proyecto, usar:
-	```
-	Frontend backoffice ongo
-	```
-3. Framework preset: `Next.js`.
-4. Build command por defecto (`npm run build`) y output `.next`.
-5. Definir las variables de entorno:
-	- `DATABASE_URL` (misma Neon que marketplace)
-	- `JWT_SECRET`
+```bash
+npm run dev
+```
 
-Con esto, el CMS y el marketplace comparten una única base de datos Neon, con responsabilidades bien separadas (catálogo vs. transacciones) y sin duplicar ni modificar datos transaccionales desde el backoffice.
+By default the app runs on http://localhost:3000 (or the next available port).
+
+## Deployment on Vercel
+
+- Push this repository to GitHub/GitLab/Bitbucket.
+- Import the project in Vercel.
+- Set DATABASE_URL in the Vercel project settings.
+- Vercel will run npm run build during deployment.
+
+Run migrations (e.g. via prisma migrate deploy or a one-off job) against your Neon database before first production use.

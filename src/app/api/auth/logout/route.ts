@@ -1,0 +1,15 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function POST(_request: NextRequest) {
+  const response = NextResponse.json({ ok: true });
+
+  response.cookies.set('auth', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
+
+  return response;
+}
