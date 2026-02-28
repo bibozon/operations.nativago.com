@@ -8,9 +8,9 @@ interface EditExperiencePageProps {
 
 export default async function EditExperiencePage({ params }: EditExperiencePageProps) {
   const auth = await requireAuth();
-  const id = Number(params.id);
-
-  if (!Number.isFinite(id)) {
+  const id = params.id;
+  // id es string, no convertir a número
+  if (!id || typeof id !== "string") {
     redirect('/admin/experiences');
   }
 
