@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 
 export async function GET(req: NextRequest) {
-  const expIdParam = req.nextUrl.searchParams.get('experienceId');
-  const expId = expIdParam ? Number(expIdParam) : NaN;
-
-  if (!Number.isFinite(expId)) {
+  const expId = req.nextUrl.searchParams.get('experienceId');
+  if (!expId || typeof expId !== 'string') {
     return NextResponse.json({ error: 'Invalid experienceId' }, { status: 400 });
   }
 
