@@ -1,6 +1,20 @@
 import React from "react";
 
-export function AddSlotModal({ open, onClose, onSave, form, onChange }) {
+type AddSlotForm = {
+  date: string;
+  time: string;
+  capacity: number | string;
+};
+
+type AddSlotModalProps = {
+  open?: boolean;
+  onClose: () => void;
+  onSave: () => void;
+  form: AddSlotForm;
+  onChange: (field: keyof AddSlotForm, value: string | number) => void;
+};
+
+export function AddSlotModal({ open, onClose, onSave, form, onChange }: AddSlotModalProps) {
   if (!open) return null;
   return (
     <div className="modal">
