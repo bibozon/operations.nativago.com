@@ -8,9 +8,9 @@ interface AvailabilityPageProps {
 
 export default async function AvailabilityPage({ params }: AvailabilityPageProps) {
   const auth = await requireAuth();
-  const expId = Number(params.id);
-
-  if (!Number.isFinite(expId)) {
+  const expId = params.id;
+  // expId es string, no convertir a número
+  if (!expId || typeof expId !== "string") {
     redirect('/admin/experiences');
   }
 
