@@ -9,8 +9,7 @@ interface EditExperiencePageProps {
 export default async function EditExperiencePage({ params }: EditExperiencePageProps) {
   const auth = await requireAuth();
   const id = params.id;
-  // id es string, no convertir a número
-  if (!id || typeof id !== "string") {
+    if (!id || typeof id !== 'string') {
     redirect('/admin/experiences');
   }
 
@@ -53,36 +52,28 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
 
     const file = formData.get('image');
 
-    let imageUrl: string | null = null;
-
+    let images: string[] = [];
     if (file && file instanceof File && file.size > 0) {
       const uploadData = new FormData();
       uploadData.append('file', file);
-
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: uploadData,
       });
-
       if (res.ok) {
         const json = (await res.json()) as { url?: string };
         if (json.url) {
-          imageUrl = json.url;
+          images = [json.url];
         }
       }
     }
-
     const data: Record<string, unknown> = {
       title: (formData.get('title') as string) ?? '',
       price: Number(formData.get('price')),
-      cityId: Number(formData.get('cityId')),
-      categoryId: Number(formData.get('categoryId')),
+        cityId: (formData.get('cityId') as string) ?? '',
+        categoryId: (formData.get('categoryId') as string) ?? '',
+      images,
     };
-
-    if (imageUrl) {
-      data.image = imageUrl;
-    }
-
     await prisma.experience.update({
       where: { id },
       data,

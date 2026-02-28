@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
   }
 
   const finalOperatorId =
-    authUser.role === 'SUPERADMIN' ? Number(operatorId) : authUser.operatorId;
+    authUser.role === 'SUPERADMIN' ? (operatorId as string) : authUser.operatorId;
 
   if (!finalOperatorId) {
     return NextResponse.json(
@@ -55,9 +55,9 @@ export async function POST(request: NextRequest) {
     durationMinutes: Number(durationMinutes),
     image,
     featured: Boolean(featured),
-    categoryId: Number(categoryId),
-    cityId: Number(cityId),
-    operatorId: Number(finalOperatorId),
+    categoryId: (categoryId as string) ?? '',
+    cityId: (cityId as string) ?? '',
+    operatorId: (finalOperatorId as string) ?? '',
   });
 
   return NextResponse.json(experience, { status: 201 });
@@ -73,8 +73,8 @@ export async function PUT(request: NextRequest) {
   const body = await request.json();
   const { id, ...rest } = body ?? {};
 
-  const experienceId = Number(id);
-  if (!id || Number.isNaN(experienceId)) {
+  const experienceId = id;
+  if (!experienceId || typeof experienceId !== 'string') {
     return NextResponse.json(
       { error: 'Valid id is required for update' },
       { status: 400 }
@@ -85,9 +85,9 @@ export async function PUT(request: NextRequest) {
 
   if (data.price != null) data.price = Number(data.price);
   if (data.durationMinutes != null) data.durationMinutes = Number(data.durationMinutes);
-  if (data.categoryId != null) data.categoryId = Number(data.categoryId);
-  if (data.cityId != null) data.cityId = Number(data.cityId);
-  if (data.operatorId != null) data.operatorId = Number(data.operatorId);
+  if (data.categoryId != null) data.categoryId = String(data.categoryId);
+  if (data.cityId != null) data.cityId = String(data.cityId);
+  if (data.operatorId != null) data.operatorId = String(data.operatorId);
 
   if (authUser.role !== 'SUPERADMIN') {
     const existing = await prisma.experience.findUnique({

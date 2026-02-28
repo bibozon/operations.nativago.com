@@ -17,7 +17,9 @@ export function ExperienceCard({ experience, onEdit, onCalendar }: ExperienceCar
   return (
     <div className="rounded-xl bg-white shadow p-4 flex flex-col gap-2">
       {experience.images?.[0] && (
-        <img src={experience.images[0]} alt={experience.title} className="rounded-lg h-32 w-full object-cover" />
+        {Array.isArray(experience.images) && experience.images?.[0] && (
+          <img src={experience.images?.[0]} alt={experience.title} className="rounded-lg h-32 w-full object-cover" />
+        )}
       )}
       <div className="font-bold text-lg">{experience.title}</div>
       <div className="flex gap-2 text-sm">

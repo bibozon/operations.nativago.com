@@ -9,8 +9,7 @@ interface AvailabilityPageProps {
 export default async function AvailabilityPage({ params }: AvailabilityPageProps) {
   const auth = await requireAuth();
   const expId = params.id;
-  // expId es string, no convertir a número
-  if (!expId || typeof expId !== "string") {
+  if (!expId || typeof expId !== 'string') {
     redirect('/admin/experiences');
   }
 
@@ -53,24 +52,19 @@ export default async function AvailabilityPage({ params }: AvailabilityPageProps
 
     const dateStr = formData.get('date') as string | null;
     const capacityRaw = formData.get('capacity') as string | null;
-
     if (!dateStr || !capacityRaw) return;
-
     const capacity = Number(capacityRaw);
     if (!Number.isFinite(capacity) || capacity <= 0) return;
-
     const date = new Date(dateStr);
     date.setHours(0, 0, 0, 0);
-
     const startTime = new Date(date);
     startTime.setHours(9, 0, 0, 0); // default 09:00 local
-
     await prisma.availabilitySlot.create({
       data: {
         experienceId: expId,
         date,
         startTime,
-        capacity,
+        capacity: capacity ?? 0,
       },
     });
   }
@@ -81,9 +75,8 @@ export default async function AvailabilityPage({ params }: AvailabilityPageProps
     const authInAction = await requireAuth();
 
     const idRaw = formData.get('id') as string | null;
-    const id = idRaw ? Number(idRaw) : NaN;
-    if (!Number.isFinite(id)) return;
-
+    const id = idRaw ?? '';
+    if (!id) return;
     const slot = await prisma.availabilitySlot.findUnique({
       where: { id },
       include: { experience: { include: { operator: true } } },

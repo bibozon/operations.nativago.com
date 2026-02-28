@@ -8,7 +8,7 @@ export interface ExperienceEditorProps {
     duration: number | string;
     city: string;
     category: string;
-    images?: (File | string)[];
+    images?: string[];
   };
   onChange: (field: keyof ExperienceEditorProps['form'], value: string | number | File) => void;
   onSave: () => void;
@@ -34,7 +34,7 @@ export function ExperienceEditor({ form, onChange, onSave, onCancel }: Experienc
         onChange={e => {
           const files = e.target.files;
           if (files && files[0]) {
-            onChange("images", [files[0]]);
+            onChange("images", Array.isArray(files) ? files.map(f => typeof f === 'string' ? f : '') : [typeof files[0] === 'string' ? files[0] : '']);
           }
         }}
       />

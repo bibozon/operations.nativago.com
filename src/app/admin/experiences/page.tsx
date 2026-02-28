@@ -72,9 +72,9 @@ export default async function ExperiencesPage() {
           {experiences.map((exp) => (
             <tr key={exp.id} className="border-t">
               <td className="border px-2 py-1">
-                {Array.isArray(exp.images) && exp.images[0] && (
+                {Array.isArray(exp.images) && exp.images?.[0] && (
                   <img
-                    src={exp.images[0]}
+                    src={exp.images?.[0]}
                     alt={exp.title}
                     className="h-12 w-16 rounded object-cover"
                   />

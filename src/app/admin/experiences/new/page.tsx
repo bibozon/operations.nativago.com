@@ -44,25 +44,21 @@ export default async function NewExperiencePage() {
       throw new Error('Operator not verified');
     }
 
-    let imageUrl: string | null = null;
-
+    let images: string[] = [];
     if (file && file instanceof File && file.size > 0) {
       const uploadData = new FormData();
       uploadData.append('file', file);
-
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: uploadData,
       });
-
       if (res.ok) {
         const json = (await res.json()) as { url?: string };
         if (json.url) {
-          imageUrl = json.url;
+          images = [json.url];
         }
       }
     }
-
     await prisma.experience.create({
       data: {
         title,
@@ -70,18 +66,18 @@ export default async function NewExperiencePage() {
         durationMinutes,
         price,
         capacity,
-        cityId,
-        categoryId,
+        cityId: Number(cityId),
+        categoryId: Number(categoryId),
         operatorId: operator.id,
-        images: imageUrl ? [imageUrl] : [],
-      },
-    });
-
-    redirect('/admin/experiences');
-  }
-
-  if (!operator || operator.verificationStatus !== 'APPROVED') {
-    return (
+        images,
+          const title = (formData.get('title') as string) ?? '';
+          const description = (formData.get('description') as string) ?? '';
+          const durationMinutes = Number(formData.get('durationMinutes'));
+          const price = Number(formData.get('price'));
+          const cityId = (formData.get('cityId') as string) ?? '';
+          const categoryId = (formData.get('categoryId') as string) ?? '';
+          const capacity = Number(formData.get('capacity'));
+          const file = formData.get('image');
       <div className="mx-auto max-w-lg px-4 py-8">
         <h1 className="mb-4 text-xl font-semibold">Crear experiencia</h1>
         <p className="text-sm text-slate-600">
@@ -115,17 +111,17 @@ export default async function NewExperiencePage() {
           className="w-full rounded border px-2 py-2 text-sm"
           min={1}
         />
-
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-slate-700">
-            Preço (R$)
-          </label>
-          <input
-            name="price"
-            placeholder="R$ 0,00"
-            className="w-full rounded border p-2 text-sm"
-            type="number"
-            min={0}
+            data: {
+              title,
+              description,
+              durationMinutes,
+              price,
+              capacity: capacity ?? 0,
+              cityId,
+              categoryId,
+              operatorId: operator.id,
+              images: images,
+            },
             step={0.01}
           />
         </div>

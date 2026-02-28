@@ -20,15 +20,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
 
-  // Convert experienceId to number for Experience lookup
-  const expIdNum = Number(experienceId);
-  if (!Number.isFinite(expIdNum)) {
+  // Use experienceId as string for Experience lookup
+  if (typeof experienceId !== 'string' || !experienceId) {
     return NextResponse.json({ error: 'Invalid experienceId' }, { status: 400 });
   }
 
   // Fetch experience price
   const experience = await prisma.experience.findUnique({
-    where: { id: expIdNum }
+    where: { id: experienceId }
   });
 
   if (!experience) {
