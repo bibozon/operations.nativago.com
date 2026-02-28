@@ -27,7 +27,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const token = verifyAuthToken(getAuthTokenFromRequest(request));
+  const rawToken = getAuthTokenFromRequest(request);
+  if (!rawToken) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const token = verifyAuthToken(rawToken);
   if (!isSuperAdmin(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
@@ -43,7 +47,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const token = verifyAuthToken(getAuthTokenFromRequest(request));
+  const rawToken = getAuthTokenFromRequest(request);
+  if (!rawToken) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const token = verifyAuthToken(rawToken);
   if (!isSuperAdmin(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
@@ -60,7 +68,11 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const token = verifyAuthToken(getAuthTokenFromRequest(request));
+  const rawToken = getAuthTokenFromRequest(request);
+  if (!rawToken) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const token = verifyAuthToken(rawToken);
   if (!isSuperAdmin(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
