@@ -7,24 +7,25 @@
     "start": "next start"
   },
   "dependencies": {
-    "@prisma/client": "^5.0.0",
-    "@tailwindcss/postcss": "^4.0.0",
-    "@yudiel/react-qr-scanner": "^2.5.1",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.3",
     "next": "14.2.5",
-    "pdfkit": "^0.17.2",
-    "qrcode": "^1.5.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "stripe": "^12.0.0"
+    "@prisma/client": "^5.0.0",
+    "@yudiel/react-qr-scanner": "^2.5.1",
+    "bcryptjs": "^2.4.3",
+    "qrcode": "^1.5.4",
+    "jsonwebtoken": "^9.0.3",
+    "stripe": "^12.0.0",
+    "pdfkit": "^0.17.2"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/qrcode": "^1.5.6",
-    "@types/react": "19.2.14",
-    "prisma": "^5",
-    "typescript": "^5"
+    "prisma": "^5.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0",
+    "@tailwindcss/postcss": "^4.0.0"
   }
 }
