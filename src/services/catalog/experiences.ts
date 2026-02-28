@@ -73,7 +73,7 @@ export async function listExperiences(filters: ExperienceFilters = {}): Promise<
     return mapExperiencesToCards(experiences as Array<
       Experience & {
         category: Pick<Category, 'id' | 'name' | 'slug'>;
-        city: Pick<City, 'id' | 'name'>;
+        city: Pick<City, 'id' | 'name' | 'country'>;
         operator: Pick<Operator, 'id' | 'name'>;
       }
     >);
