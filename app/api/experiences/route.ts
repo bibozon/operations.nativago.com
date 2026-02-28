@@ -9,9 +9,16 @@ function isOperator(token: any) {
 
 export async function GET(request: NextRequest) {
   // List all experiences for authenticated operator
-  const token = verifyAuthToken(getAuthTokenFromRequest(request));
+  const rawToken = getAuthTokenFromRequest(request);
+
+  if (!rawToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const token = verifyAuthToken(rawToken);
+
   if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   let where = {};
   if (isOperator(token)) {
