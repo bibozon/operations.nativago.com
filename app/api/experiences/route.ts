@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
   const body = await request.json();
-  const { title, description, price, durationMinutes, capacity, image, coveragePolicy, coverageDescription, cityId, categoryId } = body;
+  const { title, description, price, durationMinutes, capacity, images, coveragePolicy, coverageDescription, cityId, categoryId } = body;
   if (!title || !price || !durationMinutes || !capacity || !cityId || !categoryId) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       price,
       durationMinutes,
       capacity,
-      image,
+      images,
       coveragePolicy,
       coverageDescription,
       operatorId: token.operatorId,
