@@ -1,0 +1,9 @@
+{
+  "name": "operations.nativago.com-wrapper",
+  "private": true,
+  "scripts": {
+    "build": "cd .. && npm install && npm run build",
+    "dev": "cd .. && npm run dev",
+    "start": "cd .. && npm run start"
+  }
+}
