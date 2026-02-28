@@ -21,8 +21,8 @@ export default async function ExperiencesPage() {
     'use server';
 
     const idRaw = formData.get('id');
-    const id = typeof idRaw === 'string' ? Number(idRaw) : NaN;
-    if (!Number.isFinite(id)) return;
+    const id = typeof idRaw === 'string' ? idRaw : '';
+    if (!id) return;
 
     const authInAction = await requireAuth();
 
