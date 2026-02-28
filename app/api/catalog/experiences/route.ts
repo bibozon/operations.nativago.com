@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       slots: true,
       status: true,
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: 'desc' }
   });
   return NextResponse.json({ experiences });
 }
