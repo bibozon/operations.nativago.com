@@ -25,6 +25,7 @@ export default async function NewExperiencePage() {
     const price = Number(formData.get('price'));
     const cityId = Number(formData.get('cityId'));
     const categoryId = Number(formData.get('categoryId'));
+    const capacity = Number(formData.get('capacity'));
     const file = formData.get('image');
 
     if (!title || !description || !Number.isFinite(durationMinutes) || !Number.isFinite(price) || !cityId || !categoryId) {
@@ -68,6 +69,7 @@ export default async function NewExperiencePage() {
         description,
         durationMinutes,
         price,
+        capacity,
         cityId,
         categoryId,
         operatorId: operator.id,
