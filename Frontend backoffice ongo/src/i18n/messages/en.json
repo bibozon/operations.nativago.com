@@ -1,9 +1,0 @@
-{
-  "nav.dashboard": "Dashboard",
-  "nav.experiences": "My experiences",
-  "nav.bookings": "Bookings",
-  "nav.startActivity": "Start activity",
-  "auth.login": "Sign in",
-  "auth.logout": "Sign out",
-  "experience.amountToCollect": "Amount to collect from client at start (85%)"
-}

@@ -1,9 +1,0 @@
-{
-  "nav.dashboard": "Tableau de bord",
-  "nav.experiences": "Mes expériences",
-  "nav.bookings": "Réservations",
-  "nav.startActivity": "Démarrer l'activité",
-  "auth.login": "Se connecter",
-  "auth.logout": "Se déconnecter",
-  "experience.amountToCollect": "Montant à encaisser du client au début (85 %)"
-}

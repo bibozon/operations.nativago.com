@@ -1,9 +1,0 @@
-{
-  "nav.dashboard": "Dashboard",
-  "nav.experiences": "Minhas experiências",
-  "nav.bookings": "Reservas",
-  "nav.startActivity": "Iniciar atividade",
-  "auth.login": "Entrar",
-  "auth.logout": "Sair",
-  "experience.amountToCollect": "Valor a cobrar do cliente no início (85%)"
-}
