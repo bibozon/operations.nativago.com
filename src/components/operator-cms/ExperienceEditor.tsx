@@ -28,7 +28,16 @@ export function ExperienceEditor({ form, onChange, onSave, onCancel }: Experienc
       <select className="input" value={form.category} onChange={e => onChange("category", e.target.value)}>
         {/* Opciones de categorías */}
       </select>
-      <input className="input" type="file" onChange={e => onChange("image", e.target.files[0])} />
+      <input
+        className="input"
+        type="file"
+        onChange={e => {
+          const files = e.target.files;
+          if (files && files[0]) {
+            onChange("image", files[0]);
+          }
+        }}
+      />
       <div className="flex gap-2 mt-4">
         <button type="button" className="btn-primary flex-1" onClick={onSave}>Guardar</button>
         <button type="button" className="btn-outline flex-1" onClick={onCancel}>Cancelar</button>
