@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { uploadImage } from "@/lib/blob";
-import { getAuthTokenFromRequest, verifyAuthToken } from "@/lib/auth";
 
 // Helper para extraer el archivo del form-data
 async function getFileFromRequest(request: NextRequest): Promise<File | null> {
@@ -13,16 +12,6 @@ async function getFileFromRequest(request: NextRequest): Promise<File | null> {
 }
 
 export async function POST(request: NextRequest) {
-  // Autenticación
-  const rawToken = getAuthTokenFromRequest(request);
-  if (!rawToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const token = verifyAuthToken(rawToken);
-  if (!token) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   // Extraer archivo
   const file = await getFileFromRequest(request);
   if (!file) {

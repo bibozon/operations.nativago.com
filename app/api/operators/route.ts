@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { getAuthTokenFromRequest, verifyAuthToken } from '@/lib/auth';
+import { requireAuth } from "@/lib/require-auth";
 
 // Only SUPERADMIN can create/update/delete operators
 function isSuperAdmin(token: any) {
@@ -27,11 +28,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const rawToken = getAuthTokenFromRequest(request);
-  if (!rawToken) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const token = requireAuth(request);
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const token = verifyAuthToken(rawToken);
   if (!isSuperAdmin(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
@@ -47,11 +47,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const rawToken = getAuthTokenFromRequest(request);
-  if (!rawToken) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const token = requireAuth(request);
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const token = verifyAuthToken(rawToken);
   if (!isSuperAdmin(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
@@ -68,11 +67,10 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const rawToken = getAuthTokenFromRequest(request);
-  if (!rawToken) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const token = requireAuth(request);
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const token = verifyAuthToken(rawToken);
   if (!isSuperAdmin(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }

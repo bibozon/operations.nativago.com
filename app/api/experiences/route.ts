@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { getAuthTokenFromRequest, verifyAuthToken } from '@/lib/auth';
+import { requireAuth } from "@/lib/require-auth";
 
 // Only authenticated operators can create/update/delete their experiences
 function isOperator(token: any) {
@@ -9,11 +10,7 @@ function isOperator(token: any) {
 
 export async function GET(request: NextRequest) {
   // List all experiences for authenticated operator
-  const rawToken = getAuthTokenFromRequest(request);
-  if (!rawToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const token = verifyAuthToken(rawToken);
+  const token = requireAuth(request);
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -46,12 +43,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const rawToken = getAuthTokenFromRequest(request);
-  if (!rawToken) {
+  const token = requireAuth(request);
+  if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  const token = verifyAuthToken(rawToken);
-  if (!token || !isOperator(token) || typeof token.operatorId !== "number") {
+  if (!isOperator(token) || typeof token.operatorId !== "number") {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
   const body = await request.json();
@@ -79,12 +75,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const rawToken = getAuthTokenFromRequest(request);
-  if (!rawToken) {
+  const token = requireAuth(request);
+  if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  const token = verifyAuthToken(rawToken);
-  if (!token || !isOperator(token)) {
+  if (!isOperator(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
   const body = await request.json();
@@ -105,12 +100,11 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const rawToken = getAuthTokenFromRequest(request);
-  if (!rawToken) {
+  const token = requireAuth(request);
+  if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  const token = verifyAuthToken(rawToken);
-  if (!token || !isOperator(token)) {
+  if (!isOperator(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
   const body = await request.json();

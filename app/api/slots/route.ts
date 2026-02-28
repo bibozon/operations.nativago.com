@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { getAuthTokenFromRequest, verifyAuthToken } from '@/lib/auth';
+import { requireAuth } from "@/lib/require-auth";
 
 function isOperator(token: any) {
   return token?.role === 'OPERATOR_AGENCY' || token?.role === 'OPERATOR_FREELANCE';
@@ -8,9 +9,9 @@ function isOperator(token: any) {
 
 export async function GET(request: NextRequest) {
   // List all slots for authenticated operator
-  const token = verifyAuthToken(getAuthTokenFromRequest(request));
+  const token = requireAuth(request);
   if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   let where = {};
   if (isOperator(token)) {
@@ -32,7 +33,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const token = verifyAuthToken(getAuthTokenFromRequest(request));
+  const token = requireAuth(request);
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   if (!isOperator(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
@@ -53,7 +57,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const token = verifyAuthToken(getAuthTokenFromRequest(request));
+  const token = requireAuth(request);
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   if (!isOperator(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
@@ -79,7 +86,10 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const token = verifyAuthToken(getAuthTokenFromRequest(request));
+  const token = requireAuth(request);
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   if (!isOperator(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
