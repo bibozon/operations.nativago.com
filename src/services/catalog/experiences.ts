@@ -54,29 +54,22 @@ export async function listExperiences(filters: ExperienceFilters = {}): Promise<
 
     const experiences = await prisma.experience.findMany({
       where,
-      include: {
-        category: {
-          select: { id: true, name: true, slug: true },
-        },
-        city: {
-          select: { id: true, name: true },
-        },
-        operator: {
-          select: { id: true, name: true },
-        },
+      select: {
+        id: true,
+        title: true,
+        image: true,
+        price: true,
+        durationMinutes: true,
+        category: { select: { id: true, name: true, slug: true } },
+        city: { select: { id: true, name: true, country: true } },
+        operator: { select: { id: true, name: true } },
       },
       orderBy: { id: 'asc' },
       skip,
       take: safeLimit,
     });
 
-    return mapExperiencesToCards(experiences as Array<
-      Experience & {
-        category: Pick<Category, 'id' | 'name' | 'slug'>;
-        city: Pick<City, 'id' | 'name' | 'country'>;
-        operator: Pick<Operator, 'id' | 'name'>;
-      }
-    >);
+    return mapExperiencesToCards(experiences);
   } catch (error) {
     console.error('Error fetching experiences:', error);
     throw new Error('Failed to fetch experiences');
@@ -87,28 +80,21 @@ export async function getExperienceById(id: number): Promise<ExperienceCardDTO |
   try {
     const experience = await prisma.experience.findUnique({
       where: { id },
-      include: {
-        category: {
-          select: { id: true, name: true, slug: true },
-        },
-        city: {
-          select: { id: true, name: true },
-        },
-        operator: {
-          select: { id: true, name: true },
-        },
+      select: {
+        id: true,
+        title: true,
+        image: true,
+        price: true,
+        durationMinutes: true,
+        category: { select: { id: true, name: true, slug: true } },
+        city: { select: { id: true, name: true, country: true } },
+        operator: { select: { id: true, name: true } },
       },
     });
 
     if (!experience) return null;
 
-    return mapExperienceToCard(
-      experience as Experience & {
-        category: Pick<Category, 'id' | 'name' | 'slug'>;
-        city: Pick<City, 'id' | 'name'>;
-        operator: Pick<Operator, 'id' | 'name'>;
-      }
-    );
+    return mapExperienceToCard(experience);
   } catch (error) {
     console.error(`Error fetching experience with id ${id}:`, error);
     throw new Error('Failed to fetch experience');
