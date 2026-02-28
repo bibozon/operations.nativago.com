@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   const adminEmail = 'admin@nativago.com';
-  const adminPassword = 'nativago123';
+  const adminPassword = 'Admin123!';
   const adminRole = 'SUPERADMIN';
   const adminName = 'Admin NativaGo';
   const saltRounds = 10;
@@ -22,7 +22,7 @@ async function main() {
     },
   });
 
-  console.log('✔️ Admin user ensured');
+  console.log('✔️ Admin user ensured (admin@nativago.com / Admin123!)');
 }
 
 main()
