@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       price: true,
       durationMinutes: true,
       capacity: true,
-      image: true,
+      images: true,
       coveragePolicy: true,
       coverageDescription: true,
       operatorId: true,
