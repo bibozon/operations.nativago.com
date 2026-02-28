@@ -65,19 +65,13 @@ export default async function NewExperiencePage() {
         description,
         durationMinutes,
         price,
-        capacity,
-        cityId: Number(cityId),
-        categoryId: Number(categoryId),
+        capacity: capacity ?? 0,
+        cityId: (formData.get('cityId') as string) ?? '',
+        categoryId: (formData.get('categoryId') as string) ?? '',
         operatorId: operator.id,
         images,
-          const title = (formData.get('title') as string) ?? '';
-          const description = (formData.get('description') as string) ?? '';
-          const durationMinutes = Number(formData.get('durationMinutes'));
-          const price = Number(formData.get('price'));
-          const cityId = (formData.get('cityId') as string) ?? '';
-          const categoryId = (formData.get('categoryId') as string) ?? '';
-          const capacity = Number(formData.get('capacity'));
-          const file = formData.get('image');
+      },
+    });
       <div className="mx-auto max-w-lg px-4 py-8">
         <h1 className="mb-4 text-xl font-semibold">Crear experiencia</h1>
         <p className="text-sm text-slate-600">

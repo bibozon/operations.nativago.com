@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   }
   let where = {};
   if (isOperator(token)) {
-    where = { operatorId: token.operatorId };
+      where = { operatorId: String(token.operatorId) };
   }
   const experiences = await prisma.experience.findMany({
     where,
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  if (!isOperator(token) || typeof token.operatorId !== "number") {
+    if (!isOperator(token) || !token.operatorId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
   const body = await request.json();
@@ -65,9 +65,9 @@ export async function POST(request: NextRequest) {
       images,
       coveragePolicy,
       coverageDescription,
-      operatorId: token.operatorId,
-      cityId,
-      categoryId,
+        operatorId: String(token.operatorId),
+        cityId: String(cityId),
+        categoryId: String(categoryId),
       status: 'DRAFT',
     },
   });
@@ -89,7 +89,7 @@ export async function PUT(request: NextRequest) {
   }
   // Only allow update if experience belongs to operator
   const experience = await prisma.experience.findUnique({ where: { id } });
-  if (!experience || experience.operatorId !== token.operatorId) {
+  if (!experience || experience.operatorId !== String(token.operatorId)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
   const updated = await prisma.experience.update({
@@ -114,7 +114,7 @@ export async function DELETE(request: NextRequest) {
   }
   // Only allow delete if experience belongs to operator
   const experience = await prisma.experience.findUnique({ where: { id } });
-  if (!experience || experience.operatorId !== token.operatorId) {
+  if (!experience || experience.operatorId !== String(token.operatorId)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
   await prisma.experience.delete({ where: { id } });

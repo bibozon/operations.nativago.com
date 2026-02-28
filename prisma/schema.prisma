@@ -39,7 +39,7 @@ model User {
 }
 
 model Category {
-  id        Int          @id @default(autoincrement())
+  id        String       @id @default(cuid())
   name      String
   slug      String       @unique
   experiences Experience[]
@@ -47,7 +47,7 @@ model Category {
 }
 
 model City {
-  id          Int          @id @default(autoincrement())
+  id          String       @id @default(cuid())
   name        String
   country     String
   operators   Operator[]
@@ -56,7 +56,7 @@ model City {
 }
 
 model Operator {
-  id          Int          @id @default(autoincrement())
+  id          String       @id @default(cuid())
   name        String
   email       String       @unique
   phone       String?
@@ -72,14 +72,14 @@ model Operator {
   liabilityAcceptedAt DateTime?
   contractAccepted   Boolean  @default(false)
   contractAcceptedAt DateTime?
-  cityId      Int
+  cityId      String
   city        City         @relation(fields: [cityId], references: [id])
   userId      Int?         @unique
   user        User?        @relation(fields: [userId], references: [id])
   experiences Experience[]
     // Prevent deleting if used by Experience (enforce in backend)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime? @updatedAt
 }
 
 model Experience {
@@ -89,15 +89,15 @@ model Experience {
   description String
   price Float
   durationMinutes Int
-  capacity Int
+  capacity Int @default(0)
   images String[]
 
   coveragePolicy String?
   coverageDescription String?
 
-  operatorId Int
-  cityId Int
-  categoryId Int
+    operatorId String
+    cityId String
+    categoryId String
 
   status ExperienceStatus @default(DRAFT)
 
@@ -108,7 +108,7 @@ model Experience {
   availabilitySlots AvailabilitySlot[]
   bookings Booking[]
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime? @updatedAt
 }
 
 model Slot {
@@ -126,7 +126,7 @@ enum ExperienceStatus {
 }
 
 model AvailabilitySlot {
-  id           Int        @id @default(autoincrement())
+  id           String     @id @default(cuid())
   experienceId String
   experience   Experience @relation(fields: [experienceId], references: [id])
   date         DateTime
