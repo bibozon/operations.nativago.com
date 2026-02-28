@@ -11,6 +11,27 @@ async function main() {
   await prisma.category.deleteMany();
   await prisma.city.deleteMany();
 
+  // --- Ensure default admin user exists ---
+  const bcrypt = require('bcryptjs');
+  const adminEmail = 'admin@nativago.com';
+  const adminPassword = 'nativago123';
+  const adminRole = 'SUPERADMIN';
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
+
+  await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {},
+    create: {
+      email: adminEmail,
+      password: hashedPassword,
+      role: adminRole,
+      name: 'Admin',
+    },
+  });
+
+  // --- End admin user seed ---
+
   const categories = await Promise.all(
     [
       { name: 'Buceo', slug: 'buceo' },
