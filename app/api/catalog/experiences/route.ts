@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
       category: { select: { id: true, name: true, slug: true } },
       slots: true,
       status: true,
-      createdAt: true,
     },
     orderBy: { createdAt: 'desc' },
   });
