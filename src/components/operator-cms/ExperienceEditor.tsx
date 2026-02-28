@@ -1,6 +1,21 @@
 import React from "react";
 
-export function ExperienceEditor({ form, onChange, onSave, onCancel }) {
+export interface ExperienceEditorProps {
+  form: {
+    title: string;
+    description: string;
+    price: number | string;
+    duration: number | string;
+    city: string;
+    category: string;
+    image?: File | string;
+  };
+  onChange: (field: keyof ExperienceEditorProps['form'], value: string | number | File) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}
+
+export function ExperienceEditor({ form, onChange, onSave, onCancel }: ExperienceEditorProps) {
   return (
     <form className="flex flex-col gap-4 p-4">
       <input className="input" placeholder="Título" value={form.title} onChange={e => onChange("title", e.target.value)} />
