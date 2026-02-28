@@ -10,13 +10,10 @@ function isOperator(token: any) {
 export async function GET(request: NextRequest) {
   // List all experiences for authenticated operator
   const rawToken = getAuthTokenFromRequest(request);
-
   if (!rawToken) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
   const token = verifyAuthToken(rawToken);
-
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -82,8 +79,12 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const token = verifyAuthToken(getAuthTokenFromRequest(request));
-  if (!isOperator(token)) {
+  const rawToken = getAuthTokenFromRequest(request);
+  if (!rawToken) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const token = verifyAuthToken(rawToken);
+  if (!token || !isOperator(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
   const body = await request.json();
@@ -104,8 +105,12 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const token = verifyAuthToken(getAuthTokenFromRequest(request));
-  if (!isOperator(token)) {
+  const rawToken = getAuthTokenFromRequest(request);
+  if (!rawToken) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const token = verifyAuthToken(rawToken);
+  if (!token || !isOperator(token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
   const body = await request.json();
