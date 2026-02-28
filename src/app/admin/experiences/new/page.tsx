@@ -71,7 +71,7 @@ export default async function NewExperiencePage() {
         cityId,
         categoryId,
         operatorId: operator.id,
-        image: imageUrl,
+        images: imageUrl ? [imageUrl] : [],
       },
     });
 
