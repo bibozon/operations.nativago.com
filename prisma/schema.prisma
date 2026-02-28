@@ -81,26 +81,49 @@ model Operator {
 }
 
 model Experience {
-  id              Int               @id @default(autoincrement())
-  title           String
-  description     String
-  price           Float
+  id String @id @default(cuid())
+
+  title String
+  description String
+  price Float
   durationMinutes Int
-  image           String?
-  featured        Boolean           @default(false)
-  categoryId      Int
-  category        Category          @relation(fields: [categoryId], references: [id])
-  cityId          Int
-  city            City              @relation(fields: [cityId], references: [id])
-  operatorId      Int
-  operator        Operator          @relation(fields: [operatorId], references: [id])
-  slots           AvailabilitySlot[]
-  bookings        Booking[]
+  capacity Int
+  images String[]
+
+  coveragePolicy String?
+  coverageDescription String?
+
+  operatorId Int
+  cityId Int
+  categoryId Int
+
+  status ExperienceStatus @default(DRAFT)
+
+  operator Operator @relation(fields: [operatorId], references: [id])
+  city City @relation(fields: [cityId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+  slots Slot[]
+  availabilitySlots AvailabilitySlot[]
+  bookings Booking[]
+}
+
+model Slot {
+  id String @id @default(cuid())
+  experienceId String
+  date DateTime
+  time String
+  capacity Int
+  experience Experience @relation(fields: [experienceId], references: [id])
+  createdAt DateTime @default(now())
+}
+enum ExperienceStatus {
+  DRAFT
+  PUBLISHED
 }
 
 model AvailabilitySlot {
   id           Int        @id @default(autoincrement())
-  experienceId Int
+  experienceId String
   experience   Experience @relation(fields: [experienceId], references: [id])
   date         DateTime
   startTime    DateTime
@@ -117,7 +140,7 @@ enum BookingStatus {
 
 model Booking {
   id             Int           @id @default(autoincrement())
-  experienceId   Int
+  experienceId   String
   date           DateTime
   guests         Int
   customerName   String
