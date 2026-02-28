@@ -1,6 +1,16 @@
 import React from "react";
 
-export function SlotList({ slots, onAdd }) {
+export interface SlotListProps {
+  slots: Array<{
+    id: string | number;
+    date: string;
+    time: string;
+    capacity: number;
+  }>;
+  onAdd: () => void;
+}
+
+export function SlotList({ slots, onAdd }: SlotListProps) {
   return (
     <div>
       <div className="flex justify-between items-center mb-2">
