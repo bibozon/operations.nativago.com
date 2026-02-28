@@ -17,11 +17,11 @@ async function main() {
 
   const categories = await Promise.all(
     [
+      { name: 'Barco', slug: 'barco' },
       { name: 'Buceo', slug: 'buceo' },
-      { name: 'Aventura', slug: 'aventura' },
-      { name: 'Cultura', slug: 'cultura' },
-      { name: 'Paseos en barco', slug: 'paseos-barco' },
-      { name: 'Playas', slug: 'playa' },
+      { name: 'Snorkel', slug: 'snorkel' },
+      { name: 'Surf', slug: 'surf' },
+      { name: 'Kayak', slug: 'kayak' },
     ].map((data) =>
       prisma.category.upsert({
         where: { slug: data.slug },
@@ -33,12 +33,9 @@ async function main() {
 
   const cities = await Promise.all(
     [
-      { name: 'Cartagena', country: 'Colombia' },
-      { name: 'Santa Marta', country: 'Colombia' },
-      { name: 'San Andres', country: 'Colombia' },
-      { name: 'Cabo Frio', country: 'Brazil' },
-      { name: 'Arraial do Cabo', country: 'Brazil' },
       { name: 'Armação dos Búzios', country: 'Brazil' },
+      { name: 'Arraial do Cabo', country: 'Brazil' },
+      { name: 'Cabo Frio', country: 'Brazil' },
     ].map((data) => prisma.city.create({ data })),
   );
 
@@ -77,17 +74,24 @@ async function main() {
   const operators = await Promise.all(
     [
       {
-        name: 'Ocean Divers',
-        email: 'contact@oceandivers.test',
-        phone: '+57 3000000001',
-        cityName: 'San Andres',
+        name: 'Ocean Búzios',
+        email: 'buzios@ocean.com',
+        phone: '+55 22 99999-1111',
+        cityName: 'Armação dos Búzios',
         userEmail: 'freelance@nativago.com',
       },
       {
-        name: 'Caribe Tours',
-        email: 'contact@caribetours.test',
-        phone: '+57 3000000002',
-        cityName: 'Cartagena',
+        name: 'Arraial Boat Tours',
+        email: 'arraial@boat.com',
+        phone: '+55 22 99999-2222',
+        cityName: 'Arraial do Cabo',
+        userEmail: 'agency@nativago.com',
+      },
+      {
+        name: 'Cabo Surf School',
+        email: 'cabo@surf.com',
+        phone: '+55 22 99999-3333',
+        cityName: 'Cabo Frio',
         userEmail: 'agency@nativago.com',
       },
     ].map((o) => {
@@ -113,64 +117,59 @@ async function main() {
   const experiences = await Promise.all(
     [
       {
-        title: 'Buceo en arrecife',
-        description:
-          'Inmersión guiada en arrecifes de coral con equipo incluido en aguas de Cartagena.',
-        price: 350000,
+        title: 'Passeio de Barco Búzios',
+        description: 'Tour de barco por las playas de Búzios',
+        price: 200,
         durationMinutes: 180,
-        image: '/images/buceo-arrecife.jpg',
+        image: '/experiences/buzios-boat.jpg',
+        featured: true,
+        categorySlug: 'barco',
+        cityName: 'Armação dos Búzios',
+        operatorName: 'Ocean Búzios',
+      },
+      {
+        title: 'Mergulho Arraial',
+        description: 'Buceo guiado en Arraial do Cabo',
+        price: 350,
+        durationMinutes: 120,
+        image: '/experiences/arraial-dive.jpg',
         featured: true,
         categorySlug: 'buceo',
-        cityName: 'Cartagena',
-        operatorName: 'Caribe Tours',
+        cityName: 'Arraial do Cabo',
+        operatorName: 'Arraial Boat Tours',
       },
       {
-        title: 'Tour islas del Rosario',
-        description:
-          'Excursión en lancha a las islas del Rosario desde Cartagena con almuerzo y tiempo libre para snorkel.',
-        price: 280000,
-        durationMinutes: 420,
-        image: '/images/islas-rosario.jpg',
+        title: 'Snorkel Arraial',
+        description: 'Snorkel en aguas cristalinas de Arraial do Cabo',
+        price: 120,
+        durationMinutes: 90,
+        image: '/experiences/arraial-snorkel.jpg',
         featured: true,
-        categorySlug: 'aventura',
-        cityName: 'Cartagena',
-        operatorName: 'Caribe Tours',
+        categorySlug: 'snorkel',
+        cityName: 'Arraial do Cabo',
+        operatorName: 'Arraial Boat Tours',
       },
       {
-        title: 'Caminata Tayrona',
-        description:
-          'Senderismo guiado en el Parque Tayrona saliendo desde Santa Marta, con paradas en miradores y playas.',
-        price: 220000,
-        durationMinutes: 360,
-        image: '/images/caminata-tayrona.jpg',
+        title: 'Surf Cabo Frio',
+        description: 'Clase de surf en Cabo Frio',
+        price: 100,
+        durationMinutes: 60,
+        image: '/experiences/cabo-surf.jpg',
         featured: true,
-        categorySlug: 'aventura',
-        cityName: 'Santa Marta',
-        operatorName: 'Caribe Tours',
+        categorySlug: 'surf',
+        cityName: 'Cabo Frio',
+        operatorName: 'Cabo Surf School',
       },
       {
-        title: 'Snorkel San Andres',
-        description:
-          'Salida de snorkel en San Andres para explorar el mar de siete colores con guía certificado.',
-        price: 180000,
-        durationMinutes: 150,
-        image: '/images/snorkel-san-andres.jpg',
+        title: 'Kayak Cabo Frio',
+        description: 'Aventura en kayak en Cabo Frio',
+        price: 80,
+        durationMinutes: 90,
+        image: '/experiences/cabo-kayak.jpg',
         featured: true,
-        categorySlug: 'buceo',
-        cityName: 'San Andres',
-        operatorName: 'Ocean Divers',
-      },
-      {
-        title: 'Ruta cultural Cartagena',
-        description:
-          'Recorrido cultural a pie por el centro histórico de Cartagena, con guía local y degustaciones.',
-        price: 150000,
-        durationMinutes: 180,
-        image: '/images/ruta-cultural-cartagena.jpg',
-        featured: true,
-        categorySlug: 'cultura',
-        cityName: 'Cartagena',
-        operatorName: 'Caribe Tours',
+        categorySlug: 'kayak',
+        cityName: 'Cabo Frio',
+        operatorName: 'Cabo Surf School',
       },
     ].map((e) => {
       const category = findCategory(e.categorySlug);
@@ -333,32 +332,30 @@ async function main() {
 
   const now = new Date();
 
-  const slotsPromises = experiences.flatMap((experience) => {
+  // Capacidades mezcladas para slots
+  const slotCapacities = [1, 4, 8, 12];
+  const slotsPromises = experiences.flatMap((experience, idx) => {
     const slotsForExperience = [] as Promise<unknown>[];
-
     for (let i = 0; i < 7; i++) {
       const date = new Date(now);
       date.setDate(now.getDate() + i);
       date.setHours(0, 0, 0, 0);
-
       const startTime = new Date(date);
-      startTime.setHours(9, 0, 0, 0); // 09:00 hora local
-
+      startTime.setHours(9 + i % 3 * 2, 0, 0, 0); // 09:00, 11:00, 13:00
+      const capacity = slotCapacities[(idx + i) % slotCapacities.length];
       slotsForExperience.push(
         prisma.availabilitySlot.create({
           data: {
             experienceId: experience.id,
             date,
             startTime,
-            capacity: 10,
+            capacity,
           },
         }),
       );
     }
-
     return slotsForExperience;
   });
-
   await Promise.all(slotsPromises);
 
   console.log('Seed completed successfully (TS)');

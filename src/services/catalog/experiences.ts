@@ -1,6 +1,6 @@
 import prisma from '@/lib/db';
 import type { Prisma, Experience, Category, City, Operator } from '@prisma/client';
-import { mapExperienceToCard, mapExperiencesToCards, type ExperienceCardDTO } from './catalog.mapper';
+import { mapExperienceToCard, mapExperiencesToCards, type ExperienceCardDTO } from './experience.mapper';
 
 export type ExperienceFilters = {
   citySlug?: string;
@@ -10,6 +10,14 @@ export type ExperienceFilters = {
   limit?: number;
   operatorId?: number;
 };
+
+export async function deleteOperatorIfUnused(operatorId: number) {
+  const experienceCount = await prisma.experience.count({ where: { operatorId } });
+  if (experienceCount > 0) {
+    throw new Error('Cannot delete operator: it is used by experiences');
+  }
+  await prisma.operator.delete({ where: { id: operatorId } });
+}
 
 export async function listExperiences(filters: ExperienceFilters = {}): Promise<ExperienceCardDTO[]> {
   try {

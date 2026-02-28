@@ -29,6 +29,13 @@ The public marketplace (nativago.com) consumes the public catalog API exposed by
 
 ## Environment Configuration
 
+## Recent Updates
+
+**2026-02-27:**
+- Updated minimal Next.js configuration in package.json for Vercel compatibility.
+- Ensured App Router structure and serverless Prisma client pattern.
+- Project ready for Vercel deployment and automatic Next.js detection.
+
 Set the database connection string (for Neon) in an environment file, for example .env.local:
 
 ```bash
@@ -82,6 +89,25 @@ Responses are shaped for marketplace cards, including category, city, and operat
 - POST /api/catalog/slot
 
 Add authentication/authorization (e.g. middleware) before exposing these endpoints publicly.
+
+## Experience Types: Group and Exclusive (via Slot Capacity)
+
+NativaGo CMS supports both group and exclusive/private experiences using only the `capacity` field in the `AvailabilitySlot` model:
+
+- **Group experience:** `capacity > 1` (multiple participants can book the same slot)
+- **Exclusive/private experience:** `capacity = 1` (only one booking allowed for that slot)
+
+No additional type field is needed. The slot's `capacity` determines if the session is shared or exclusive.
+
+**Examples:**
+
+- Boat tour: `capacity 12` (group)
+- Diving: `capacity 4` (group)
+- Private boat: `capacity 1` (exclusive)
+
+When a user books N participants, the slot's remaining capacity is reduced accordingly. Once capacity reaches 0, the slot is fully booked.
+
+> This logic is enforced in the backend and reflected in the API responses for `/api/catalog/slots?experience=`.
 
 ## Local Development
 

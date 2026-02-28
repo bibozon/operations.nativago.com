@@ -43,6 +43,7 @@ model Category {
   name      String
   slug      String       @unique
   experiences Experience[]
+    // Prevent deleting if used by Experience (enforce in backend)
 }
 
 model City {
@@ -51,6 +52,7 @@ model City {
   country     String
   operators   Operator[]
   experiences Experience[]
+    // Prevent deleting if used by Experience (enforce in backend)
 }
 
 model Operator {
@@ -75,6 +77,7 @@ model Operator {
   userId      Int?         @unique
   user        User?        @relation(fields: [userId], references: [id])
   experiences Experience[]
+    // Prevent deleting if used by Experience (enforce in backend)
 }
 
 model Experience {
@@ -101,7 +104,9 @@ model AvailabilitySlot {
   experience   Experience @relation(fields: [experienceId], references: [id])
   date         DateTime
   startTime    DateTime
-  capacity     Int
+  capacity     Int        @default(1)
+  @@unique([experienceId, date, startTime])
+  // capacity: required, integer, > 0, max 50 (enforced in backend)
 }
 
 enum BookingStatus {

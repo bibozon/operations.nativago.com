@@ -9,13 +9,17 @@ export type ExperienceCardDTO = {
   image: string | null;
   featured: boolean;
   city: {
+    id: number;
     name: string;
+    slug: string;
   };
   category: {
+    id: number;
     name: string;
     slug: string;
   };
   operator: {
+    id: number;
     name: string;
   };
 };
@@ -36,13 +40,17 @@ export function mapExperienceToCard(
     image: experience.image ?? null,
     featured: experience.featured,
     city: {
+      id: experience.city.id,
       name: experience.city.name,
+      slug: experience.city.name.toLowerCase().replace(/ /g, '-'),
     },
     category: {
+      id: experience.category.id,
       name: experience.category.name,
       slug: experience.category.slug,
     },
     operator: {
+      id: experience.operator.id,
       name: experience.operator.name,
     },
   };

@@ -2,8 +2,13 @@ import prisma from '@/lib/db';
 
 export async function listSlotsByExperience(experienceId: number) {
   try {
+    const now = new Date();
     const slots = await prisma.availabilitySlot.findMany({
-      where: { experienceId },
+      where: {
+        experienceId,
+        date: { gt: now },
+        capacity: { gt: 0, lte: 50 },
+      },
       orderBy: [
         { date: 'asc' },
         { startTime: 'asc' },
