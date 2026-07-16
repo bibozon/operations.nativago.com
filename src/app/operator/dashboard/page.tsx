@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import prisma from '@/lib/db';
 import { requireRole } from '@/lib/requireRole';
@@ -33,6 +34,17 @@ const STATUS_MESSAGES: Record<string, { title: string; body: string; color: stri
     color: 'border-red-200 bg-red-50 text-red-800',
   },
 };
+
+async function submitForReview(formData: FormData) {
+  'use server';
+  const id = (formData.get('operatorId') as string) ?? '';
+  if (!id) return;
+  await prisma.operator.update({
+    where: { id, verificationStatus: 'DRAFT' },
+    data: { verificationStatus: 'PENDING' },
+  });
+  revalidatePath('/operator/dashboard');
+}
 
 export default async function OperatorDashboardPage() {
   const auth = await requireRole(['OPERATOR_AGENCY', 'OPERATOR_FREELANCE']);
@@ -137,6 +149,20 @@ export default async function OperatorDashboardPage() {
               <p className="font-medium text-amber-800">El equipo de NativaGo indicó:</p>
               <p className="mt-0.5 text-amber-700">{operator.reviewNotes}</p>
             </div>
+          )}
+          {status === 'DRAFT' && (
+            <form action={submitForReview} className="mt-4">
+              <input type="hidden" name="operatorId" value={operator.id} />
+              <button
+                type="submit"
+                className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              >
+                Enviar para revisión →
+              </button>
+              <p className="mt-1.5 text-xs opacity-70">
+                Asegúrate de haber subido todos tus documentos antes de enviar.
+              </p>
+            </form>
           )}
         </div>
 

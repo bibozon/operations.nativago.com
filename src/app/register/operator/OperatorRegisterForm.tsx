@@ -1,5 +1,6 @@
 'use client';
 
+import { useFormState } from 'react-dom';
 import { useMemo, useState } from 'react';
 import {
   JURIDICA_PRESTADOR_CATEGORIES,
@@ -9,6 +10,7 @@ import {
   operatorTypeFromPrestadorTipo,
   type PrestadorTipo,
 } from '@/lib/operatorRegistration';
+import type { RegisterState } from './actions';
 
 type CityOption = { id: string; name: string; countryId: string | null; countryCode: string | null };
 type DocumentTypeOption = {
@@ -32,15 +34,17 @@ export function OperatorRegisterForm({
 }: {
   cities: CityOption[];
   documentTypes: DocumentTypeOption[];
-  registerOperator: (formData: FormData) => void;
+  registerOperator: (prevState: RegisterState, formData: FormData) => Promise<RegisterState>;
 }) {
+  const [state, formAction] = useFormState(registerOperator, null);
+
   const [prestadorTipo, setPrestadorTipo] = useState<PrestadorTipo>('NATURAL');
   const [cityId, setCityId]               = useState('');
   const [showPassword, setShowPassword]   = useState(false);
 
-  const selectedCity   = useMemo(() => cities.find((c) => c.id === cityId) ?? null, [cities, cityId]);
-  const operatorType   = operatorTypeFromPrestadorTipo(prestadorTipo);
-  const countryCode    = selectedCity?.countryCode?.toUpperCase() ?? null;
+  const selectedCity = useMemo(() => cities.find((c) => c.id === cityId) ?? null, [cities, cityId]);
+  const operatorType = operatorTypeFromPrestadorTipo(prestadorTipo);
+  const countryCode  = selectedCity?.countryCode?.toUpperCase() ?? null;
 
   const relevantDocumentTypes = useMemo(() => {
     if (!selectedCity?.countryId) return [];
@@ -54,10 +58,17 @@ export function OperatorRegisterForm({
   const paymentLabel  = countryCode ? (PAYMENT_ACCOUNT_LABEL[countryCode] ?? PAYMENT_ACCOUNT_LABEL.CO) : PAYMENT_ACCOUNT_LABEL.CO;
 
   return (
-    <form action={registerOperator} className="mt-6 space-y-5">
+    <form action={formAction} className="mt-6 space-y-5">
       <input type="hidden" name="prestadorTipo" value={prestadorTipo} />
 
-      {/* ── Tipo de prestador ─────────────────────────── */}
+      {/* ── Error global ────────────────────────────── */}
+      {state?.error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+          {state.error}
+        </div>
+      )}
+
+      {/* ── Tipo de prestador ─────────────────────────────── */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-slate-700">¿Cómo vas a ofrecer tus experiencias?</label>
         <div className="grid grid-cols-2 gap-3">
@@ -143,7 +154,7 @@ export function OperatorRegisterForm({
             type={showPassword ? 'text' : 'password'}
             name="password"
             minLength={8}
-            className="w-full rounded border border-slate-200 px-3 py-2 text-sm pr-20"
+            className="w-full rounded border border-slate-200 px-3 py-2 pr-20 text-sm"
             placeholder="Mínimo 8 caracteres"
             required
           />
@@ -155,9 +166,7 @@ export function OperatorRegisterForm({
             {showPassword ? 'Ocultar' : 'Mostrar'}
           </button>
         </div>
-        <p className="text-xs text-slate-400">
-          Con esta contraseña accederás a tu panel de operador.
-        </p>
+        <p className="text-xs text-slate-400">Con esta contraseña accederás a tu panel de operador.</p>
       </div>
 
       <div className="space-y-1">
@@ -209,13 +218,15 @@ export function OperatorRegisterForm({
 
           {/* Cuenta de pago */}
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700">
-              {paymentLabel}
-            </label>
+            <label className="block text-sm font-medium text-slate-700">{paymentLabel}</label>
             <input
               name="paymentAccount"
               className="w-full rounded border border-slate-200 px-3 py-2 text-sm"
-              placeholder={countryCode === 'BR' ? 'celular, CPF o e-mail registrado en PIX' : '+57 300 000 0000 o número de cuenta'}
+              placeholder={
+                countryCode === 'BR'
+                  ? 'celular, CPF o e-mail registrado en PIX'
+                  : '+57 300 000 0000 o número de cuenta'
+              }
             />
             <p className="text-xs text-slate-400">
               Aquí recibirás los pagos de NativaGo. Puedes completarlo después si aún no lo tienes.
