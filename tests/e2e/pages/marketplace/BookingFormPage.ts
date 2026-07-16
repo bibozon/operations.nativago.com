@@ -11,8 +11,11 @@ export class ExperienceDetailPage {
   constructor(private readonly page: Page) {}
 
   async expectPriceVisible() {
-    // El precio del anticipo (15%) aparece en el sticky card de escritorio o en el CTA móvil
-    await expect(this.page.locator('text=/Anticipo/')).toBeVisible({ timeout: 8_000 });
+    // El precio del anticipo (15%) aparece en el sticky card de escritorio o en el CTA móvil;
+    // ambos existen en el DOM a la vez, solo uno es visible según el viewport.
+    await expect(
+      this.page.locator('text=/Anticipo/').filter({ visible: true })
+    ).toBeVisible({ timeout: 8_000 });
   }
 
   async addToCart() {

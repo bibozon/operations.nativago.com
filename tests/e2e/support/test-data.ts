@@ -22,7 +22,7 @@ export function makeOperadorCO() {
     categoria:      'AGENCIA_VIAJES',
     legalRep:       'Juan García',
     cityLabel:      'Cartagena',
-    identityDoc:    '900123456-1',
+    identityDoc:    '9001234561',
     paymentAccount: '+57 300 111 2222',
     experience: {
       title:           'Avistamiento de flamencos en Galeras',
