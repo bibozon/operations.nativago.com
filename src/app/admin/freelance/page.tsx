@@ -1,27 +1,9 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import prisma from '@/lib/db';
 import { verifyAuthToken, type AuthTokenPayload } from '@/lib/auth';
-
-async function getFreelanceDashboardData(operatorId: number) {
-  const [experiences, experiencesCount] = await Promise.all([
-    prisma.experience.findMany({
-      where: { operatorId },
-      include: {
-        city: { select: { name: true } },
-      },
-      orderBy: { id: 'desc' },
-      take: 20,
-    }),
-    prisma.experience.count({ where: { operatorId } }),
-  ]);
-
-  return {
-    experiences,
-    experiencesCount,
-    bookingsThisMonth: 0,
-  };
-}
+import { getOperatorDashboardData } from '@/services/operator/dashboard';
+import { OperatorExperiencesTable } from '@/components/admin/OperatorExperiencesTable';
+import { TrustLevelCard } from '@/components/admin/TrustLevelCard';
 
 export default async function FreelanceDashboardPage() {
   const cookieStore = await cookies();
@@ -44,8 +26,8 @@ export default async function FreelanceDashboardPage() {
     redirect('/admin');
   }
 
-  const { experiences, experiencesCount, bookingsThisMonth } =
-    await getFreelanceDashboardData(auth.operatorId);
+  const { experiences, experiencesCount, bookingsThisMonth, currencyCode, trustLevel } =
+    await getOperatorDashboardData(auth.operatorId);
 
   const roleLabel = 'OPERADOR FREELANCE';
 
@@ -93,7 +75,7 @@ export default async function FreelanceDashboardPage() {
           </div>
 
           {/* Stats cards */}
-          <section className="mb-8 grid gap-4 md:grid-cols-2">
+          <section className="mb-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                 Experiencias
@@ -113,6 +95,8 @@ export default async function FreelanceDashboardPage() {
               </p>
               <p className="mt-1 text-xs text-slate-500">Integración de reservas pendiente</p>
             </div>
+
+            <TrustLevelCard trustLevel={trustLevel} />
           </section>
 
           {/* Mis experiencias table */}
@@ -122,64 +106,7 @@ export default async function FreelanceDashboardPage() {
                 Mis experiencias
               </h2>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-100 text-sm">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Título
-                    </th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Ciudad
-                    </th>
-                    <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Precio
-                    </th>
-                    <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Estado
-                    </th>
-                    <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {experiences.map((exp) => (
-                    <tr key={exp.id} className="hover:bg-slate-50/60">
-                      <td className="px-3 py-2 text-sm font-medium text-slate-900">
-                        {exp.title}
-                      </td>
-                      <td className="px-3 py-2 text-sm text-slate-700">
-                        {exp.city?.name ?? '-'}
-                      </td>
-                      <td className="px-3 py-2 text-right text-sm text-slate-900">
-                        {`$${Number(exp.price).toLocaleString('es-CO')}`}
-                      </td>
-                      <td className="px-3 py-2 text-center text-xs">
-                        <span className="inline-flex rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700">
-                          Activa
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 text-right text-xs">
-                        <button className="inline-flex items-center rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50">
-                          Editar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {experiences.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-3 py-6 text-center text-sm text-slate-500"
-                      >
-                        Aún no tienes experiencias publicadas.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <OperatorExperiencesTable experiences={experiences} currencyCode={currencyCode} />
           </section>
         </main>
       </div>

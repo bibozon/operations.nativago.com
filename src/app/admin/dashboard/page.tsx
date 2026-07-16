@@ -1,5 +1,6 @@
 import prisma from '@/lib/db';
 import { requireSuperadmin } from '@/lib/requireRole';
+import { formatPrice } from '@/domain/entities/Money';
 
 async function getDashboardData() {
   const [experiencesCount, operatorsCount, citiesCount, recentExperiences] =
@@ -11,6 +12,7 @@ async function getDashboardData() {
         include: {
           operator: { select: { name: true } },
           city: { select: { name: true } },
+          country: { select: { defaultCurrency: { select: { code: true } } } },
         },
         orderBy: { id: 'desc' },
         take: 5,
@@ -205,7 +207,7 @@ export default async function SuperadminDashboardPage() {
                         {exp.city?.name ?? '-'}
                       </td>
                       <td className="px-3 py-2 text-right text-sm text-slate-900">
-                        {`$${Number(exp.price).toLocaleString('es-CO')}`}
+                        {formatPrice(Number(exp.price), exp.country?.defaultCurrency.code ?? 'COP')}
                       </td>
                       <td className="px-3 py-2 text-center text-xs">
                         <span className="inline-flex rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700">

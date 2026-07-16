@@ -4,10 +4,9 @@ import { listSlotsByExperience } from '@/services/catalog/slots';
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
-  const experienceParam = searchParams.get('experience');
-  const experienceId = experienceParam ? Number(experienceParam) : NaN;
+  const experienceId = searchParams.get('experience');
 
-  if (!experienceParam || Number.isNaN(experienceId)) {
+  if (!experienceId) {
     return NextResponse.json(
       { error: 'Missing or invalid experience query parameter' },
       { status: 400 }

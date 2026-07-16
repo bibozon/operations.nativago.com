@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import type { Role } from '@prisma/client';
+import type { Role, Operator } from '@prisma/client';
 import prisma from '@/lib/db';
 import { verifyAuthToken, type AuthTokenPayload } from '@/lib/auth';
 
@@ -57,4 +57,23 @@ export async function requireOperator(): Promise<AuthTokenPayload> {
    }
 
   return auth;
+}
+
+// Combina requireOperator() con el registro completo del Operator — en
+// particular countryId, que es la frontera de aislamiento multi-país: un
+// operador solo puede crear/editar ciudades, categorías y experiencias
+// dentro de su propio country. Centraliza el lookup que antes se repetía
+// (ad hoc) en cada página.
+export async function requireOperatorContext(): Promise<{ auth: AuthTokenPayload; operator: Operator }> {
+  const auth = await requireOperator();
+
+  const operator = await prisma.operator.findFirst({ where: { userId: auth.userId } });
+  if (!operator) {
+    redirect('/register/operator');
+  }
+  if (!operator.countryId) {
+    throw new Error(`Operator ${operator.id} has no countryId — run prisma/backfill-country.js`);
+  }
+
+  return { auth, operator };
 }

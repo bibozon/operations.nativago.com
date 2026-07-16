@@ -2,18 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getExperienceById } from '@/services/catalog/experiences';
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: idParam } = await params;
+  const { id } = await params;
+  const countryCode = request.nextUrl.searchParams.get('country') ?? undefined;
 
-  const id = Number(idParam);
-
-  if (Number.isNaN(id)) {
-    return NextResponse.json({ error: 'Invalid experience id' }, { status: 400 });
-  }
-
-  const experience = await getExperienceById(id);
+  const experience = await getExperienceById(id, countryCode);
 
   if (!experience) {
     return NextResponse.json({ error: 'Experience not found' }, { status: 404 });

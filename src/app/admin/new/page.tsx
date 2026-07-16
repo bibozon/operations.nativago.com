@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-type Option = { id: number; name: string };
+type Option = { id: string; name: string };
 
 export default function NewExperiencePage() {
   const router = useRouter();
@@ -14,11 +14,9 @@ export default function NewExperiencePage() {
   const [durationMinutes, setDurationMinutes] = useState('');
   const [capacity, setCapacity] = useState('');
   const [image, setImage] = useState('');
-  const [galleryFiles, setGalleryFiles] = useState<FileList | null>(null);
   const [categoryId, setCategoryId] = useState('');
   const [cityId, setCityId] = useState('');
   const [operatorId, setOperatorId] = useState('');
-  const [featured, setFeatured] = useState(true);
 
   const [categories, setCategories] = useState<Option[]>([]);
   const [cities, setCities] = useState<Option[]>([]);
@@ -77,10 +75,9 @@ export default function NewExperiencePage() {
           durationMinutes: Number(durationMinutes),
           image: image || undefined,
           capacity: capacity ? Number(capacity) : undefined,
-          featured,
-          categoryId: Number(categoryId),
-          cityId: Number(cityId),
-          operatorId: Number(operatorId),
+          categoryId,
+          cityId,
+          operatorId,
         }),
       });
 
@@ -249,22 +246,6 @@ export default function NewExperiencePage() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-medium text-slate-600">
-                    Galería de imágenes
-                  </label>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    className="mt-1 w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-emerald-700 hover:file:bg-emerald-100"
-                    onChange={(e) => setGalleryFiles(e.target.files)}
-                  />
-                  <p className="mt-1 text-xs text-slate-400">
-                    Las imágenes se utilizarán como galería visual de la experiencia.
-                  </p>
-                </div>
-
                 <div>
                   <label className="block text-xs font-medium text-slate-600">Operador</label>
                   <select
@@ -281,18 +262,6 @@ export default function NewExperiencePage() {
                   </select>
                 </div>
 
-                <div className="flex items-center gap-2 md:col-span-2">
-                  <input
-                    id="featured"
-                    type="checkbox"
-                    checked={featured}
-                    onChange={(e) => setFeatured(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <label htmlFor="featured" className="text-sm text-slate-700">
-                    Destacado en el home del marketplace
-                  </label>
-                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">

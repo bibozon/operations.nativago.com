@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
     price,
     durationMinutes,
     image,
-    featured,
     categoryId,
     cityId,
     operatorId,
@@ -48,19 +47,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const experience = await createExperience({
-    title,
-    description,
-    price: Number(price),
-    durationMinutes: Number(durationMinutes),
-    image,
-    featured: Boolean(featured),
-    categoryId: (categoryId as string) ?? '',
-    cityId: (cityId as string) ?? '',
-    operatorId: (finalOperatorId as string) ?? '',
-  });
+  try {
+    const experience = await createExperience({
+      title,
+      description,
+      price: Number(price),
+      durationMinutes: Number(durationMinutes),
+      images: image ? [image as string] : [],
+      categoryId: (categoryId as string) ?? '',
+      cityId: (cityId as string) ?? '',
+      operatorId: (finalOperatorId as string) ?? '',
+    });
 
-  return NextResponse.json(experience, { status: 201 });
+    return NextResponse.json(experience, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to create experience' },
+      { status: 400 },
+    );
+  }
 }
 
 export async function PUT(request: NextRequest) {
@@ -100,7 +105,13 @@ export async function PUT(request: NextRequest) {
     }
   }
 
-  const updated = await updateExperience(experienceId, data);
-
-  return NextResponse.json(updated);
+  try {
+    const updated = await updateExperience(experienceId, data);
+    return NextResponse.json(updated);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to update experience' },
+      { status: 400 },
+    );
+  }
 }

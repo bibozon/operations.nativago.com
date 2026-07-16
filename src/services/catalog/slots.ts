@@ -1,27 +1,10 @@
-import prisma from '@/lib/db';
+import { PrismaSlotRepository } from '@/infrastructure/persistence/prisma/PrismaSlotRepository';
 
-export async function listSlotsByExperience(experienceId: number) {
+const slotRepository = new PrismaSlotRepository();
+
+export async function listSlotsByExperience(experienceId: string) {
   try {
-    const now = new Date();
-    const slots = await prisma.availabilitySlot.findMany({
-      where: {
-        experienceId,
-        date: { gt: now },
-        capacity: { gt: 0, lte: 50 },
-      },
-      orderBy: [
-        { date: 'asc' },
-        { startTime: 'asc' },
-      ],
-    });
-
-    return slots.map((s) => ({
-      id: s.id,
-      experienceId: s.experienceId,
-      date: s.date.toISOString().split('T')[0],
-      startTime: s.startTime.toISOString(),
-      capacity: s.capacity,
-    }));
+    return await slotRepository.findAvailableByExperience(experienceId);
   } catch (error) {
     console.error(`Error fetching slots for experience ${experienceId}:`, error);
     throw new Error('Failed to fetch slots');

@@ -1,19 +1,27 @@
 import prisma from '@/lib/db';
 import { requireAuth } from '@/lib/requireRole';
 import { redirect } from 'next/navigation';
+import { formatPrice } from '@/domain/entities/Money';
 
 export default async function ExperiencesPage() {
   const auth = await requireAuth();
 
+  const include = {
+    operator: true,
+    city: true,
+    category: true,
+    country: { select: { defaultCurrency: { select: { code: true } } } },
+  } as const;
+
   const experiences =
     auth.role === 'SUPERADMIN'
       ? await prisma.experience.findMany({
-          include: { operator: true, city: true, category: true },
+          include,
           orderBy: { id: 'desc' },
         })
       : await prisma.experience.findMany({
           where: { operator: { userId: auth.userId } },
-          include: { operator: true, city: true, category: true },
+          include,
           orderBy: { id: 'desc' },
         });
 
@@ -83,7 +91,7 @@ export default async function ExperiencesPage() {
               <td className="border px-2 py-1">{exp.title}</td>
               <td className="border px-2 py-1">{exp.city?.name}</td>
               <td className="border px-2 py-1 text-right">
-                {`$${Number(exp.price).toLocaleString('es-CO')}`}
+                {formatPrice(Number(exp.price), exp.country?.defaultCurrency.code ?? 'COP')}
               </td>
               <td className="border px-2 py-1">{exp.operator?.name}</td>
               <td className="border px-2 py-1 text-center">

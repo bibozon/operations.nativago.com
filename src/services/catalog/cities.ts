@@ -1,7 +1,10 @@
-
 import prisma from '@/lib/db';
+import { PrismaCityRepository } from '@/infrastructure/persistence/prisma/PrismaCityRepository';
+import { resolveCountryId } from '@/infrastructure/persistence/prisma/countryLookup';
 
-export async function deleteCityIfUnused(cityId: number) {
+const cityRepository = new PrismaCityRepository();
+
+export async function deleteCityIfUnused(cityId: string) {
   const experienceCount = await prisma.experience.count({ where: { cityId } });
   if (experienceCount > 0) {
     throw new Error('Cannot delete city: it is used by experiences');
@@ -9,30 +12,18 @@ export async function deleteCityIfUnused(cityId: number) {
   await prisma.city.delete({ where: { id: cityId } });
 }
 
-export async function listCities() {
+export async function listCities(countryCode?: string) {
   try {
-    const cities = await prisma.city.findMany({
-      where: {
-        experiences: {
-          some: {},
-        },
-      },
-      orderBy: { name: 'asc' },
-      include: {
-        _count: {
-          select: { experiences: true },
-        },
-      },
-    });
-
-    return cities.map((c) => ({
-      id: c.id,
-      name: c.name,
-      slug: c.name.toLowerCase().replace(/ /g, '-'),
-      experienceCount: c._count.experiences,
-    }));
+    const countryId = await resolveCountryId(countryCode);
+    return await cityRepository.findManyWithExperiences(countryId);
   } catch (error) {
     console.error('Error fetching cities:', error);
     throw new Error('Failed to fetch cities');
   }
+}
+
+// Todas las ciudades de un país (con o sin experiencias) — usado en los
+// selects de los formularios de operador, siempre acotado a countryId.
+export async function listCitiesByCountry(countryId: string) {
+  return cityRepository.findManyByCountry(countryId);
 }

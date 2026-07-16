@@ -4,18 +4,16 @@ import { generateOperatorContract } from '@/services/operator/contract';
 export async function POST(request: Request) {
   try {
     const url = new URL(request.url);
-    const idParam = url.searchParams.get('id');
+    let operatorId = url.searchParams.get('id');
 
-    let operatorId: number | null = idParam ? Number(idParam) : null;
-
-    if (!operatorId || !Number.isFinite(operatorId)) {
-      const body = await request.json().catch(() => null as any);
-      if (body && typeof body.id === 'number') {
+    if (!operatorId) {
+      const body = await request.json().catch(() => null);
+      if (body && typeof body.id === 'string') {
         operatorId = body.id;
       }
     }
 
-    if (!operatorId || !Number.isFinite(operatorId)) {
+    if (!operatorId) {
       return NextResponse.json({ error: 'Invalid operator id' }, { status: 400 });
     }
 

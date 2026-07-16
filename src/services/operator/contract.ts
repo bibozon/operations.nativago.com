@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import PDFDocument from 'pdfkit';
 
-export async function generateOperatorContract(operatorId: number) {
+export async function generateOperatorContract(operatorId: string) {
   const operator = await prisma.operator.findUnique({
     where: { id: operatorId },
     select: {

@@ -1,17 +1,23 @@
 import prisma from '@/lib/db';
-import type { Prisma, Experience, Category, City, Operator } from '@prisma/client';
-import { mapExperienceToCard, mapExperiencesToCards, type ExperienceCardDTO } from './experience.mapper';
+import type { ExperienceCardDTO } from '@/domain/entities/Experience';
+import { PrismaExperienceRepository } from '@/infrastructure/persistence/prisma/PrismaExperienceRepository';
+import { resolveCountryId } from '@/infrastructure/persistence/prisma/countryLookup';
+
+const experienceRepository = new PrismaExperienceRepository();
 
 export type ExperienceFilters = {
   citySlug?: string;
   categorySlug?: string;
-  featured?: boolean;
   page?: number;
   limit?: number;
-  operatorId?: number;
+  operatorId?: string;
+  // Sin countryCode = sin filtrar por país (comportamiento actual, catálogo
+  // público mixto). Se empieza a enviar de verdad cuando el ruteo por
+  // subdominio quede activo (Fase 2 del plan de arquitectura).
+  countryCode?: string;
 };
 
-export async function deleteOperatorIfUnused(operatorId: number) {
+export async function deleteOperatorIfUnused(operatorId: string) {
   const experienceCount = await prisma.experience.count({ where: { operatorId } });
   if (experienceCount > 0) {
     throw new Error('Cannot delete operator: it is used by experiences');
@@ -21,80 +27,22 @@ export async function deleteOperatorIfUnused(operatorId: number) {
 
 export async function listExperiences(filters: ExperienceFilters = {}): Promise<ExperienceCardDTO[]> {
   try {
-    const { citySlug, categorySlug, featured, page = 1, limit = 20, operatorId } = filters;
-
-    const where: Prisma.ExperienceWhereInput = {};
-
-    if (citySlug) {
-      const normalizedCityName = citySlug.replace(/-/g, ' ');
-      where.city = {
-        name: {
-          equals: normalizedCityName,
-          mode: 'insensitive',
-        },
-      };
-    }
-
-    if (categorySlug) {
-      where.category = { slug: categorySlug };
-    }
-
-    if (typeof featured === 'boolean') {
-      where.featured = featured;
-    }
-
-    if (typeof operatorId === 'number') {
-      where.operatorId = operatorId;
-    }
-
-    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    const safeLimit = Number.isFinite(limit) && limit > 0 && limit <= 100 ? limit : 20;
-
-    const skip = (safePage - 1) * safeLimit;
-
-    const experiences = await prisma.experience.findMany({
-      where,
-      select: {
-        id: true,
-        title: true,
-        image: true,
-        price: true,
-        durationMinutes: true,
-        category: { select: { id: true, name: true, slug: true } },
-        city: { select: { id: true, name: true, country: true } },
-        operator: { select: { id: true, name: true } },
-      },
-      orderBy: { id: 'asc' },
-      skip,
-      take: safeLimit,
-    });
-
-    return mapExperiencesToCards(experiences);
+    const { countryCode, ...rest } = filters;
+    const countryId = await resolveCountryId(countryCode);
+    return await experienceRepository.findMany(countryId, rest);
   } catch (error) {
     console.error('Error fetching experiences:', error);
     throw new Error('Failed to fetch experiences');
   }
 }
 
-export async function getExperienceById(id: number): Promise<ExperienceCardDTO | null> {
+export async function getExperienceById(
+  id: string,
+  countryCode?: string
+): Promise<ExperienceCardDTO | null> {
   try {
-    const experience = await prisma.experience.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        title: true,
-        image: true,
-        price: true,
-        durationMinutes: true,
-        category: { select: { id: true, name: true, slug: true } },
-        city: { select: { id: true, name: true, country: true } },
-        operator: { select: { id: true, name: true } },
-      },
-    });
-
-    if (!experience) return null;
-
-    return mapExperienceToCard(experience);
+    const countryId = await resolveCountryId(countryCode);
+    return await experienceRepository.findById(countryId, id);
   } catch (error) {
     console.error(`Error fetching experience with id ${id}:`, error);
     throw new Error('Failed to fetch experience');

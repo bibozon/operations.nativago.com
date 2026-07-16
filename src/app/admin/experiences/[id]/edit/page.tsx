@@ -1,6 +1,9 @@
 import prisma from '@/lib/db';
 import { requireAuth } from '@/lib/requireRole';
+import { updateExperience } from '@/services/catalog/cms';
+import { listCitiesByCountry } from '@/services/catalog/cities';
 import { redirect } from 'next/navigation';
+import { formatPrice } from '@/domain/entities/Money';
 
 interface EditExperiencePageProps {
   params: { id: string };
@@ -15,7 +18,10 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
 
   const exp = await prisma.experience.findUnique({
     where: { id },
-    include: { operator: true },
+    include: {
+      operator: true,
+      country: { select: { defaultCurrency: { select: { code: true } } } },
+    },
   });
 
   if (!exp) {
@@ -26,8 +32,14 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
     redirect('/admin/experiences');
   }
 
+  if (!exp.countryId) {
+    throw new Error(`Experience ${exp.id} has no countryId — run prisma/backfill-country.js`);
+  }
+
+  const currencyCode = exp.country?.defaultCurrency.code ?? 'COP';
+
   const [cities, categories] = await Promise.all([
-    prisma.city.findMany({ orderBy: { name: 'asc' } }),
+    listCitiesByCountry(exp.countryId),
     prisma.category.findMany({ orderBy: { name: 'asc' } }),
   ]);
 
@@ -67,16 +79,16 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
         }
       }
     }
-    const data: Record<string, unknown> = {
+
+    // updateExperience valida server-side que la nueva cityId (si cambió)
+    // pertenezca al mismo país que la experiencia — evita reasignarla a
+    // una ciudad de otro país aunque el <select> haya sido manipulado.
+    await updateExperience(id, {
       title: (formData.get('title') as string) ?? '',
       price: Number(formData.get('price')),
-        cityId: (formData.get('cityId') as string) ?? '',
-        categoryId: (formData.get('categoryId') as string) ?? '',
+      cityId: (formData.get('cityId') as string) ?? '',
+      categoryId: (formData.get('categoryId') as string) ?? '',
       images,
-    };
-    await prisma.experience.update({
-      where: { id },
-      data,
     });
 
     redirect('/admin/experiences');
@@ -94,12 +106,12 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
 
         <div className="space-y-1">
           <label className="block text-sm font-medium text-slate-700">
-            Preço (R$)
+            Precio ({currencyCode})
           </label>
           <input
             name="price"
             defaultValue={String(exp.price)}
-            placeholder="R$ 0,00"
+            placeholder={formatPrice(0, currencyCode)}
             className="w-full rounded border p-2 text-sm"
           />
         </div>

@@ -1,43 +1,32 @@
 import prisma from '@/lib/db';
-import { requireOperator } from '@/lib/requireRole';
+import { requireOperatorContext } from '@/lib/requireRole';
+import { createExperience } from '@/services/catalog/cms';
+import { listCitiesByCountry } from '@/services/catalog/cities';
 import { redirect } from 'next/navigation';
 
 export default async function NewExperiencePage() {
-  const auth = await requireOperator();
-
-  const operator = await prisma.operator.findFirst({
-    where: { userId: auth.userId },
-  });
+  const { operator } = await requireOperatorContext();
 
   const [cities, categories] = await Promise.all([
-    prisma.city.findMany({ orderBy: { name: 'asc' } }),
+    listCitiesByCountry(operator.countryId as string),
     prisma.category.findMany({ orderBy: { name: 'asc' } }),
   ]);
 
   async function createExp(formData: FormData) {
     'use server';
 
-    const auth = await requireOperator();
+    const { operator } = await requireOperatorContext();
 
     const title = (formData.get('title') as string) ?? '';
     const description = (formData.get('description') as string) ?? '';
     const durationMinutes = Number(formData.get('durationMinutes'));
     const price = Number(formData.get('price'));
-    const cityId = Number(formData.get('cityId'));
-    const categoryId = Number(formData.get('categoryId'));
-    const capacity = Number(formData.get('capacity'));
+    const cityId = (formData.get('cityId') as string) ?? '';
+    const categoryId = (formData.get('categoryId') as string) ?? '';
     const file = formData.get('image');
 
     if (!title || !description || !Number.isFinite(durationMinutes) || !Number.isFinite(price) || !cityId || !categoryId) {
       return;
-    }
-
-    const operator = await prisma.operator.findFirst({
-      where: { userId: auth.userId },
-    });
-
-    if (!operator) {
-      throw new Error('Operator not found');
     }
 
     if (operator.verificationStatus !== 'APPROVED') {
@@ -59,19 +48,26 @@ export default async function NewExperiencePage() {
         }
       }
     }
-    await prisma.experience.create({
-      data: {
-        title,
-        description,
-        durationMinutes,
-        price,
-        capacity: capacity ?? 0,
-        cityId: (formData.get('cityId') as string) ?? '',
-        categoryId: (formData.get('categoryId') as string) ?? '',
-        operatorId: operator.id,
-        images,
-      },
+
+    // createExperience valida server-side que cityId pertenezca al país
+    // del operador — rechaza cualquier intento de publicar fuera de él,
+    // aunque el <select> del form haya sido manipulado.
+    await createExperience({
+      title,
+      description,
+      durationMinutes,
+      price,
+      cityId,
+      categoryId,
+      operatorId: operator.id,
+      images,
     });
+
+    redirect('/admin/experiences');
+  }
+
+  if (operator.verificationStatus !== 'APPROVED') {
+    return (
       <div className="mx-auto max-w-lg px-4 py-8">
         <h1 className="mb-4 text-xl font-semibold">Crear experiencia</h1>
         <p className="text-sm text-slate-600">
@@ -105,17 +101,14 @@ export default async function NewExperiencePage() {
           className="w-full rounded border px-2 py-2 text-sm"
           min={1}
         />
-            data: {
-              title,
-              description,
-              durationMinutes,
-              price,
-              capacity: capacity ?? 0,
-              cityId,
-              categoryId,
-              operatorId: operator.id,
-              images: images,
-            },
+
+        <div className="relative">
+          <input
+            type="number"
+            name="price"
+            placeholder="Precio"
+            className="w-full rounded border px-2 py-2 text-sm"
+            min={0}
             step={0.01}
           />
         </div>

@@ -21,7 +21,7 @@ export interface AuthTokenPayload {
   userId: number;
   email: string;
   role: AuthRole;
-  operatorId?: number | null;
+  operatorId?: string | null;
   name?: string | null;
 }
 

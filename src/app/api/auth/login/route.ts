@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/db';
-import { signAuthToken } from '@/lib/auth';
+import { signAuthToken, type AuthRole } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   const token = signAuthToken({
     userId: user.id,
     email: user.email,
-    role: user.role as any,
+    role: user.role as AuthRole,
     operatorId: user.operator?.id ?? null,
     name: user.name ?? null,
   });

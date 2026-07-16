@@ -1,18 +1,11 @@
-export type ExperienceCardDTO = {
-  id: number;
-  title: string;
-  image: string | null;
-  price: number;
-  durationMinutes: number;
-  city: { id: number; name: string; country: string };
-  category: { id: number; name: string; slug: string };
-  operator: { id: number; name: string };
-};
-
-export function mapExperienceToCard(experience: ExperienceCardDTO): ExperienceCardDTO {
-  return experience;
-}
-
-export function mapExperiencesToCards(experiences: ExperienceCardDTO[]): ExperienceCardDTO[] {
-  return experiences.map(mapExperienceToCard);
-}
+// Este archivo quedó como shim de compatibilidad: el tipo del dominio vive
+// en src/domain/entities/Experience.ts y el mapeo Prisma→DTO en
+// src/infrastructure/persistence/prisma/mappers/experienceMapper.ts. Se
+// re-exportan desde acá para no romper los imports existentes
+// (`from './experience.mapper'`) en el resto del código.
+export type { ExperienceCardDTO } from '@/domain/entities/Experience';
+export {
+  mapExperienceToCard,
+  mapExperiencesToCards,
+  type PrismaExperienceForCard,
+} from '@/infrastructure/persistence/prisma/mappers/experienceMapper';

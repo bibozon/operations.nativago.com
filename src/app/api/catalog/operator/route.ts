@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const operator = await createOperator({ name, email, phone, cityId: Number(cityId) });
+  const operator = await createOperator({ name, email, phone, cityId: String(cityId) });
   return NextResponse.json(operator, { status: 201 });
 }
 

@@ -1,5 +1,8 @@
 import React from "react";
 import Link from "next/link";
+import { NativaGoLogo } from "@/components/NativaGoLogo";
+import { LogoutButton } from "@/components/LogoutButton";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const menu = [
   { label: "Dashboard", href: "/admin", icon: "dashboard" },
@@ -13,7 +16,7 @@ const menu = [
   { label: "Settings", href: "/admin/settings", icon: "settings" },
 ];
 
-function Icon({ name }: { name: string }) {
+function Icon({ name: _name }: { name: string }) {
   // Placeholder for Lucide/Feather icons
   return <span className="inline-block w-5 h-5 mr-2 align-middle">🔹</span>;
 }
@@ -21,11 +24,11 @@ function Icon({ name }: { name: string }) {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
-      {/* Sidebar */}
-      <aside className="w-64 bg-[#0F172A] text-[#E2E8F0] flex flex-col py-6 px-4 sticky top-0 h-screen">
-        <div className="mb-8 flex items-center gap-2">
-          <span className="text-2xl font-bold text-emerald-600">NativaGo</span>
-          <span className="text-base font-medium text-white bg-emerald-600 rounded px-2 py-1">CMS</span>
+      {/* Sidebar — hidden on mobile, visible on desktop */}
+      <aside className="hidden md:flex w-64 bg-[#0F172A] text-[#E2E8F0] flex-col py-6 px-4 sticky top-0 h-screen">
+        <div className="mb-8 flex items-center gap-2 px-1">
+          <NativaGoLogo size="md" context="onDark" />
+          <span className="text-xs font-bold text-white bg-emerald-600 rounded px-2 py-1 shrink-0">CMS</span>
         </div>
         <nav className="flex-1">
           {menu.map((item) => (
@@ -41,16 +44,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
       </aside>
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0">
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-white border-b border-[#E2E8F0] flex items-center justify-end h-16 px-6">
-          <div className="flex items-center gap-4">
+        <header className="sticky top-0 z-10 bg-white border-b border-[#E2E8F0] flex items-center justify-between h-16 px-6">
+          {/* Mobile: show nav links */}
+          <nav className="flex md:hidden items-center gap-1 overflow-x-auto">
+            {menu.slice(0, 4).map(item => (
+              <Link key={item.href} href={item.href}
+                className="text-xs font-semibold text-gray-600 hover:text-emerald-700 px-2 py-1 rounded whitespace-nowrap">
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher variant="light" />
             <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-bold">U</div>
-            <div className="flex flex-col text-right">
-              <span className="font-semibold text-[#0F172A]">User Name</span>
-              <span className="text-xs bg-emerald-100 text-emerald-700 rounded px-2 py-0.5">Superadmin</span>
-            </div>
-            <button className="ml-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-4 py-2 text-sm font-medium hover:bg-slate-100">Logout</button>
+            <LogoutButton />
           </div>
         </header>
         <main className="flex-1 p-8">{children}</main>

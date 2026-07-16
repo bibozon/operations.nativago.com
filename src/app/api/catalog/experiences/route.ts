@@ -6,13 +6,9 @@ export async function GET(request: NextRequest) {
 
   const citySlug = searchParams.get('city') ?? undefined;
   const categorySlug = searchParams.get('category') ?? undefined;
-  const featuredParam = searchParams.get('featured');
+  const countryCode = searchParams.get('country') ?? undefined;
   const pageParam = searchParams.get('page');
   const limitParam = searchParams.get('limit');
-
-  let featured: boolean | undefined;
-  if (featuredParam === 'true') featured = true;
-  if (featuredParam === 'false') featured = false;
 
   const page = pageParam ? Number(pageParam) : undefined;
   const limit = limitParam ? Number(limitParam) : undefined;
@@ -20,7 +16,7 @@ export async function GET(request: NextRequest) {
   const experiences = await listExperiences({
     citySlug,
     categorySlug,
-    featured,
+    countryCode,
     page,
     limit,
   });
