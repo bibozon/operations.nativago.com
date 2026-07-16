@@ -19,9 +19,18 @@ enum OperatorType {
 }
 
 enum VerificationStatus {
+  DRAFT
   PENDING
+  INFO_NEEDED
   APPROVED
+  SUSPENDED
   REJECTED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
 }
 
 model User {
@@ -43,13 +52,19 @@ model Category {
   name      String
   slug      String       @unique
   experiences Experience[]
+  translations      CategoryTranslation[]
+  countryCategories CountryCategory[]
     // Prevent deleting if used by Experience (enforce in backend)
 }
 
 model City {
   id          String       @id @default(cuid())
   name        String
-  country     String
+  country     String // legacy free-text; ver countryId. Se elimina en la fase de limpieza post-backfill.
+  countryId   String?
+  countryRef  Country?     @relation(fields: [countryId], references: [id])
+  regionId    String?
+  region      Region?      @relation(fields: [regionId], references: [id])
   operators   Operator[]
   experiences Experience[]
     // Prevent deleting if used by Experience (enforce in backend)
@@ -61,19 +76,26 @@ model Operator {
   email       String       @unique
   phone       String?
   type        OperatorType @default(AGENCY)
-  verificationStatus VerificationStatus @default(PENDING)
+  verificationStatus VerificationStatus @default(DRAFT)
   licenseNumber     String?
   licenseDocument   String?
-  cnpj              String?
-  cpf               String?
-  cadastur          String?
+  cnpj              String? // legacy; documento oficial vive ahora en OperatorDocument (por país)
+  cpf               String? // legacy; ídem
+  cadastur          String? // legacy; ídem
   contractUrl       String?
+  categoria           String?
+  legalRepresentative String?
+  paymentAccount      String?
+  reviewNotes         String?
   liabilityAccepted   Boolean  @default(false)
   liabilityAcceptedAt DateTime?
   contractAccepted   Boolean  @default(false)
   contractAcceptedAt DateTime?
   cityId      String
   city        City         @relation(fields: [cityId], references: [id])
+  countryId   String?
+  country     Country?     @relation(fields: [countryId], references: [id])
+  documents   OperatorDocument[]
   userId      Int?         @unique
   user        User?        @relation(fields: [userId], references: [id])
   experiences Experience[]
@@ -94,16 +116,19 @@ model Experience {
 
   coveragePolicy String?
   coverageDescription String?
+  riskLevel   RiskLevel @default(LOW)
 
     operatorId String
     cityId String
     categoryId String
+    countryId String?
 
   status ExperienceStatus @default(DRAFT)
 
   operator Operator @relation(fields: [operatorId], references: [id])
   city City @relation(fields: [cityId], references: [id])
   category Category @relation(fields: [categoryId], references: [id])
+  country Country? @relation(fields: [countryId], references: [id])
   slots Slot[]
   availabilitySlots AvailabilitySlot[]
   bookings Booking[]
@@ -144,11 +169,13 @@ enum BookingStatus {
 
 model Booking {
   id             Int           @id @default(autoincrement())
+  bookingCode    String?       @unique // código legible expuesto a clientes (QR, "mis reservas")
   experienceId   String
   date           DateTime
   guests         Int
   customerName   String
   customerEmail  String
+  customerPhone  String?
   status         BookingStatus @default(PENDING)
   amount         Float
   depositAmount  Float
@@ -156,9 +183,12 @@ model Booking {
   paymentStatus  PaymentStatus @default(PENDING)
   paymentType    PaymentType   @default(DEPOSIT)
   qrCode         String?
+  cancelReason   String?
+  countryId      String?
   createdAt      DateTime      @default(now())
 
   experience Experience @relation(fields: [experienceId], references: [id])
+  country    Country?   @relation(fields: [countryId], references: [id])
 }
 
 enum PaymentStatus {
@@ -169,4 +199,149 @@ enum PaymentStatus {
 
 enum PaymentType {
   DEPOSIT
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Multi-país (Fase 0/1 — ver plan de arquitectura NativaGo LatAm)
+// ─────────────────────────────────────────────────────────────────────────
+
+model Country {
+  id                String   @id @default(cuid())
+  code              String   @unique // ISO-3166 alpha-2: "CO", "BR"
+  name              String
+  domainSlug        String   @unique // "co", "br" — subdominio del marketplace
+  defaultCurrencyId String
+  defaultCurrency   Currency @relation(fields: [defaultCurrencyId], references: [id])
+  defaultLanguageId String
+  defaultLanguage   Language @relation(fields: [defaultLanguageId], references: [id])
+  timezoneId        String
+  timezone          Timezone @relation(fields: [timezoneId], references: [id])
+  taxRatePercent    Float    @default(0)
+  commissionPercent Float    @default(0)
+  isActive          Boolean  @default(true)
+  seoTitle          String?
+  seoDescription    String?
+
+  cities                  City[]
+  operators               Operator[]
+  experiences             Experience[]
+  bookings                Booking[]
+  regions                 Region[]
+  documentTypes           DocumentType[]
+  countryCategories       CountryCategory[]
+  countryPaymentProviders CountryPaymentProvider[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model Currency {
+  id            String    @id @default(cuid())
+  code          String    @unique // ISO-4217: "COP", "BRL", "USD"...
+  symbol        String
+  decimalDigits Int       @default(0)
+  countries     Country[]
+}
+
+model Language {
+  id                   String                 @id @default(cuid())
+  code                 String                 @unique // ISO-639-1: "es", "pt", "en"
+  name                 String
+  countries            Country[]
+  categoryTranslations CategoryTranslation[]
+}
+
+model Timezone {
+  id        String    @id @default(cuid())
+  ianaName  String    @unique // "America/Bogota", "America/Sao_Paulo"
+  label     String
+  countries Country[]
+}
+
+model Region {
+  id        String  @id @default(cuid())
+  countryId String
+  country   Country @relation(fields: [countryId], references: [id])
+  name      String
+  code      String?
+  cities    City[]
+
+  @@unique([countryId, name])
+}
+
+model CategoryTranslation {
+  id         String   @id @default(cuid())
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  languageId String
+  language   Language @relation(fields: [languageId], references: [id])
+  name       String
+
+  @@unique([categoryId, languageId])
+}
+
+// Qué categorías están habilitadas (y en qué orden) por país. La categoría
+// en sí es global (taxonomía compartida) — esto evita duplicarla por país.
+model CountryCategory {
+  id         String   @id @default(cuid())
+  countryId  String
+  country    Country  @relation(fields: [countryId], references: [id])
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  isEnabled  Boolean  @default(true)
+  sortOrder  Int      @default(0)
+
+  @@unique([countryId, categoryId])
+}
+
+// Qué documento oficial exige cada país para verificar un operador
+// (RNT en CO, CNPJ/CPF+CADASTUR en BR, RFC en MX...). Configurable desde
+// datos, no desde código.
+model DocumentType {
+  id                String             @id @default(cuid())
+  countryId         String
+  country           Country            @relation(fields: [countryId], references: [id])
+  code              String // "RNT", "CNPJ", "CPF", "CADASTUR", "RFC"...
+  label             String
+  validationRegex   String?
+  isRequired        Boolean            @default(true)
+  operatorDocuments OperatorDocument[]
+
+  @@unique([countryId, code])
+}
+
+model OperatorDocument {
+  id             String       @id @default(cuid())
+  operatorId     String
+  operator       Operator     @relation(fields: [operatorId], references: [id])
+  documentTypeId String
+  documentType   DocumentType @relation(fields: [documentTypeId], references: [id])
+  value          String
+  verified       Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@unique([operatorId, documentTypeId])
+}
+
+model PaymentProvider {
+  id                      String                    @id @default(cuid())
+  code                    String                    @unique // "stripe", "wompi", "mercadopago", "pix"
+  displayName             String
+  countryPaymentProviders CountryPaymentProvider[]
+}
+
+// Qué proveedor(es) de pago usa cada país, y con qué prioridad. `configRef`
+// apunta al nombre de la variable de entorno con las credenciales — nunca
+// el secreto en sí.
+model CountryPaymentProvider {
+  id                String          @id @default(cuid())
+  countryId         String
+  country           Country         @relation(fields: [countryId], references: [id])
+  paymentProviderId String
+  paymentProvider   PaymentProvider @relation(fields: [paymentProviderId], references: [id])
+  priority          Int             @default(0)
+  isActive          Boolean         @default(false)
+  configRef         String?
+
+  @@unique([countryId, paymentProviderId])
 }
