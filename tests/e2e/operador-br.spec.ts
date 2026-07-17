@@ -17,7 +17,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { makeOperadorBR }           from './support/test-data';
+import { makeOperadorBR, makeOperadorBRJuridica } from './support/test-data';
 import { OperatorRegisterPage }     from './pages/cms/OperatorRegisterPage';
 import { OperatorDashboardPage }    from './pages/cms/OperatorDashboardPage';
 import { AdminVerificationPage }    from './pages/cms/AdminVerificationPage';
@@ -98,6 +98,80 @@ test('BR — Operador brasileño registra cuenta y publica experiencia en BRL', 
     // ── BR7. Verificar en la lista ────────────────────────────────────
     await expForm.expectExperienceInList(op.experience.title);
     console.log(`  ✓ BR7 — Experiencia visible en el panel del operador`);
+
+  } finally {
+    await operadorCtx.close();
+    await adminCtx.close();
+  }
+});
+
+test('BR — Operador brasileño (empresa) registra cuenta y publica experiencia en BRL', async ({ browser }) => {
+  const op = makeOperadorBRJuridica();
+  console.log(`\n▶  Operador BR (empresa): ${op.name} (${op.email})`);
+
+  const operadorCtx  = await browser.newContext();
+  const adminCtx     = await browser.newContext();
+  const operadorPage = await operadorCtx.newPage();
+  const adminPage    = await adminCtx.newPage();
+
+  try {
+    const registerPage = new OperatorRegisterPage(operadorPage);
+
+    await operadorPage.goto('/register/operator');
+    await operadorPage.waitForLoadState('networkidle');
+    const cityOptions = await operadorPage.locator('select[name="cityId"] option').allTextContents();
+    const hasManaus   = cityOptions.some(o => o.trim().toLowerCase() === 'manaus');
+    if (!hasManaus) {
+      console.warn('  ⚠  Manaus no está disponible en el select — test BR(J) skipped (corre globalSetup)');
+      test.skip();
+      return;
+    }
+
+    await registerPage.registerOperator({
+      prestadorTipo:  op.prestadorTipo,
+      categoria:      op.categoria,
+      name:           op.name,
+      legalRep:       op.legalRep,
+      email:          op.email,
+      phone:          op.phone,
+      password:       op.password,
+      cityLabel:      op.cityLabel,
+      identityDoc:    op.identityDoc,
+      paymentAccount: op.paymentAccount,
+    });
+    console.log('  ✓ BR1(J) — Registro completo → /operator/dashboard');
+
+    const dashboard = new OperatorDashboardPage(operadorPage);
+    await dashboard.expectStatus('DRAFT');
+    const pct = await dashboard.progressPercent();
+    expect(pct).toBeGreaterThan(0);
+    console.log(`  ✓ BR2(J) — Estado DRAFT | Progreso: ${pct}%`);
+
+    await dashboard.submitForReview();
+    await dashboard.expectStatus('PENDING');
+    console.log('  ✓ BR3(J) — Cuenta enviada para revisión (PENDING)');
+
+    const adminVerification = new AdminVerificationPage(adminPage);
+    await adminVerification.loginAsAdmin();
+    await adminVerification.goto();
+    const approved = await adminVerification.approveOperator(op.name);
+    expect(approved).toBe(true);
+    await adminVerification.expectOperatorAbsent(op.name);
+    console.log(`  ✓ BR4(J) — Operador aprobado por admin`);
+
+    await operadorPage.goto('/operator/dashboard');
+    const contract = new ContractPage(operadorPage);
+    await contract.accept();
+    console.log('  ✓ BR5(J) — Contrato aceptado → /admin');
+
+    await expect(operadorPage).toHaveURL(/\/admin/, { timeout: 8_000 });
+
+    const expForm = new ExperienceFormPage(operadorPage);
+    await expForm.createExperience(op.experience);
+    console.log(`  ✓ BR6(J) — Experiencia creada: "${op.experience.title}" — R$ ${Number(op.experience.price).toLocaleString('pt-BR')}`);
+
+    await expForm.expectExperienceInList(op.experience.title);
+    console.log(`  ✓ BR7(J) — Experiencia visible en el panel del operador`);
 
   } finally {
     await operadorCtx.close();

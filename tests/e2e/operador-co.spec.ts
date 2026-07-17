@@ -17,7 +17,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { makeOperadorCO }           from './support/test-data';
+import { makeOperadorCO, makeOperadorCONatural } from './support/test-data';
 import { OperatorRegisterPage }     from './pages/cms/OperatorRegisterPage';
 import { OperatorDashboardPage }    from './pages/cms/OperatorDashboardPage';
 import { AdminVerificationPage }    from './pages/cms/AdminVerificationPage';
@@ -90,6 +90,68 @@ test('CO — Operador colombiano registra cuenta y publica experiencia en COP', 
     // ── CO7. Verificar en la lista ────────────────────────────────────
     await expForm.expectExperienceInList(op.experience.title);
     console.log(`  ✓ CO7 — Experiencia visible en el panel del operador`);
+
+  } finally {
+    await operadorCtx.close();
+    await adminCtx.close();
+  }
+});
+
+test('CO — Operador colombiano (persona natural) registra cuenta y publica experiencia en COP', async ({ browser }) => {
+  const op = makeOperadorCONatural();
+  console.log(`\n▶  Operador CO (natural): ${op.name} (${op.email})`);
+
+  const operadorCtx  = await browser.newContext();
+  const adminCtx     = await browser.newContext();
+  const operadorPage = await operadorCtx.newPage();
+  const adminPage    = await adminCtx.newPage();
+
+  try {
+    const registerPage = new OperatorRegisterPage(operadorPage);
+    await registerPage.registerOperator({
+      prestadorTipo:  op.prestadorTipo,
+      categoria:      op.categoria,
+      name:           op.name,
+      email:          op.email,
+      phone:          op.phone,
+      password:       op.password,
+      cityLabel:      op.cityLabel,
+      identityDoc:    op.identityDoc,
+      paymentAccount: op.paymentAccount,
+    });
+    console.log('  ✓ CO1(N) — Registro completo → /operator/dashboard');
+
+    const dashboard = new OperatorDashboardPage(operadorPage);
+    await dashboard.expectStatus('DRAFT');
+    const pct = await dashboard.progressPercent();
+    expect(pct).toBeGreaterThan(0);
+    console.log(`  ✓ CO2(N) — Estado DRAFT | Progreso: ${pct}%`);
+
+    await dashboard.submitForReview();
+    await dashboard.expectStatus('PENDING');
+    console.log('  ✓ CO3(N) — Cuenta enviada para revisión (PENDING)');
+
+    const adminVerification = new AdminVerificationPage(adminPage);
+    await adminVerification.loginAsAdmin();
+    await adminVerification.goto();
+    const approved = await adminVerification.approveOperator(op.name);
+    expect(approved).toBe(true);
+    await adminVerification.expectOperatorAbsent(op.name);
+    console.log(`  ✓ CO4(N) — Operador aprobado por admin`);
+
+    await operadorPage.goto('/operator/dashboard');
+    const contract = new ContractPage(operadorPage);
+    await contract.accept();
+    console.log('  ✓ CO5(N) — Contrato aceptado → /admin');
+
+    await expect(operadorPage).toHaveURL(/\/admin/, { timeout: 8_000 });
+
+    const expForm = new ExperienceFormPage(operadorPage);
+    await expForm.createExperience(op.experience);
+    console.log(`  ✓ CO6(N) — Experiencia creada: "${op.experience.title}" — COP ${Number(op.experience.price).toLocaleString('es-CO')}`);
+
+    await expForm.expectExperienceInList(op.experience.title);
+    console.log(`  ✓ CO7(N) — Experiencia visible en el panel del operador`);
 
   } finally {
     await operadorCtx.close();
