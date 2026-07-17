@@ -1,10 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthUserFromRequest } from '@/lib/auth';
+
+// El middleware corre en Edge Runtime — no puede importar jsonwebtoken (Node.js only).
+// Hace una comprobación de presencia + estructura básica del JWT sin verificar firma;
+// la verificación criptográfica real ocurre en cada route handler (Node.js).
+function hasValidTokenShape(request: NextRequest): boolean {
+  const token = request.cookies.get('auth')?.value;
+  if (!token) return false;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    const payload = JSON.parse(atob(parts[1]));
+    return Boolean(payload?.userId && payload?.role);
+  } catch {
+    return false;
+  }
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public access to catalog and public APIs
+  // Rutas públicas — sin auth
   if (
     pathname.startsWith('/api/catalog/') ||
     pathname.startsWith('/api/public/') ||
@@ -15,16 +30,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Require auth for admin/private APIs
+  // Rutas protegidas — requieren token con forma válida
   if (
     pathname.startsWith('/admin/') ||
     pathname.startsWith('/api/admin/') ||
     pathname.startsWith('/api/private/')
   ) {
-    const user = getAuthUserFromRequest(request);
-    if (!user) {
-      const loginUrl = new URL('/login', request.url);
-      return NextResponse.redirect(loginUrl);
+    if (!hasValidTokenShape(request)) {
+      return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 

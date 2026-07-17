@@ -14,7 +14,32 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt           from 'bcryptjs';
 
+const CMS_URL = process.env.PLAYWRIGHT_CMS_URL ?? 'http://localhost:3001';
+
+/** Espera hasta que el CMS responda con 2xx (máx 60 s) para manejar el race condition del middleware */
+async function waitForCms() {
+  const url      = `${CMS_URL}/register/operator`;
+  const deadline = Date.now() + 60_000;
+  let lastErr    = '';
+  while (Date.now() < deadline) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        console.log(`globalSetup ✓  CMS listo (${res.status}) en ${url}`);
+        return;
+      }
+      lastErr = `HTTP ${res.status}`;
+    } catch (e: unknown) {
+      lastErr = String(e);
+    }
+    await new Promise(r => setTimeout(r, 2_000));
+    process.stdout.write('.');
+  }
+  throw new Error(`CMS no respondió con 2xx en 60 s. Último error: ${lastErr}`);
+}
+
 export default async function globalSetup() {
+  await waitForCms();
   const prisma = new PrismaClient();
 
   try {

@@ -11,21 +11,8 @@ export default defineConfig({
   retries: 1,
   timeout: 90_000,
   reporter: [['list'], ['html', { open: 'never' }]],
-  webServer: [
-    {
-      command: 'npx next dev -p 3001',
-      url: `${CMS_URL}/api/debug/db`,
-      reuseExistingServer: true,
-      timeout: 120_000,
-    },
-    {
-      command: 'npx next dev -p 3000',
-      url: MKT_URL,
-      reuseExistingServer: true,
-      timeout: 120_000,
-      cwd: '../Proyecto_mpv_ngo_v1/nativago-mvp',
-    },
-  ],
+  // Sin webServer: los servidores se arrancan manualmente antes de correr tests.
+  // globalSetup hace el warmup + health-check con retry.
   use: {
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
