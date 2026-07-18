@@ -12,9 +12,11 @@ export class ExperienceDetailPage {
 
   async expectPriceVisible() {
     // El precio del anticipo (15%) aparece en el sticky card de escritorio o en el CTA móvil;
-    // ambos existen en el DOM a la vez, solo uno es visible según el viewport.
+    // ambos existen en el DOM a la vez, solo uno es visible según el viewport. El regex exige
+    // el paréntesis para no matchear las tarjetas de "experiencias relacionadas" (que muestran
+    // "Anticipo 15%" sin paréntesis, una por cada experiencia listada).
     await expect(
-      this.page.locator('text=/Anticipo/').filter({ visible: true })
+      this.page.locator('text=/Anticipo \\(15%\\)/').filter({ visible: true })
     ).toBeVisible({ timeout: 8_000 });
   }
 

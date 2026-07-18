@@ -1,67 +1,66 @@
 import React from "react";
-import Link from "next/link";
 import { NativaGoLogo } from "@/components/NativaGoLogo";
 import { LogoutButton } from "@/components/LogoutButton";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { AdminSidebarNav, type AdminMenuItem } from "@/components/admin/AdminSidebarNav";
+import { getAuthFromCookies } from "@/lib/requireRole";
 
-const menu = [
+const menu: AdminMenuItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: "dashboard" },
-  { label: "Experiences", href: "/admin/experiences", icon: "sparkle" },
-  { label: "Bookings", href: "/admin/bookings", icon: "calendar" },
+  { label: "Experiencias", href: "/admin/experiences", icon: "sparkle" },
+  { label: "Reservas", href: "/admin/bookings", icon: "calendar" },
   { label: "Check-in QR", href: "/admin/checkin", icon: "qrcode" },
-  { label: "Operators", href: "/admin/operators", icon: "users" },
-  { label: "Cities", href: "/admin/cities", icon: "map" },
-  { label: "Categories", href: "/admin/categories", icon: "tag" },
-  { label: "Settings", href: "/admin/settings", icon: "settings" },
+  { label: "Operadores", href: "/admin/operators", icon: "users" },
+  { label: "Ciudades", href: "/admin/cities", icon: "map" },
+  { label: "Categorías", href: "/admin/categories", icon: "tag" },
+  { label: "Configuración", href: "/admin/settings", icon: "settings" },
 ];
 
-function Icon({ name: _name }: { name: string }) {
-  // Placeholder for Lucide/Feather icons
-  return <span className="inline-block w-5 h-5 mr-2 align-middle">🔹</span>;
-}
+const ROLE_LABEL: Record<string, string> = {
+  SUPERADMIN: "Superadmin",
+  OPERATOR_AGENCY: "Agencia",
+  OPERATOR_FREELANCE: "Freelance",
+};
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const auth = await getAuthFromCookies();
+  const displayName = auth?.name?.trim() || auth?.email || "Usuario";
+  const initial = displayName[0]?.toUpperCase() ?? "U";
+  const roleLabel = auth ? (ROLE_LABEL[auth.role] ?? auth.role) : "";
+
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="flex min-h-screen bg-slate-50">
       {/* Sidebar — hidden on mobile, visible on desktop */}
-      <aside className="hidden md:flex w-64 bg-[#0F172A] text-[#E2E8F0] flex-col py-6 px-4 sticky top-0 h-screen">
-        <div className="mb-8 flex items-center gap-2 px-1">
+      <aside className="hidden md:flex w-64 shrink-0 flex-col bg-[#0B1120] py-6 px-4 sticky top-0 h-screen">
+        <div className="mb-8 px-1">
           <NativaGoLogo size="md" context="onDark" />
-          <span className="text-xs font-bold text-white bg-emerald-600 rounded px-2 py-1 shrink-0">CMS</span>
         </div>
-        <nav className="flex-1">
-          {menu.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 mb-2 hover:bg-emerald-600/20 hover:text-emerald-400 transition"
-            >
-              <Icon name={item.icon} />
-              <span className="font-medium">{item.label}</span>
-            </Link>
-          ))}
-        </nav>
+        <AdminSidebarNav menu={menu} />
+        <div className="mt-auto pt-4 border-t border-white/10 flex items-center gap-2 px-1">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-500/20 text-sm font-semibold text-teal-300">
+            {initial}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-white">{displayName}</p>
+            <p className="text-xs text-slate-400">{roleLabel}</p>
+          </div>
+        </div>
       </aside>
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen min-w-0">
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-white border-b border-[#E2E8F0] flex items-center justify-between h-16 px-6">
+        <header className="sticky top-0 z-10 bg-white border-b border-slate-200 flex items-center justify-between h-16 px-6">
           {/* Mobile: show nav links */}
-          <nav className="flex md:hidden items-center gap-1 overflow-x-auto">
-            {menu.slice(0, 4).map(item => (
-              <Link key={item.href} href={item.href}
-                className="text-xs font-semibold text-gray-600 hover:text-emerald-700 px-2 py-1 rounded whitespace-nowrap">
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3">
+          <AdminSidebarNav menu={menu} mobile />
+          <div className="ml-auto flex items-center gap-3">
             <LanguageSwitcher variant="light" />
-            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-bold">U</div>
+            <div className="hidden sm:flex h-9 w-9 items-center justify-center rounded-full bg-teal-50 text-sm font-semibold text-teal-700">
+              {initial}
+            </div>
             <LogoutButton />
           </div>
         </header>
-        <main className="flex-1 p-8">{children}</main>
+        <main className="flex-1 p-6 md:p-8">{children}</main>
       </div>
     </div>
   );

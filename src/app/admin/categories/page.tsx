@@ -47,67 +47,74 @@ export default async function CategoriesPage() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Categorías</h1>
-      </div>
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Categorías</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Taxonomía de experiencias visible en todo el marketplace.
+        </p>
+      </header>
 
-      <form action={addCategory} className="mb-6 flex items-end gap-2">
+      <form action={addCategory} className="mb-6 flex items-end gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-slate-700">Nueva categoría</label>
+          <label className="block text-xs font-medium text-slate-600">Nueva categoría</label>
           <input
             name="name"
             placeholder="Ej. Aventura, Cultura, Gastronomía…"
-            className="mt-1 w-full rounded border border-slate-200 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-100"
           />
         </div>
         <button
           type="submit"
-          className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+          className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-500"
         >
           Crear
         </button>
       </form>
 
-      <table className="w-full border text-sm">
-        <thead className="bg-slate-50">
-          <tr>
-            <th className="border px-2 py-1 text-left">Nombre</th>
-            <th className="border px-2 py-1 text-left">Slug</th>
-            <th className="border px-2 py-1 text-center">Experiencias</th>
-            <th className="border px-2 py-1 text-center">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {categories.map((c) => (
-            <tr key={c.id} className="border-t">
-              <td className="border px-2 py-1">{c.name}</td>
-              <td className="border px-2 py-1 text-slate-500">{c.slug}</td>
-              <td className="border px-2 py-1 text-center">{c._count.experiences}</td>
-              <td className="border px-2 py-1 text-center">
-                {c._count.experiences === 0 ? (
-                  <form action={removeCategory}>
-                    <input type="hidden" name="id" value={c.id} />
-                    <button type="submit" className="text-xs font-medium text-red-600 hover:underline">
-                      Eliminar
-                    </button>
-                  </form>
-                ) : (
-                  <span className="text-xs text-slate-400" title="No se puede eliminar: en uso por experiencias">
-                    En uso
-                  </span>
-                )}
-              </td>
-            </tr>
-          ))}
-          {categories.length === 0 && (
-            <tr>
-              <td colSpan={4} className="px-3 py-4 text-center text-sm text-slate-500">
-                No hay categorías creadas aún.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-100 text-sm">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Nombre</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Slug</th>
+                <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">Experiencias</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {categories.map((c) => (
+                <tr key={c.id} className="hover:bg-slate-50/70">
+                  <td className="px-4 py-2.5 font-medium text-slate-900">{c.name}</td>
+                  <td className="px-4 py-2.5 text-slate-500">{c.slug}</td>
+                  <td className="px-4 py-2.5 text-center text-slate-900">{c._count.experiences}</td>
+                  <td className="px-4 py-2.5 text-right">
+                    {c._count.experiences === 0 ? (
+                      <form action={removeCategory} className="inline">
+                        <input type="hidden" name="id" value={c.id} />
+                        <button type="submit" className="text-xs font-medium text-red-600 hover:underline">
+                          Eliminar
+                        </button>
+                      </form>
+                    ) : (
+                      <span className="text-xs text-slate-400" title="No se puede eliminar: en uso por experiencias">
+                        En uso
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {categories.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-500">
+                    No hay categorías creadas aún.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }
