@@ -23,7 +23,7 @@ export default defineConfig({
     {
       name: 'cms',
       use: { ...devices['Desktop Chrome'], baseURL: CMS_URL },
-      testMatch: ['**/operador-*.spec.ts'],
+      testMatch: ['**/operador-*.spec.ts', '**/admin-crud.spec.ts'],
     },
     {
       name: 'marketplace',
