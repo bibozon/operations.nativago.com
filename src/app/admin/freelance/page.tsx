@@ -32,49 +32,28 @@ export default async function FreelanceDashboardPage() {
   const roleLabel = 'OPERADOR FREELANCE';
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="flex min-h-screen">
-        {/* Sidebar */}
-        <aside className="hidden w-56 flex-shrink-0 border-r border-slate-200 bg-white/90 px-4 py-6 shadow-sm md:block">
-          <div className="mb-6">
-            <div className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              NativaGo Creator
-            </div>
+    <div>
+      {/* Topbar */}
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
+            Panel freelance
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Gestiona tus experiencias como operador freelance en NativaGo.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            {roleLabel}
+          </span>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
+            {(auth?.name ?? 'Freelance')[0].toUpperCase()}
           </div>
+        </div>
+      </div>
 
-          <nav className="space-y-1 text-sm">
-            <button className="flex w-full items-center rounded-lg bg-emerald-50 px-3 py-2 text-left font-medium text-emerald-700">
-              Mis experiencias
-            </button>
-            <button className="mt-1 flex w-full items-center rounded-lg px-3 py-2 text-left text-slate-400">
-              Perfil
-            </button>
-          </nav>
-        </aside>
-
-        {/* Main content */}
-        <main className="flex-1 px-4 py-4 md:px-8 md:py-6">
-          {/* Topbar */}
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
-                Panel freelance
-              </h1>
-              <p className="mt-1 text-sm text-slate-500">
-                Gestiona tus experiencias como operador freelance en NativaGo.
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                {roleLabel}
-              </span>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
-                {(auth?.name ?? 'Freelance')[0].toUpperCase()}
-              </div>
-            </div>
-          </div>
-
-          {/* Stats cards */}
+      {/* Stats cards */}
           <section className="mb-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
@@ -108,8 +87,6 @@ export default async function FreelanceDashboardPage() {
             </div>
             <OperatorExperiencesTable experiences={experiences} currencyCode={currencyCode} />
           </section>
-        </main>
-      </div>
     </div>
   );
 }

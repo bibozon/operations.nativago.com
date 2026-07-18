@@ -36,9 +36,9 @@ export class CartPage {
   constructor(private readonly page: Page) {}
 
   async expectItemInCart() {
-    await expect(this.page.getByText('Tu carrito')).toBeVisible({ timeout: 6_000 });
+    await expect(this.page.getByRole('heading', { name: 'Tu carrito' })).toBeVisible({ timeout: 6_000 });
     // Debe haber al menos un botón de Reservar ahora
-    await expect(this.page.getByText('Reservar ahora')).toBeVisible({ timeout: 6_000 });
+    await expect(this.page.getByRole('main').getByText('Reservar ahora').first()).toBeVisible({ timeout: 6_000 });
   }
 
   /** Hace clic en el primer enlace "Reservar ahora" y espera la carga del form */
@@ -64,10 +64,13 @@ export class BookingFormPage {
   }
 
   async fillGuestData(guest: GuestData) {
-    // El form usa componente <Input> que renderiza inputs estándar
-    await this.page.locator('input[type="text"]').fill(guest.name);
-    await this.page.locator('input[type="email"]').fill(guest.email);
-    await this.page.locator('input[type="tel"]').fill(guest.phone);
+    // El form usa componente <Input> que renderiza inputs estándar. Hay un
+    // modal de login ("Acceso viajeros") montado con campos duplicados
+    // (fuera de <main>) — se acota a <main> para evitar el strict mode.
+    const main = this.page.getByRole('main');
+    await main.locator('input[type="text"]').fill(guest.name);
+    await main.locator('input[type="email"]').fill(guest.email);
+    await main.locator('input[type="tel"]').fill(guest.phone);
   }
 
   async acceptTerms() {

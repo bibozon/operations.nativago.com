@@ -96,40 +96,7 @@ export default function NewExperiencePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="flex min-h-screen">
-        {/* Sidebar */}
-        <aside className="hidden w-64 flex-shrink-0 border-r border-slate-200 bg-white/90 px-4 py-6 shadow-sm md:block">
-          <div className="mb-6 flex items-center gap-2">
-            <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white">
-              NG
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">NativaGo</p>
-              <p className="text-xs text-slate-500">CMS Admin</p>
-            </div>
-          </div>
-
-          <nav className="space-y-1 text-sm">
-            <a
-              href="/admin"
-              className="flex items-center rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-50"
-            >
-              Experiencias
-            </a>
-            <a
-              href="/admin/new"
-              className="mt-1 flex items-center rounded-lg bg-emerald-50 px-3 py-2 font-medium text-emerald-700"
-            >
-              <span className="mr-2 h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Crear experiencia
-            </a>
-          </nav>
-        </aside>
-
-        {/* Main content */}
-        <main className="flex-1 px-4 py-6 md:px-8">
-          <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-4xl">
             <header className="mb-6">
               <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
                 Crear experiencia
@@ -281,9 +248,6 @@ export default function NewExperiencePage() {
                 </button>
               </div>
             </form>
-          </div>
-        </main>
-      </div>
     </div>
   );
 }

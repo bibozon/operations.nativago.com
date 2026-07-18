@@ -5,14 +5,13 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const menu = [
-  { label: "Dashboard", href: "/admin", icon: "dashboard" },
+  { label: "Dashboard", href: "/admin/dashboard", icon: "dashboard" },
   { label: "Experiences", href: "/admin/experiences", icon: "sparkle" },
   { label: "Bookings", href: "/admin/bookings", icon: "calendar" },
   { label: "Check-in QR", href: "/admin/checkin", icon: "qrcode" },
   { label: "Operators", href: "/admin/operators", icon: "users" },
   { label: "Cities", href: "/admin/cities", icon: "map" },
   { label: "Categories", href: "/admin/categories", icon: "tag" },
-  { label: "Payments", href: "/admin/payments", icon: "credit-card" },
   { label: "Settings", href: "/admin/settings", icon: "settings" },
 ];
 

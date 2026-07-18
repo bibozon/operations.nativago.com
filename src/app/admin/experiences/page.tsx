@@ -58,7 +58,7 @@ export default async function ExperiencesPage() {
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Experiencias</h1>
         <a
-          href="/admin/experiences/new"
+          href={auth.role === 'SUPERADMIN' ? '/admin/new' : '/admin/experiences/new'}
           className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
         >
           Nueva experiencia
