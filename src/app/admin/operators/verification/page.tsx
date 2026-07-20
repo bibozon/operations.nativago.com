@@ -1,6 +1,6 @@
 import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/db';
-import { requireSuperadmin } from '@/lib/requireRole';
+import { requireStaffOrAbove } from '@/lib/requireRole';
 import { generateOperatorContract } from '@/services/operator/contract';
 import { getOperatorReviewState, REVIEW_STATE_LABEL, type OperatorReviewState } from '@/lib/operatorStatus';
 
@@ -26,7 +26,7 @@ const REVIEW_STATE_BADGE_CLASS: Record<OperatorReviewState, string> = {
 };
 
 export default async function OperatorVerificationPage() {
-  await requireSuperadmin();
+  await requireStaffOrAbove();
 
   const [operators, allDocumentTypes] = await Promise.all([
     getPendingOperators(),
@@ -48,6 +48,8 @@ export default async function OperatorVerificationPage() {
 
   async function updateStatus(formData: FormData) {
     'use server';
+
+    await requireStaffOrAbove();
 
     const id     = (formData.get('id') as string) ?? '';
     const action = (formData.get('action') as string) ?? '';

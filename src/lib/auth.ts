@@ -15,13 +15,15 @@ export function getJwtSecret() {
   return JWT_SECRET;
 }
 
-export type AuthRole = 'SUPERADMIN' | 'OPERATOR_AGENCY' | 'OPERATOR_FREELANCE';
+export type AuthRole = 'SUPERADMIN' | 'SUPPORT' | 'OPERATOR_AGENCY' | 'OPERATOR_FREELANCE';
+export type AuthOperatorRole = 'ADMIN' | 'STAFF';
 
 export interface AuthTokenPayload {
   userId: number;
   email: string;
   role: AuthRole;
   operatorId?: string | null;
+  operatorRole?: AuthOperatorRole | null;
   name?: string | null;
 }
 

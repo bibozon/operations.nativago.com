@@ -92,6 +92,10 @@ export async function registerOperator(
       },
     });
 
+    await tx.operatorMember.create({
+      data: { operatorId: operator.id, userId: user.id, role: 'ADMIN' },
+    });
+
     return { user, operator };
   });
 
@@ -109,11 +113,12 @@ export async function registerOperator(
   }
 
   const token = signAuthToken({
-    userId:     user.id,
-    email:      user.email,
+    userId:       user.id,
+    email:        user.email,
     role,
-    operatorId: operator.id,
-    name:       user.name,
+    operatorId:   operator.id,
+    operatorRole: 'ADMIN',
+    name:         user.name,
   });
 
   const cookieStore = await cookies();

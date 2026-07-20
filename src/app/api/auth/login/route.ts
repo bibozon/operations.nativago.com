@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { email },
-    include: { operator: { select: { id: true } } },
+    include: { operatorMemberships: { select: { operatorId: true, role: true }, take: 1 } },
   });
 
   if (!user) {
@@ -29,11 +29,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
+  const membership = user.operatorMemberships[0];
+
   const token = signAuthToken({
     userId: user.id,
     email: user.email,
     role: user.role as AuthRole,
-    operatorId: user.operator?.id ?? null,
+    operatorId: membership?.operatorId ?? null,
+    operatorRole: membership?.role ?? null,
     name: user.name ?? null,
   });
 

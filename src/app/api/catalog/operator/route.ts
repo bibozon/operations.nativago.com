@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { createOperator } from '@/services/catalog/cms';
 import { getAuthUserFromRequest } from '@/lib/auth';
+import { isStaffOrAbove } from '@/lib/requireRole';
 
 export async function GET(request: NextRequest) {
   const authUser = getAuthUserFromRequest(request);
@@ -15,8 +16,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(operators);
   }
 
-  // SUPERADMIN: see all operators
-  if (authUser.role === 'SUPERADMIN') {
+  // SUPERADMIN/SUPPORT: see all operators
+  if (isStaffOrAbove(authUser.role)) {
     const operators = await prisma.operator.findMany({
       select: { id: true, name: true },
       orderBy: { name: 'asc' },

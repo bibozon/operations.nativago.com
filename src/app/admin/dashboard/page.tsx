@@ -1,6 +1,7 @@
 import prisma from '@/lib/db';
-import { requireSuperadmin } from '@/lib/requireRole';
+import { requireStaffOrAbove } from '@/lib/requireRole';
 import { formatPrice } from '@/domain/entities/Money';
+import { ROLE_LABEL } from '@/lib/roleLabels';
 
 async function getDashboardData() {
   const [experiencesCount, operatorsCount, citiesCount, recentExperiences] =
@@ -28,7 +29,7 @@ async function getDashboardData() {
 }
 
 export default async function SuperadminDashboardPage() {
-  const auth = await requireSuperadmin();
+  const auth = await requireStaffOrAbove();
 
   const { experiencesCount, operatorsCount, citiesCount, recentExperiences } =
     await getDashboardData();
@@ -47,7 +48,7 @@ export default async function SuperadminDashboardPage() {
         </div>
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-            SUPERADMIN
+            {(ROLE_LABEL[auth.role] ?? auth.role).toUpperCase()}
           </span>
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
             {(auth?.name ?? 'Superadmin')[0].toUpperCase()}

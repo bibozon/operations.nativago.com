@@ -1,5 +1,5 @@
 import prisma from '@/lib/db';
-import { requireAuth } from '@/lib/requireRole';
+import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
 import { updateExperience } from '@/services/catalog/cms';
 import { listCitiesByCountry } from '@/services/catalog/cities';
 import { redirect } from 'next/navigation';
@@ -28,7 +28,7 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
     redirect('/admin/experiences');
   }
 
-  if (auth.role !== 'SUPERADMIN' && exp.operator?.userId !== auth.userId) {
+  if (!isStaffOrAbove(auth.role) && exp.operatorId !== auth.operatorId) {
     redirect('/admin/experiences');
   }
 
@@ -48,16 +48,13 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
 
     const authInAction = await requireAuth();
 
-    const existing = await prisma.experience.findUnique({
-      where: { id },
-      include: { operator: true },
-    });
+    const existing = await prisma.experience.findUnique({ where: { id } });
 
     if (!existing) return;
 
     if (
-      authInAction.role !== 'SUPERADMIN' &&
-      existing.operator?.userId !== authInAction.userId
+      !isStaffOrAbove(authInAction.role) &&
+      existing.operatorId !== authInAction.operatorId
     ) {
       return;
     }

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/db';
-import { requireSuperadmin } from '@/lib/requireRole';
+import { requireStaffOrAbove } from '@/lib/requireRole';
 import { listCitiesByCountry } from '@/services/catalog/cities';
 
 interface EditOperatorPageProps {
@@ -15,7 +15,7 @@ const inputClass =
 const labelClass = 'block text-xs font-medium text-slate-600';
 
 export default async function EditOperatorPage({ params }: EditOperatorPageProps) {
-  await requireSuperadmin();
+  await requireStaffOrAbove();
 
   const id = params.id;
   const operator = await prisma.operator.findUnique({ where: { id } });
@@ -29,7 +29,7 @@ export default async function EditOperatorPage({ params }: EditOperatorPageProps
   async function updateOperator(formData: FormData) {
     'use server';
 
-    await requireSuperadmin();
+    await requireStaffOrAbove();
 
     const name = (formData.get('name') as string) ?? '';
     const phone = (formData.get('phone') as string) ?? '';

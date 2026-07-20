@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createExperience, updateExperience } from '@/services/catalog/cms';
 import { getAuthUserFromRequest } from '@/lib/auth';
+import { isStaffOrAbove } from '@/lib/requireRole';
 import prisma from '@/lib/db';
 
 export async function POST(request: NextRequest) {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     !durationMinutes ||
     !categoryId ||
     !cityId ||
-    (!operatorId && authUser.role === 'SUPERADMIN')
+    (!operatorId && isStaffOrAbove(authUser.role))
   ) {
     return NextResponse.json(
       { error: 'Missing required fields for experience' },
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
   }
 
   const finalOperatorId =
-    authUser.role === 'SUPERADMIN' ? (operatorId as string) : authUser.operatorId;
+    isStaffOrAbove(authUser.role) ? (operatorId as string) : authUser.operatorId;
 
   if (!finalOperatorId) {
     return NextResponse.json(
@@ -94,7 +95,7 @@ export async function PUT(request: NextRequest) {
   if (data.cityId != null) data.cityId = String(data.cityId);
   if (data.operatorId != null) data.operatorId = String(data.operatorId);
 
-  if (authUser.role !== 'SUPERADMIN') {
+  if (!isStaffOrAbove(authUser.role)) {
     const existing = await prisma.experience.findUnique({
       where: { id: experienceId },
       select: { operatorId: true },

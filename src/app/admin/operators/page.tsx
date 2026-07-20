@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/db';
-import { requireSuperadmin } from '@/lib/requireRole';
+import { requireStaffOrAbove } from '@/lib/requireRole';
 
 async function getOperatorsData() {
   const operators = await prisma.operator.findMany({
@@ -40,7 +40,7 @@ const STATUS_BADGE_CLASS: Record<string, string> = {
 };
 
 export default async function OperatorsPage() {
-  await requireSuperadmin();
+  await requireStaffOrAbove();
 
   const operators = await getOperatorsData();
 
@@ -53,7 +53,7 @@ export default async function OperatorsPage() {
   async function toggleSuspended(formData: FormData) {
     'use server';
 
-    await requireSuperadmin();
+    await requireStaffOrAbove();
 
     const id = (formData.get('id') as string) ?? '';
     const nextStatus = (formData.get('nextStatus') as string) ?? '';

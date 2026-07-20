@@ -1,5 +1,5 @@
 import prisma from '@/lib/db';
-import { requireAuth } from '@/lib/requireRole';
+import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
 import { redirect } from 'next/navigation';
 
 interface AvailabilityPageProps {
@@ -15,14 +15,13 @@ export default async function AvailabilityPage({ params }: AvailabilityPageProps
 
   const experience = await prisma.experience.findUnique({
     where: { id: expId },
-    include: { operator: true },
   });
 
   if (!experience) {
     redirect('/admin/experiences');
   }
 
-  if (auth.role !== 'SUPERADMIN' && experience.operator?.userId !== auth.userId) {
+  if (!isStaffOrAbove(auth.role) && experience.operatorId !== auth.operatorId) {
     redirect('/admin/experiences');
   }
 
@@ -36,16 +35,13 @@ export default async function AvailabilityPage({ params }: AvailabilityPageProps
 
     const authInAction = await requireAuth();
 
-    const currentExp = await prisma.experience.findUnique({
-      where: { id: expId },
-      include: { operator: true },
-    });
+    const currentExp = await prisma.experience.findUnique({ where: { id: expId } });
 
     if (!currentExp) return;
 
     if (
-      authInAction.role !== 'SUPERADMIN' &&
-      currentExp.operator?.userId !== authInAction.userId
+      !isStaffOrAbove(authInAction.role) &&
+      currentExp.operatorId !== authInAction.operatorId
     ) {
       return;
     }
@@ -79,14 +75,14 @@ export default async function AvailabilityPage({ params }: AvailabilityPageProps
     if (!id) return;
     const slot = await prisma.availabilitySlot.findUnique({
       where: { id },
-      include: { experience: { include: { operator: true } } },
+      include: { experience: { select: { operatorId: true } } },
     });
 
     if (!slot) return;
 
     if (
-      authInAction.role !== 'SUPERADMIN' &&
-      slot.experience.operator?.userId !== authInAction.userId
+      !isStaffOrAbove(authInAction.role) &&
+      slot.experience.operatorId !== authInAction.operatorId
     ) {
       return;
     }

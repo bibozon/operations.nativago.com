@@ -8,7 +8,7 @@ export default async function Home() {
     return null;
   }
   // Redirect by role
-  if (auth.role === 'SUPERADMIN') {
+  if (auth.role === 'SUPERADMIN' || auth.role === 'SUPPORT') {
     redirect('/admin/dashboard');
     return null;
   }
@@ -17,7 +17,7 @@ export default async function Home() {
     return null;
   }
   if (auth.role === 'OPERATOR_FREELANCE') {
-    redirect('/admin/operator');
+    redirect('/admin/freelance');
     return null;
   }
   // Fallback: show login

@@ -1,20 +1,20 @@
 import prisma from '@/lib/db';
-import { requireAuth } from '@/lib/requireRole';
+import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
 
 export default async function BookingsPage() {
   const auth = await requireAuth();
+  const staffOrAbove = isStaffOrAbove(auth.role);
 
-  const bookings =
-    auth.role === 'SUPERADMIN'
-      ? await prisma.booking.findMany({
-          include: { experience: { include: { operator: true } } },
-          orderBy: { createdAt: 'desc' },
-        })
-      : await prisma.booking.findMany({
-          where: { experience: { operator: { userId: auth.userId } } },
-          include: { experience: true },
-          orderBy: { createdAt: 'desc' },
-        });
+  const bookings = staffOrAbove
+    ? await prisma.booking.findMany({
+        include: { experience: { include: { operator: true } } },
+        orderBy: { createdAt: 'desc' },
+      })
+    : await prisma.booking.findMany({
+        where: { experience: { operatorId: auth.operatorId ?? '' } },
+        include: { experience: true },
+        orderBy: { createdAt: 'desc' },
+      });
 
   async function updateStatus(formData: FormData) {
     'use server';
@@ -31,14 +31,14 @@ export default async function BookingsPage() {
 
     const booking = await prisma.booking.findUnique({
       where: { id },
-      include: { experience: { include: { operator: true } } },
+      include: { experience: { select: { operatorId: true } } },
     });
 
     if (!booking) return;
 
     if (
-      authInAction.role !== 'SUPERADMIN' &&
-      booking.experience.operator?.userId !== authInAction.userId
+      !isStaffOrAbove(authInAction.role) &&
+      booking.experience.operatorId !== authInAction.operatorId
     ) {
       return;
     }

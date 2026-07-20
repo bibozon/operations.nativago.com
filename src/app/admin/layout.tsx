@@ -4,29 +4,59 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { AdminSidebarNav, type AdminMenuItem } from "@/components/admin/AdminSidebarNav";
 import { getAuthFromCookies } from "@/lib/requireRole";
+import { ROLE_LABEL } from "@/lib/roleLabels";
+import type { AuthTokenPayload } from "@/lib/auth";
 
-const menu: AdminMenuItem[] = [
-  { label: "Dashboard", href: "/admin/dashboard", icon: "dashboard" },
-  { label: "Experiencias", href: "/admin/experiences", icon: "sparkle" },
-  { label: "Reservas", href: "/admin/bookings", icon: "calendar" },
-  { label: "Check-in QR", href: "/admin/checkin", icon: "qrcode" },
-  { label: "Operadores", href: "/admin/operators", icon: "users" },
-  { label: "Ciudades", href: "/admin/cities", icon: "map" },
-  { label: "Categorías", href: "/admin/categories", icon: "tag" },
-  { label: "Configuración", href: "/admin/settings", icon: "settings" },
-];
+function menuForAuth(auth: AuthTokenPayload): AdminMenuItem[] {
+  if (auth.role === "SUPERADMIN") {
+    return [
+      { label: "Dashboard", href: "/admin/dashboard", icon: "dashboard" },
+      { label: "Experiencias", href: "/admin/experiences", icon: "sparkle" },
+      { label: "Reservas", href: "/admin/bookings", icon: "calendar" },
+      { label: "Check-in QR", href: "/admin/checkin", icon: "qrcode" },
+      { label: "Operadores", href: "/admin/operators", icon: "users" },
+      { label: "Ciudades", href: "/admin/cities", icon: "map" },
+      { label: "Categorías", href: "/admin/categories", icon: "tag" },
+      { label: "Usuarios", href: "/admin/users", icon: "shield" },
+      { label: "Configuración", href: "/admin/settings", icon: "settings" },
+    ];
+  }
 
-const ROLE_LABEL: Record<string, string> = {
-  SUPERADMIN: "Superadmin",
-  OPERATOR_AGENCY: "Agencia",
-  OPERATOR_FREELANCE: "Freelance",
-};
+  if (auth.role === "SUPPORT") {
+    return [
+      { label: "Dashboard", href: "/admin/dashboard", icon: "dashboard" },
+      { label: "Experiencias", href: "/admin/experiences", icon: "sparkle" },
+      { label: "Reservas", href: "/admin/bookings", icon: "calendar" },
+      { label: "Check-in QR", href: "/admin/checkin", icon: "qrcode" },
+      { label: "Operadores", href: "/admin/operators", icon: "users" },
+    ];
+  }
+
+  // OPERATOR_AGENCY / OPERATOR_FREELANCE
+  const items: AdminMenuItem[] = [
+    {
+      label: "Dashboard",
+      href: auth.role === "OPERATOR_AGENCY" ? "/admin/agency" : "/admin/freelance",
+      icon: "dashboard",
+    },
+    { label: "Experiencias", href: "/admin/experiences", icon: "sparkle" },
+    { label: "Reservas", href: "/admin/bookings", icon: "calendar" },
+    { label: "Check-in QR", href: "/admin/checkin", icon: "qrcode" },
+  ];
+
+  if (auth.role === "OPERATOR_AGENCY" && auth.operatorRole === "ADMIN") {
+    items.push({ label: "Equipo", href: "/admin/team", icon: "users" });
+  }
+
+  return items;
+}
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const auth = await getAuthFromCookies();
   const displayName = auth?.name?.trim() || auth?.email || "Usuario";
   const initial = displayName[0]?.toUpperCase() ?? "U";
   const roleLabel = auth ? (ROLE_LABEL[auth.role] ?? auth.role) : "";
+  const menu = auth ? menuForAuth(auth) : [];
 
   return (
     <div className="flex min-h-screen bg-slate-50">

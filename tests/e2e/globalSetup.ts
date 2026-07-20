@@ -159,6 +159,12 @@ export default async function globalSetup() {
           console.log('globalSetup ✓  operador semilla CO creado');
         }
 
+        await prisma.operatorMember.upsert({
+          where: { operatorId_userId: { operatorId: seedOperator.id, userId: seedUser.id } },
+          update: {},
+          create: { operatorId: seedOperator.id, userId: seedUser.id, role: 'ADMIN' },
+        });
+
         // ── 7. Experiencia semilla ───────────────────────────────────
         const SEED_TITLE = 'Tour de prueba E2E NativaGo';
         const existingExp = await prisma.experience.findFirst({

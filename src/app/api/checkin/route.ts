@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
-import { requireOperator } from '@/lib/requireRole';
+import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
 
 export async function POST(req: NextRequest) {
-  const auth = await requireOperator();
+  const auth = await requireAuth();
 
   const body = await req.json().catch(() => null);
 
@@ -16,11 +16,7 @@ export async function POST(req: NextRequest) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
-      experience: {
-        include: {
-          operator: true,
-        },
-      },
+      experience: { select: { operatorId: true } },
     },
   });
 
@@ -28,8 +24,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  // Ensure the booking belongs to the operator making the request
-  if (!booking.experience.operator || booking.experience.operator.userId !== auth.userId) {
+  // SUPERADMIN/SUPPORT pueden hacer check-in de cualquier reserva; el resto
+  // (operadores) solo de las de su propio operador.
+  if (!isStaffOrAbove(auth.role) && booking.experience.operatorId !== auth.operatorId) {
     return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
   }
 

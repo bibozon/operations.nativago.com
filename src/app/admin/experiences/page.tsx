@@ -1,10 +1,11 @@
 import prisma from '@/lib/db';
-import { requireAuth } from '@/lib/requireRole';
+import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
 import { redirect } from 'next/navigation';
 import { formatPrice } from '@/domain/entities/Money';
 
 export default async function ExperiencesPage() {
   const auth = await requireAuth();
+  const staffOrAbove = isStaffOrAbove(auth.role);
 
   const include = {
     operator: true,
@@ -13,17 +14,16 @@ export default async function ExperiencesPage() {
     country: { select: { defaultCurrency: { select: { code: true } } } },
   } as const;
 
-  const experiences =
-    auth.role === 'SUPERADMIN'
-      ? await prisma.experience.findMany({
-          include,
-          orderBy: { id: 'desc' },
-        })
-      : await prisma.experience.findMany({
-          where: { operator: { userId: auth.userId } },
-          include,
-          orderBy: { id: 'desc' },
-        });
+  const experiences = staffOrAbove
+    ? await prisma.experience.findMany({
+        include,
+        orderBy: { id: 'desc' },
+      })
+    : await prisma.experience.findMany({
+        where: { operatorId: auth.operatorId ?? '' },
+        include,
+        orderBy: { id: 'desc' },
+      });
 
   async function deleteExp(formData: FormData) {
     'use server';
@@ -34,16 +34,13 @@ export default async function ExperiencesPage() {
 
     const authInAction = await requireAuth();
 
-    const exp = await prisma.experience.findUnique({
-      where: { id },
-      include: { operator: true },
-    });
+    const exp = await prisma.experience.findUnique({ where: { id } });
 
     if (!exp) return;
 
     if (
-      authInAction.role !== 'SUPERADMIN' &&
-      exp.operator?.userId !== authInAction.userId
+      !isStaffOrAbove(authInAction.role) &&
+      exp.operatorId !== authInAction.operatorId
     ) {
       return;
     }
@@ -59,11 +56,11 @@ export default async function ExperiencesPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Experiencias</h1>
           <p className="mt-1 text-sm text-slate-500">
-            {auth.role === 'SUPERADMIN' ? 'Todas las experiencias publicadas en NativaGo.' : 'Tus experiencias publicadas en NativaGo.'}
+            {staffOrAbove ? 'Todas las experiencias publicadas en NativaGo.' : 'Tus experiencias publicadas en NativaGo.'}
           </p>
         </div>
         <a
-          href={auth.role === 'SUPERADMIN' ? '/admin/new' : '/admin/experiences/new'}
+          href={staffOrAbove ? '/admin/new' : '/admin/experiences/new'}
           className="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-500"
         >
           Nueva experiencia
