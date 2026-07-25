@@ -9,6 +9,12 @@ export const runtime = 'nodejs';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+class CapacityError extends Error {
+  constructor(public remainingSpots: number) {
+    super('Capacity exceeded');
+  }
+}
+
 // Reserva pública + inicio de pago. Consumido por el marketplace (o
 // cualquier otro cliente de cara al público) — el CMS es la única fuente
 // de verdad para reservas, ver plan de arquitectura "CMS como fuente
@@ -66,26 +72,69 @@ export async function POST(req: NextRequest) {
   const deposit = total * 0.15;
   const remaining = total - deposit;
   const currencyCode = exp.country.defaultCurrency.code;
+  const bookingDate = new Date(date);
 
   const bookingCode = await generateUniqueBookingCode();
 
-  const booking = await prisma.booking.create({
-    data: {
-      bookingCode,
-      experienceId: exp.id,
-      countryId: exp.countryId,
-      date: new Date(date),
-      guests: safeGuests,
-      customerName: customerName.slice(0, 100),
-      customerEmail: customerEmail.toLowerCase().trim(),
-      customerPhone: customerPhone ? String(customerPhone).slice(0, 30) : null,
-      amount: total,
-      depositAmount: deposit,
-      remainingAmount: remaining,
-      paymentStatus: 'PENDING',
-      paymentType: 'DEPOSIT',
-    },
-  });
+  // Control de cupo: si el operador definió Experience.capacity (> 0), no se
+  // permite que la suma de guests de reservas activas para la misma fecha/hora
+  // exceda ese cupo. capacity === 0 (default) se trata como "sin límite
+  // configurado" para no romper experiencias que nunca lo definieron.
+  // El conteo + creación corren en una transacción para acotar la ventana de
+  // sobreventa por solicitudes concurrentes (no elimina el race condition por
+  // completo sin aislamiento serializable, pero cierra el hueco de "cero
+  // validación" reportado en la auditoría).
+  let booking;
+  try {
+    booking = await prisma.$transaction(async (tx) => {
+      if (exp.capacity > 0) {
+        const existing = await tx.booking.aggregate({
+          _sum: { guests: true },
+          where: {
+            experienceId: exp.id,
+            date: bookingDate,
+            status: { not: 'CANCELLED' },
+          },
+        });
+        const alreadyBooked = existing._sum.guests ?? 0;
+        if (alreadyBooked + safeGuests > exp.capacity) {
+          const remainingSpots = Math.max(0, exp.capacity - alreadyBooked);
+          throw new CapacityError(remainingSpots);
+        }
+      }
+
+      return tx.booking.create({
+        data: {
+          bookingCode,
+          experienceId: exp.id,
+          countryId: exp.countryId,
+          date: bookingDate,
+          guests: safeGuests,
+          customerName: customerName.slice(0, 100),
+          customerEmail: customerEmail.toLowerCase().trim(),
+          customerPhone: customerPhone ? String(customerPhone).slice(0, 30) : null,
+          amount: total,
+          depositAmount: deposit,
+          remainingAmount: remaining,
+          paymentStatus: 'PENDING',
+          paymentType: 'DEPOSIT',
+        },
+      });
+    });
+  } catch (error) {
+    if (error instanceof CapacityError) {
+      return NextResponse.json(
+        {
+          error:
+            error.remainingSpots > 0
+              ? `Cupo insuficiente para esta fecha. Quedan ${error.remainingSpots} lugar(es) disponibles.`
+              : 'No quedan cupos disponibles para esta fecha.',
+        },
+        { status: 409 },
+      );
+    }
+    throw error;
+  }
 
   let qrCode: string | null = null;
   try {

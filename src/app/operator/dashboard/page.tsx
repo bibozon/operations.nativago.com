@@ -53,24 +53,41 @@ export default async function OperatorDashboardPage() {
     redirect('/register/operator');
   }
 
-  const operator = await prisma.operator.findUnique({
+  const operatorSelect = {
+    id:                 true,
+    name:               true,
+    verificationStatus: true,
+    contractAccepted:   true,
+    type:               true,
+    categoria:          true,
+    paymentAccount:     true,
+    reviewNotes:        true,
+    createdAt:          true,
+    documents:          true,
+  } as const;
+
+  let operator = await prisma.operator.findUnique({
     where: { id: auth.operatorId },
-    select: {
-      id:                 true,
-      name:               true,
-      verificationStatus: true,
-      contractAccepted:   true,
-      type:               true,
-      categoria:          true,
-      paymentAccount:     true,
-      reviewNotes:        true,
-      createdAt:          true,
-      documents:          true,
-    },
+    select: operatorSelect,
   });
 
   if (!operator) {
     redirect('/register/operator');
+  }
+
+  // El estado "no aprobado" es ambiguo justo después de que un admin aprueba:
+  // puede ser real, o una lectura que llegó a una réplica/conexión del pool
+  // que aún no ve el commit. Un solo reintento corto solo se paga en ese caso
+  // borde — el camino sano (ya aprobado) nunca pasa por aquí.
+  if (operator.verificationStatus !== 'APPROVED') {
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    operator = await prisma.operator.findUnique({
+      where: { id: auth.operatorId },
+      select: operatorSelect,
+    });
+    if (!operator) {
+      redirect('/register/operator');
+    }
   }
 
   // Si ya está aprobado y aceptó el contrato, mandarlo al panel completo

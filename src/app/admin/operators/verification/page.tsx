@@ -3,6 +3,7 @@ import prisma from '@/lib/db';
 import { requireStaffOrAbove } from '@/lib/requireRole';
 import { generateOperatorContract } from '@/services/operator/contract';
 import { getOperatorReviewState, REVIEW_STATE_LABEL, type OperatorReviewState } from '@/lib/operatorStatus';
+import { BackLink } from '@/components/BackLink';
 
 async function getPendingOperators() {
   return prisma.operator.findMany({
@@ -94,11 +95,17 @@ export default async function OperatorVerificationPage() {
     }
 
     revalidatePath('/admin/operators/verification');
+    // El operador puede estar mirando su propio dashboard/aceite de contrato
+    // en este mismo instante — invalidar también esas rutas para que su
+    // próxima carga no sirva un estado de verificación desactualizado.
+    revalidatePath('/operator/dashboard');
+    revalidatePath('/legal/operador/aceite');
   }
 
   return (
     <div>
       <div className="mx-auto max-w-6xl">
+            <BackLink href="/admin/operators" label="Operadores" />
             <header className="mb-6 flex items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
