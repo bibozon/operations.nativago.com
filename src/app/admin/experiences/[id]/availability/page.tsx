@@ -1,6 +1,7 @@
 import prisma from '@/lib/db';
 import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
 import { redirect } from 'next/navigation';
+import { BackLink } from '@/components/BackLink';
 
 interface AvailabilityPageProps {
   params: { id: string };
@@ -92,6 +93,7 @@ export default async function AvailabilityPage({ params }: AvailabilityPageProps
 
   return (
     <div className="mx-auto max-w-xl px-4 py-8">
+      <BackLink href="/admin/experiences" label="Experiencias" />
       <h1 className="mb-4 text-xl font-semibold">Disponibilidad para "{experience.title}"</h1>
 
       <form action={addSlot} className="mb-4 flex flex-wrap items-center gap-2">

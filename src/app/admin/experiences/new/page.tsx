@@ -3,6 +3,7 @@ import { requireOperatorContext } from '@/lib/requireRole';
 import { createExperience } from '@/services/catalog/cms';
 import { listCitiesByCountry } from '@/services/catalog/cities';
 import { redirect } from 'next/navigation';
+import { BackLink } from '@/components/BackLink';
 
 export default async function NewExperiencePage() {
   const { operator } = await requireOperatorContext();
@@ -69,6 +70,7 @@ export default async function NewExperiencePage() {
   if (operator.verificationStatus !== 'APPROVED') {
     return (
       <div className="mx-auto max-w-lg px-4 py-8">
+        <BackLink href="/admin/experiences" label="Experiencias" />
         <h1 className="mb-4 text-xl font-semibold">Crear experiencia</h1>
         <p className="text-sm text-slate-600">
           Tu cuenta de operador aún no ha sido verificada. Solo los operadores
@@ -80,6 +82,7 @@ export default async function NewExperiencePage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
+      <BackLink href="/admin/experiences" label="Experiencias" />
       <h1 className="mb-4 text-xl font-semibold">Crear experiencia</h1>
       <form action={createExp} className="space-y-3" encType="multipart/form-data">
         <input

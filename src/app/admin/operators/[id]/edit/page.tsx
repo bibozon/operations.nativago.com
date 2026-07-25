@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import prisma from '@/lib/db';
 import { requireStaffOrAbove } from '@/lib/requireRole';
 import { listCitiesByCountry } from '@/services/catalog/cities';
+import { BackLink } from '@/components/BackLink';
 
 interface EditOperatorPageProps {
   params: { id: string };
@@ -59,13 +60,8 @@ export default async function EditOperatorPage({ params }: EditOperatorPageProps
 
   return (
     <div className="mx-auto max-w-lg">
-      <div className="mb-6 flex items-center gap-3">
-        <Link href="/admin/operators" className="text-sm text-slate-500 hover:text-teal-700">
-          Operadores
-        </Link>
-        <span className="text-slate-300">/</span>
-        <h1 className="text-xl font-semibold tracking-tight text-slate-900">Editar operador</h1>
-      </div>
+      <BackLink href="/admin/operators" label="Operadores" />
+      <h1 className="mb-6 text-xl font-semibold tracking-tight text-slate-900">Editar operador</h1>
 
       <form action={updateOperator} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="space-y-1">

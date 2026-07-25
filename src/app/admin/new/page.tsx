@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { BackLink } from '@/components/BackLink';
 
 type Option = { id: string; name: string };
 
@@ -97,6 +98,7 @@ export default function NewExperiencePage() {
 
   return (
     <div className="mx-auto max-w-4xl">
+            <BackLink href="/admin/experiences" label="Experiencias" />
             <header className="mb-6">
               <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
                 Crear experiencia
@@ -234,7 +236,7 @@ export default function NewExperiencePage() {
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => router.push('/admin')}
+                  onClick={() => router.push('/admin/experiences')}
                   className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
                   Cancelar

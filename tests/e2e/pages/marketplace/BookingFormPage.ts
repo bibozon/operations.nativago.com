@@ -24,8 +24,8 @@ export class ExperienceDetailPage {
     const btn = this.page.getByRole('button', { name: /Agregar al carrito/ }).first();
     await expect(btn).toBeVisible({ timeout: 6_000 });
     await btn.click();
-    // Esperar feedback visual ("Agregado al carrito")
-    await expect(this.page.getByRole('button', { name: /Agregado/ })).toBeVisible({ timeout: 4_000 });
+    // Tras agregar, AddToCartButton cambia a un botón "N cupo(s) en carrito · Ver carrito →"
+    await expect(this.page.getByRole('button', { name: /cupo.*en carrito/ })).toBeVisible({ timeout: 4_000 });
   }
 
   async goToCart() {

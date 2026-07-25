@@ -4,6 +4,7 @@ import { updateExperience } from '@/services/catalog/cms';
 import { listCitiesByCountry } from '@/services/catalog/cities';
 import { redirect } from 'next/navigation';
 import { formatPrice } from '@/domain/entities/Money';
+import { BackLink } from '@/components/BackLink';
 
 interface EditExperiencePageProps {
   params: { id: string };
@@ -93,6 +94,7 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
+      <BackLink href="/admin/experiences" label="Experiencias" />
       <h1 className="mb-4 text-xl font-semibold">Editar experiencia</h1>
       <form action={updateExp} className="space-y-3" encType="multipart/form-data">
         <input

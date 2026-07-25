@@ -1,6 +1,7 @@
 import prisma from '@/lib/db';
 import { OperatorRegisterForm } from './OperatorRegisterForm';
 import { registerOperator } from './actions';
+import { BackLink } from '@/components/BackLink';
 
 export default async function OperatorRegisterPage() {
   const [cities, documentTypes] = await Promise.all([
@@ -23,6 +24,7 @@ export default async function OperatorRegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
       <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white px-6 py-8 shadow-sm">
+        <BackLink href="/login" label="Iniciar sesión" />
         <h1 className="text-xl font-semibold text-slate-900">Registro de operador</h1>
         <p className="mt-1 text-sm text-slate-600">
           Cuéntanos cómo ofreces tus experiencias para pedirte solo lo necesario y verificar tu cuenta.
