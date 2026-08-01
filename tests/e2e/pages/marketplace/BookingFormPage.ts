@@ -75,6 +75,14 @@ export class BookingFormPage {
     await main.locator('input[type="tel"]').fill(guest.phone);
   }
 
+  /** Rellena solo los campos indicados de guest (para casos negativos de campo faltante) */
+  async fillGuestDataPartial(guest: Partial<GuestData>) {
+    const main = this.page.getByRole('main');
+    if (guest.name  !== undefined) await main.locator('input[type="text"]').fill(guest.name);
+    if (guest.email !== undefined) await main.locator('input[type="email"]').fill(guest.email);
+    if (guest.phone !== undefined) await main.locator('input[type="tel"]').fill(guest.phone);
+  }
+
   async acceptTerms() {
     const checkboxes = this.page.locator('input[type="checkbox"]');
     const count = await checkboxes.count();
@@ -83,10 +91,19 @@ export class BookingFormPage {
     }
   }
 
+  /** Marca solo "Términos" y deja "Privacidad" sin marcar (caso negativo) */
+  async acceptOnlyTermsCheckbox() {
+    await this.page.locator('input[type="checkbox"]').nth(0).check();
+  }
+
   async submit() {
     const btn = this.page.getByRole('button', { name: /Reservar/ });
     await expect(btn).toBeVisible({ timeout: 5_000 });
     await btn.click();
+  }
+
+  async expectError(text: string) {
+    await expect(this.page.getByText(text)).toBeVisible({ timeout: 5_000 });
   }
 
   async expectConfirmation() {

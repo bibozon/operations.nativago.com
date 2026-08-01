@@ -14,6 +14,7 @@
 /coverage
 /test-results
 /playwright-report
+/.bdd-gen
 
 # next.js
 /.next/
