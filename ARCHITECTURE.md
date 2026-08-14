@@ -154,7 +154,7 @@ Next.js 16 renombró `middleware.ts` a `proxy.ts` (export debe llamarse `proxy`,
 ## 6. Deuda técnica conocida (no resuelta, documentada a propósito)
 
 ### CMS
-- **`src/app/admin/page.tsx` está roto de fondo:** hace `fetch('/api/auth/me')` pero esa ruta **no existe** (`src/app/api/auth/` solo tiene `login` y `logout`). Además usa tipos obsoletos (`Experience.id: number`, campo `featured` que ya no existe en el schema). Es anterior a todo el trabajo de esta sesión — nunca funcionó del todo.
+- ~~`src/app/admin/page.tsx` está roto de fondo~~ — **corregido** (ya no llama a `/api/auth/me`; usa `requireAuth()` + `redirect()` server-side por rol). Verificado 2026-08-01 durante la auditoría QA.
 - **Dos UIs paralelas para crear experiencias:** `admin/new/page.tsx` (client component + `/api/catalog/experience`) y `admin/experiences/new/page.tsx` (server action). Ambas funcionan y ambas están protegidas por el aislamiento de país, pero es redundancia — deberían unificarse.
 - **Modelo `Slot` sin usar:** todo el código real usa `AvailabilitySlot`. `Slot` (con `time: String`) parece un diseño anterior abandonado. Candidato a eliminar del schema (requiere migración).
 - **`eslint` no está instalado** pese a existir `eslint.config.mjs` — no hay script `lint`, el linter nunca corre.
@@ -204,4 +204,3 @@ Next.js 16 renombró `middleware.ts` a `proxy.ts` (export debe llamarse `proxy`,
 - `npx tsc --noEmit` limpio en ambos proyectos (CMS y marketplace) es la señal mínima de que nada está roto.
 - CMS: `node prisma/backfill-country.js` es idempotente — correrlo de nuevo debe reportar 0 actualizaciones si ya se corrió antes.
 - Marketplace: no hay `DATABASE_URL` de Postgres accesible desde este entorno de desarrollo — la migración/seed local (`prisma/seed.ts`, con 15 ciudades CO + 10 BR) está escrita pero no se ha ejecutado contra una base real desde acá.
-- Plan de arquitectura completo (fases 0-7, contexto de cada decisión): `C:\Users\Usuario\.claude\plans\cozy-sniffing-plum.md`.
