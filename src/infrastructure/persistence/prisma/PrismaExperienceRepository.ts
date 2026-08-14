@@ -34,7 +34,16 @@ export class PrismaExperienceRepository implements ExperienceRepository {
     }
 
     if (categorySlug) {
-      where.category = { slug: categorySlug };
+      // El marketplace hoy envía el nombre visible de la categoría ("Cultura"),
+      // no el slug ("cultura") — igual que el filtro de ciudad de arriba, se
+      // acepta por nombre insensible a mayúsculas además del slug real, para
+      // no depender de que el llamador use exactamente uno u otro formato.
+      where.category = {
+        OR: [
+          { slug: categorySlug },
+          { name: { equals: categorySlug, mode: 'insensitive' } },
+        ],
+      };
     }
 
     if (operatorId) {
