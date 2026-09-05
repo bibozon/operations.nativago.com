@@ -2,10 +2,12 @@ import prisma from '@/lib/db';
 import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
 import { redirect } from 'next/navigation';
 import { formatPrice } from '@/domain/entities/Money';
+import { getT } from '@/lib/i18n/getLocale';
 
 export default async function ExperiencesPage() {
   const auth = await requireAuth();
   const staffOrAbove = isStaffOrAbove(auth.role);
+  const t = await getT();
 
   const include = {
     operator: true,
@@ -54,16 +56,16 @@ export default async function ExperiencesPage() {
     <div>
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Experiencias</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t.admin_expTitle}</h1>
           <p className="mt-1 text-sm text-slate-500">
-            {staffOrAbove ? 'Todas las experiencias publicadas en NativaGo.' : 'Tus experiencias publicadas en NativaGo.'}
+            {staffOrAbove ? t.admin_expSubtitleAll : t.admin_expSubtitleMine}
           </p>
         </div>
         <a
           href={staffOrAbove ? '/admin/new' : '/admin/experiences/new'}
           className="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-500"
         >
-          Nueva experiencia
+          {t.admin_expNew}
         </a>
       </header>
 
@@ -72,12 +74,12 @@ export default async function ExperiencesPage() {
           <table className="min-w-full divide-y divide-slate-100 text-sm">
             <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Imagen</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Título</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Ciudad</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Precio</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Operador</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Acciones</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{t.admin_expColImage}</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{t.admin_colTitle}</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{t.admin_colCity}</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">{t.admin_colPrice}</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{t.admin_expColOperator}</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">{t.admin_expActions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
@@ -106,13 +108,13 @@ export default async function ExperiencesPage() {
                         href={`/admin/experiences/${exp.id}/edit`}
                         className="text-xs font-medium text-teal-700 hover:underline"
                       >
-                        Editar
+                        {t.admin_edit}
                       </a>
                       <a
                         href={`/admin/experiences/${exp.id}/availability`}
                         className="text-xs font-medium text-sky-700 hover:underline"
                       >
-                        Disponibilidad
+                        {t.admin_availability}
                       </a>
                       <form action={deleteExp} className="inline">
                         <input type="hidden" name="id" value={exp.id} />
@@ -120,7 +122,7 @@ export default async function ExperiencesPage() {
                           type="submit"
                           className="text-xs font-medium text-red-600 hover:underline"
                         >
-                          Eliminar
+                          {t.admin_delete}
                         </button>
                       </form>
                     </div>
@@ -133,7 +135,7 @@ export default async function ExperiencesPage() {
                     colSpan={6}
                     className="px-4 py-6 text-center text-sm text-slate-500"
                   >
-                    No hay experiencias creadas aún.
+                    {t.admin_expEmpty}
                   </td>
                 </tr>
               )}
