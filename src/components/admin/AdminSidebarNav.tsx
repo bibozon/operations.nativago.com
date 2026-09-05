@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { NativaGoLogo } from '@/components/NativaGoLogo';
 
 export interface AdminMenuItem {
   label: string;
@@ -125,7 +126,12 @@ export function AdminSidebarNav({ menu, mobile = false, userInfo }: AdminSidebar
             />
             <div className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-[#0B1120] py-6 px-4 shadow-2xl">
               <div className="mb-6 flex items-center justify-between px-1">
-                <span className="text-sm font-semibold text-white">Menú</span>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-7 shrink-0">
+                    <NativaGoLogo size="sm" />
+                  </div>
+                  <span className="text-base font-extrabold tracking-tight text-white">CMS</span>
+                </div>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}

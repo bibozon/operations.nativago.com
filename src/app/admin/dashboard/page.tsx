@@ -2,6 +2,7 @@ import prisma from '@/lib/db';
 import { requireStaffOrAbove } from '@/lib/requireRole';
 import { formatPrice } from '@/domain/entities/Money';
 import { ROLE_LABEL } from '@/lib/roleLabels';
+import { getT } from '@/lib/i18n/getLocale';
 
 async function getDashboardData() {
   const [experiencesCount, operatorsCount, citiesCount, recentExperiences] =
@@ -30,6 +31,7 @@ async function getDashboardData() {
 
 export default async function SuperadminDashboardPage() {
   const auth = await requireStaffOrAbove();
+  const t = await getT();
 
   const { experiencesCount, operatorsCount, citiesCount, recentExperiences } =
     await getDashboardData();
@@ -40,10 +42,10 @@ export default async function SuperadminDashboardPage() {
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
-            Dashboard
+            {t.admin_dashboardTitle}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Vista general del rendimiento de operadores y experiencias.
+            {t.admin_dashboardSubtitle}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -60,40 +62,40 @@ export default async function SuperadminDashboardPage() {
           <section className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Experiencias
+                {t.admin_statExperiences}
               </p>
               <p className="mt-2 text-2xl font-semibold text-slate-900">
                 {experiencesCount}
               </p>
-              <p className="mt-1 text-xs text-slate-500">Publicadas en el marketplace</p>
+              <p className="mt-1 text-xs text-slate-500">{t.admin_statExperiencesDesc}</p>
             </div>
 
             <div className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Operadores
+                {t.admin_statOperators}
               </p>
               <p className="mt-2 text-2xl font-semibold text-slate-900">
                 {operatorsCount}
               </p>
-              <p className="mt-1 text-xs text-slate-500">Agencias y freelancers activos</p>
+              <p className="mt-1 text-xs text-slate-500">{t.admin_statOperatorsDesc}</p>
             </div>
 
             <div className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Ciudades
+                {t.admin_statCities}
               </p>
               <p className="mt-2 text-2xl font-semibold text-slate-900">
                 {citiesCount}
               </p>
-              <p className="mt-1 text-xs text-slate-500">Destinos operados</p>
+              <p className="mt-1 text-xs text-slate-500">{t.admin_statCitiesDesc}</p>
             </div>
 
             <div className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Ventas
+                {t.admin_statSales}
               </p>
               <p className="mt-2 text-2xl font-semibold text-slate-900">$0</p>
-              <p className="mt-1 text-xs text-slate-500">Integración pendiente</p>
+              <p className="mt-1 text-xs text-slate-500">{t.admin_statSalesDesc}</p>
             </div>
           </section>
 
@@ -101,7 +103,7 @@ export default async function SuperadminDashboardPage() {
           <section className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-slate-900">
-                Experiencias recientes
+                {t.admin_recentExperiences}
               </h2>
             </div>
             <div className="overflow-x-auto">
@@ -109,19 +111,19 @@ export default async function SuperadminDashboardPage() {
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Título
+                      {t.admin_colTitle}
                     </th>
                     <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Operador
+                      {t.admin_colOperator}
                     </th>
                     <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Ciudad
+                      {t.admin_colCity}
                     </th>
                     <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Precio
+                      {t.admin_colPrice}
                     </th>
                     <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Estado
+                      {t.admin_colStatus}
                     </th>
                   </tr>
                 </thead>
@@ -142,7 +144,7 @@ export default async function SuperadminDashboardPage() {
                       </td>
                       <td className="px-3 py-2 text-center text-xs">
                         <span className="inline-flex rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700">
-                          Publicada
+                          {t.admin_published}
                         </span>
                       </td>
                     </tr>
@@ -153,7 +155,7 @@ export default async function SuperadminDashboardPage() {
                         colSpan={5}
                         className="px-3 py-6 text-center text-sm text-slate-500"
                       >
-                        No hay experiencias recientes.
+                        {t.admin_noRecentExperiences}
                       </td>
                     </tr>
                   )}

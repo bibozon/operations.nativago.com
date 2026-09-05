@@ -1,6 +1,7 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { type Locale, type TranslationKey, T } from './translations';
+import { LANG_COOKIE } from './langCookie';
 
 interface LangCtx {
   locale: Locale;
@@ -23,8 +24,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   function setLocale(l: Locale) {
-    setLocaleState(l);
     localStorage.setItem('nativago_lang', l);
+    // Cookie legible del lado del servidor — permite traducir Server
+    // Components (todo el admin del CMS se renderiza en servidor). Se usa
+    // un reload completo en vez de router.refresh(): el router cache de
+    // Next no siempre vuelve a pedir el RSC payload solo porque cambió una
+    // cookie, así que un refresh() a veces dejaba la página en el idioma
+    // viejo.
+    document.cookie = `${LANG_COOKIE}=${l}; path=/; max-age=31536000; samesite=lax`;
+    window.location.reload();
   }
 
   const t = (key: TranslationKey) => T[locale][key] ?? T.es[key];

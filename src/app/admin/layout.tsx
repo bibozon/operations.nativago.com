@@ -5,47 +5,49 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { AdminSidebarNav, type AdminMenuItem } from "@/components/admin/AdminSidebarNav";
 import { getAuthFromCookies } from "@/lib/requireRole";
 import { ROLE_LABEL } from "@/lib/roleLabels";
+import { getT } from "@/lib/i18n/getLocale";
 import type { AuthTokenPayload } from "@/lib/auth";
+import type { TranslationKey } from "@/lib/i18n/translations";
 
-function menuForAuth(auth: AuthTokenPayload): AdminMenuItem[] {
+function menuForAuth(auth: AuthTokenPayload, t: Record<TranslationKey, string>): AdminMenuItem[] {
   if (auth.role === "SUPERADMIN") {
     return [
-      { label: "Dashboard", href: "/admin/dashboard", icon: "dashboard" },
-      { label: "Experiencias", href: "/admin/experiences", icon: "sparkle" },
-      { label: "Reservas", href: "/admin/bookings", icon: "calendar" },
-      { label: "Check-in QR", href: "/admin/checkin", icon: "qrcode" },
-      { label: "Operadores", href: "/admin/operators", icon: "users" },
-      { label: "Ciudades", href: "/admin/cities", icon: "map" },
-      { label: "Categorías", href: "/admin/categories", icon: "tag" },
-      { label: "Usuarios", href: "/admin/users", icon: "shield" },
-      { label: "Configuración", href: "/admin/settings", icon: "settings" },
+      { label: t.admin_navDashboard, href: "/admin/dashboard", icon: "dashboard" },
+      { label: t.admin_navExperiences, href: "/admin/experiences", icon: "sparkle" },
+      { label: t.admin_navBookings, href: "/admin/bookings", icon: "calendar" },
+      { label: t.admin_navCheckin, href: "/admin/checkin", icon: "qrcode" },
+      { label: t.admin_navOperators, href: "/admin/operators", icon: "users" },
+      { label: t.admin_navCities, href: "/admin/cities", icon: "map" },
+      { label: t.admin_navCategories, href: "/admin/categories", icon: "tag" },
+      { label: t.admin_navUsers, href: "/admin/users", icon: "shield" },
+      { label: t.admin_navSettings, href: "/admin/settings", icon: "settings" },
     ];
   }
 
   if (auth.role === "SUPPORT") {
     return [
-      { label: "Dashboard", href: "/admin/dashboard", icon: "dashboard" },
-      { label: "Experiencias", href: "/admin/experiences", icon: "sparkle" },
-      { label: "Reservas", href: "/admin/bookings", icon: "calendar" },
-      { label: "Check-in QR", href: "/admin/checkin", icon: "qrcode" },
-      { label: "Operadores", href: "/admin/operators", icon: "users" },
+      { label: t.admin_navDashboard, href: "/admin/dashboard", icon: "dashboard" },
+      { label: t.admin_navExperiences, href: "/admin/experiences", icon: "sparkle" },
+      { label: t.admin_navBookings, href: "/admin/bookings", icon: "calendar" },
+      { label: t.admin_navCheckin, href: "/admin/checkin", icon: "qrcode" },
+      { label: t.admin_navOperators, href: "/admin/operators", icon: "users" },
     ];
   }
 
   // OPERATOR_AGENCY / OPERATOR_FREELANCE
   const items: AdminMenuItem[] = [
     {
-      label: "Dashboard",
+      label: t.admin_navDashboard,
       href: auth.role === "OPERATOR_AGENCY" ? "/admin/agency" : "/admin/freelance",
       icon: "dashboard",
     },
-    { label: "Experiencias", href: "/admin/experiences", icon: "sparkle" },
-    { label: "Reservas", href: "/admin/bookings", icon: "calendar" },
-    { label: "Check-in QR", href: "/admin/checkin", icon: "qrcode" },
+    { label: t.admin_navExperiences, href: "/admin/experiences", icon: "sparkle" },
+    { label: t.admin_navBookings, href: "/admin/bookings", icon: "calendar" },
+    { label: t.admin_navCheckin, href: "/admin/checkin", icon: "qrcode" },
   ];
 
   if (auth.role === "OPERATOR_AGENCY" && auth.operatorRole === "ADMIN") {
-    items.push({ label: "Equipo", href: "/admin/team", icon: "users" });
+    items.push({ label: t.admin_navTeam, href: "/admin/team", icon: "users" });
   }
 
   return items;
@@ -53,10 +55,11 @@ function menuForAuth(auth: AuthTokenPayload): AdminMenuItem[] {
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const auth = await getAuthFromCookies();
+  const t = await getT();
   const displayName = auth?.name?.trim() || auth?.email || "Usuario";
   const initial = displayName[0]?.toUpperCase() ?? "U";
   const roleLabel = auth ? (ROLE_LABEL[auth.role] ?? auth.role) : "";
-  const menu = auth ? menuForAuth(auth) : [];
+  const menu = auth ? menuForAuth(auth, t) : [];
 
   return (
     <div className="flex min-h-screen bg-slate-50">
