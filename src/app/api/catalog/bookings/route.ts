@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
     include: {
       country: { include: { defaultCurrency: true } },
       operator: { select: { name: true, email: true, phone: true } },
+      category: { select: { slug: true } },
     },
   });
 
@@ -69,7 +70,13 @@ export async function POST(req: NextRequest) {
   const safeGuests = Math.max(1, Math.min(50, Number(guests) || 1));
   const price = Number(exp.price);
   const total = price * safeGuests;
-  const deposit = total * 0.15;
+  // Buceo exige anticipo del 50% (no el 15% estándar) por los costos
+  // operativos previos a la salida (equipo, embarcación, personal) que el
+  // operador asume antes de que la actividad ocurra. De ese 50%, el 15% del
+  // valor total sigue siendo la comisión de NativaGo — el 35% restante es
+  // un adelanto al operador, no una comisión adicional.
+  const depositRate = exp.category?.slug === 'buceo' ? 0.5 : 0.15;
+  const deposit = total * depositRate;
   const remaining = total - deposit;
   const currencyCode = exp.country.defaultCurrency.code;
   const bookingDate = new Date(date);
