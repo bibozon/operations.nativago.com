@@ -4,6 +4,11 @@ import prisma from '@/lib/db';
 export async function GET() {
   try {
     const categories = await prisma.category.findMany({
+      where: {
+        experiences: {
+          some: { operator: { verificationStatus: 'APPROVED' } },
+        },
+      },
       orderBy: { name: 'asc' },
     });
 
