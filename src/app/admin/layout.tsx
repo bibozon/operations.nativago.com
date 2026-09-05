@@ -80,8 +80,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="flex-1 flex flex-col min-h-screen min-w-0">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-white border-b border-slate-200 flex items-center justify-between h-16 px-6">
-          {/* Mobile: show nav links */}
-          <AdminSidebarNav menu={menu} mobile />
+          {/* Mobile: hamburger que abre el menú completo */}
+          <AdminSidebarNav menu={menu} mobile userInfo={{ initial, displayName, roleLabel }} />
           <div className="ml-auto flex items-center gap-3">
             <LanguageSwitcher variant="light" />
             <div className="hidden sm:flex h-9 w-9 items-center justify-center rounded-full bg-teal-50 text-sm font-semibold text-teal-700">

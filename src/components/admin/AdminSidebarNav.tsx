@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -47,29 +48,16 @@ function Icon({ name }: { name: AdminMenuItem['icon'] }) {
   );
 }
 
-export function AdminSidebarNav({ menu, mobile = false }: { menu: AdminMenuItem[]; mobile?: boolean }) {
-  const pathname = usePathname();
+interface AdminSidebarNavProps {
+  menu: AdminMenuItem[];
+  mobile?: boolean;
+  userInfo?: { initial: string; displayName: string; roleLabel: string };
+}
 
+function NavLinks({ menu, onNavigate }: { menu: AdminMenuItem[]; onNavigate?: () => void }) {
+  const pathname = usePathname();
   const isActive = (href: string) =>
     href === '/admin/dashboard' ? pathname === href : pathname === href || pathname?.startsWith(href + '/');
-
-  if (mobile) {
-    return (
-      <nav className="flex md:hidden items-center gap-1 overflow-x-auto">
-        {menu.slice(0, 4).map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`text-xs font-semibold px-2 py-1 rounded whitespace-nowrap transition ${
-              isActive(item.href) ? 'bg-teal-50 text-teal-700' : 'text-slate-500 hover:text-teal-700'
-            }`}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-    );
-  }
 
   return (
     <nav className="flex-1 space-y-0.5">
@@ -79,6 +67,7 @@ export function AdminSidebarNav({ menu, mobile = false }: { menu: AdminMenuItem[
           <Link
             key={item.href}
             href={item.href}
+            onClick={onNavigate}
             className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
               active
                 ? 'bg-teal-500/15 text-teal-300 font-semibold'
@@ -92,4 +81,80 @@ export function AdminSidebarNav({ menu, mobile = false }: { menu: AdminMenuItem[
       })}
     </nav>
   );
+}
+
+export function AdminSidebarNav({ menu, mobile = false, userInfo }: AdminSidebarNavProps) {
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Cerrar el drawer al navegar a otra página o al presionar Escape.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open]);
+
+  if (mobile) {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Abrir menú"
+          aria-expanded={open}
+          className="flex md:hidden h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 active:bg-slate-200"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-6 w-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+          </svg>
+        </button>
+
+        {open && (
+          <div className="md:hidden">
+            <div
+              className="fixed inset-0 z-40 bg-black/50"
+              onClick={() => setOpen(false)}
+              aria-hidden="true"
+            />
+            <div className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-[#0B1120] py-6 px-4 shadow-2xl">
+              <div className="mb-6 flex items-center justify-between px-1">
+                <span className="text-sm font-semibold text-white">Menú</span>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="Cerrar menú"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <NavLinks menu={menu} onNavigate={() => setOpen(false)} />
+              {userInfo && (
+                <div className="mt-auto pt-4 border-t border-white/10 flex items-center gap-2 px-1">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-500/20 text-sm font-semibold text-teal-300">
+                    {userInfo.initial}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-white">{userInfo.displayName}</p>
+                    <p className="text-xs text-slate-400">{userInfo.roleLabel}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  return <NavLinks menu={menu} />;
 }
