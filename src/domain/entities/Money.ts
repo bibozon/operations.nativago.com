@@ -9,9 +9,12 @@ export type Money = {
 };
 
 export function formatMoney(money: Money, locale: string): string {
+  // currencyDisplay: 'code' — el símbolo "$" es ambiguo entre COP/MXN/USD;
+  // el código (COP, MXN, BRL...) identifica la moneda sin ambigüedad.
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: money.currencyCode,
+    currencyDisplay: 'code',
   }).format(money.amount);
 }
 
