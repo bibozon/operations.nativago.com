@@ -7,9 +7,11 @@ import { isStaffOrAbove } from '@/lib/requireRole';
 export async function GET(request: NextRequest) {
   const authUser = getAuthUserFromRequest(request);
 
-  // Public (unauthenticated) access: list all operators (for now)
+  // Public (unauthenticated) access: solo operadores ya aprobados — nadie
+  // externo debe poder listar operadores DRAFT/PENDING/REJECTED/SUSPENDED.
   if (!authUser) {
     const operators = await prisma.operator.findMany({
+      where: { verificationStatus: 'APPROVED' },
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
     });

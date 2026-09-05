@@ -4,7 +4,11 @@ import { redirect } from 'next/navigation';
 import { formatPrice } from '@/domain/entities/Money';
 import { getT } from '@/lib/i18n/getLocale';
 
-export default async function ExperiencesPage() {
+export default async function ExperiencesPage({
+  searchParams,
+}: {
+  searchParams?: { error?: string };
+}) {
   const auth = await requireAuth();
   const staffOrAbove = isStaffOrAbove(auth.role);
   const t = await getT();
@@ -47,6 +51,16 @@ export default async function ExperiencesPage() {
       return;
     }
 
+    // Borrar con reservas activas viola la FK (Booking.experienceId) y
+    // Postgres la rechaza — se chequea antes para mostrar un mensaje de
+    // negocio en vez de que la Server Action crashee con un error 500.
+    const activeBookings = await prisma.booking.count({
+      where: { experienceId: id, status: { not: 'CANCELLED' } },
+    });
+    if (activeBookings > 0) {
+      redirect('/admin/experiences?error=has-bookings');
+    }
+
     await prisma.experience.delete({ where: { id } });
 
     redirect('/admin/experiences');
@@ -54,6 +68,11 @@ export default async function ExperiencesPage() {
 
   return (
     <div>
+      {searchParams?.error === 'has-bookings' && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {t.admin_expHasBookingsError}
+        </div>
+      )}
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t.admin_expTitle}</h1>

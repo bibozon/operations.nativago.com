@@ -5,9 +5,12 @@ import { resolveCountryId } from '@/infrastructure/persistence/prisma/countryLoo
 const cityRepository = new PrismaCityRepository();
 
 export async function deleteCityIfUnused(cityId: string) {
-  const experienceCount = await prisma.experience.count({ where: { cityId } });
-  if (experienceCount > 0) {
-    throw new Error('Cannot delete city: it is used by experiences');
+  const [experienceCount, operatorCount] = await Promise.all([
+    prisma.experience.count({ where: { cityId } }),
+    prisma.operator.count({ where: { cityId } }),
+  ]);
+  if (experienceCount > 0 || operatorCount > 0) {
+    throw new Error('Cannot delete city: it is used by experiences or operators');
   }
   await prisma.city.delete({ where: { id: cityId } });
 }

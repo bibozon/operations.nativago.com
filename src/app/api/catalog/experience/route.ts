@@ -48,6 +48,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Un operador (no-staff) solo puede publicar si ya fue aprobado — cierra
+  // el mismo hueco que la UI de /admin/experiences/new ya bloqueaba, pero
+  // que la API no exigía si se llamaba directamente.
+  if (!isStaffOrAbove(authUser.role)) {
+    const operator = await prisma.operator.findUnique({
+      where: { id: finalOperatorId },
+      select: { verificationStatus: true },
+    });
+
+    if (operator?.verificationStatus !== 'APPROVED') {
+      return NextResponse.json(
+        { error: 'Operator not verified' },
+        { status: 403 },
+      );
+    }
+  }
+
   try {
     const experience = await createExperience({
       title,

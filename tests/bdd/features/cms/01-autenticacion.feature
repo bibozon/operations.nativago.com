@@ -31,3 +31,14 @@ Característica: Autenticación en el CMS
   Escenario: La API de login rechaza una petición sin email ni contraseña
     Cuando envío una petición a la API de login sin email ni contraseña
     Entonces la API responde con estado 400 y el mensaje "Email and password are required"
+
+  @borde
+  Escenario: Una cookie de sesión inválida no da acceso al panel
+    Dado que tengo una cookie de sesión inválida
+    Cuando intento entrar al dashboard de administración
+    Entonces soy redirigido a la página de inicio de sesión
+
+  @negativo @seguridad @P1
+  Escenario: La API de login bloquea intentos repetidos de fuerza bruta
+    Cuando envío 15 intentos de login consecutivos con la misma contraseña incorrecta
+    Entonces alguno de los intentos responde con estado 429

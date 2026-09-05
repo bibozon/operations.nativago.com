@@ -1,4 +1,5 @@
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import prisma from '@/lib/db';
 import { requireSuperadmin } from '@/lib/requireRole';
 import { createCategory } from '@/services/catalog/cms';
@@ -13,7 +14,11 @@ function slugify(name: string) {
     .replace(/(^-|-$)/g, '');
 }
 
-export default async function CategoriesPage() {
+export default async function CategoriesPage({
+  searchParams,
+}: {
+  searchParams?: { error?: string };
+}) {
   await requireSuperadmin();
 
   const categories = await prisma.category.findMany({
@@ -41,12 +46,24 @@ export default async function CategoriesPage() {
     const id = (formData.get('id') as string) ?? '';
     if (!id) return;
 
-    await deleteCategoryIfUnused(id);
+    // El botón ya se oculta si está en uso, pero la Server Action es
+    // invocable directamente sin pasar por la UI (POST forzado) — sin este
+    // try/catch, deleteCategoryIfUnused() propaga un error no controlado.
+    try {
+      await deleteCategoryIfUnused(id);
+    } catch {
+      redirect('/admin/categories?error=in-use');
+    }
     revalidatePath('/admin/categories');
   }
 
   return (
     <div>
+      {searchParams?.error === 'in-use' && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          No se puede eliminar: esta categoría está en uso por experiencias.
+        </div>
+      )}
       <header className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Categorías</h1>
         <p className="mt-1 text-sm text-slate-500">

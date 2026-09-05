@@ -2,8 +2,28 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/db';
 import { signAuthToken, type AuthRole } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rateLimit';
+
+// Sin esto, /api/auth/login quedaba como el único endpoint sensible del CMS
+// sin límite de intentos (bookings y checkout del marketplace ya lo usan) —
+// abierto a fuerza bruta de credenciales sin restricción. Solo cuenta
+// intentos FALLIDOS (no cada login exitoso) — es lo que realmente protege
+// contra fuerza bruta, y evita bloquear tráfico legítimo repetido desde la
+// misma IP/NAT compartida.
+function rateLimitedFailure(ip: string): NextResponse | null {
+  const { ok } = checkRateLimit(`login-fail:${ip}`, 10);
+  if (!ok) {
+    return NextResponse.json(
+      { error: 'Demasiados intentos. Intenta de nuevo en unos minutos.' },
+      { status: 429 },
+    );
+  }
+  return null;
+}
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown';
+
   const body = await request.json().catch(() => null);
 
   const { email, password } = (body ?? {}) as {
@@ -21,12 +41,12 @@ export async function POST(request: NextRequest) {
   });
 
   if (!user) {
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    return rateLimitedFailure(ip) ?? NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    return rateLimitedFailure(ip) ?? NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
   const membership = user.operatorMemberships[0];

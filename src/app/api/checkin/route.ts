@@ -30,6 +30,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
   }
 
+  if (booking.status === 'CANCELLED') {
+    return NextResponse.json(
+      { error: 'Esta reserva fue cancelada — no se puede hacer check-in' },
+      { status: 409 },
+    );
+  }
+
   await prisma.booking.update({
     where: { id: bookingId },
     data: { status: 'CONFIRMED' },

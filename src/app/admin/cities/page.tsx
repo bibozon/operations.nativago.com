@@ -1,9 +1,14 @@
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import prisma from '@/lib/db';
 import { requireSuperadmin } from '@/lib/requireRole';
 import { deleteCityIfUnused } from '@/services/catalog/cities';
 
-export default async function CitiesPage() {
+export default async function CitiesPage({
+  searchParams,
+}: {
+  searchParams?: { error?: string };
+}) {
   await requireSuperadmin();
 
   const [cities, countries] = await Promise.all([
@@ -41,7 +46,11 @@ export default async function CitiesPage() {
     const id = (formData.get('id') as string) ?? '';
     if (!id) return;
 
-    await deleteCityIfUnused(id);
+    try {
+      await deleteCityIfUnused(id);
+    } catch {
+      redirect('/admin/cities?error=in-use');
+    }
     revalidatePath('/admin/cities');
   }
 

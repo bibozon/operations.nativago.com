@@ -146,6 +146,7 @@ export const T = {
     admin_availability:    'Disponibilidad',
     admin_delete:          'Eliminar',
     admin_expEmpty:        'No hay experiencias creadas aún.',
+    admin_expHasBookingsError: 'No se puede eliminar: esta experiencia tiene reservas activas. Cancélalas primero.',
   },
   en: {
     tagline:        'Latin America awaits you',
@@ -272,6 +273,7 @@ export const T = {
     admin_availability:    'Availability',
     admin_delete:          'Delete',
     admin_expEmpty:        'No experiences created yet.',
+    admin_expHasBookingsError: 'Cannot delete: this experience has active bookings. Cancel them first.',
   },
   fr: {
     tagline:        'L\'Amérique Latine vous attend',
@@ -398,6 +400,7 @@ export const T = {
     admin_availability:    'Disponibilité',
     admin_delete:          'Supprimer',
     admin_expEmpty:        'Aucune expérience créée pour le moment.',
+    admin_expHasBookingsError: 'Impossible de supprimer : cette expérience a des réservations actives. Annulez-les d\'abord.',
   },
   pt: {
     tagline:        'A América Latina te espera',
@@ -524,6 +527,7 @@ export const T = {
     admin_availability:    'Disponibilidade',
     admin_delete:          'Excluir',
     admin_expEmpty:        'Nenhuma experiência criada ainda.',
+    admin_expHasBookingsError: 'Não é possível excluir: esta experiência tem reservas ativas. Cancele-as primeiro.',
   },
 } as const satisfies Record<Locale, Record<string, string>>;
 

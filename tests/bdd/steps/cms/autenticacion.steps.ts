@@ -1,7 +1,7 @@
 import { createBdd } from 'playwright-bdd';
 import { expect } from '@playwright/test';
 import { test } from '../../fixtures';
-import { CMS_URL } from '../../../e2e/support/test-data';
+import { ADMIN, CMS_URL } from '../../../e2e/support/test-data';
 
 const { Given, When, Then } = createBdd(test);
 
@@ -39,4 +39,32 @@ Then('la API responde con estado {int} y el mensaje {string}', async ({ world },
   expect(world.apiResponse.status()).toBe(status);
   const body = await world.apiResponse.json();
   expect(body.error).toBe(message);
+});
+
+Given('que tengo una cookie de sesión inválida', async ({ context }) => {
+  await context.addCookies([
+    { name: 'auth', value: 'token-invalido-no-firmado', domain: new URL(CMS_URL).hostname, path: '/' },
+  ]);
+});
+
+When('intento entrar al dashboard de administración', async ({ page }) => {
+  await page.goto('/admin/dashboard');
+});
+
+Then('soy redirigido a la página de inicio de sesión', async ({ page }) => {
+  await expect(page).toHaveURL(/\/login/, { timeout: 8_000 });
+});
+
+When('envío {int} intentos de login consecutivos con la misma contraseña incorrecta', async ({ page, world }, attempts: number) => {
+  world.bruteForceResponses = [];
+  for (let i = 0; i < attempts; i++) {
+    const res = await page.request.post(`${CMS_URL}/api/auth/login`, {
+      data: { email: ADMIN.email, password: 'clave-incorrecta-bruteforce' },
+    });
+    world.bruteForceResponses.push(res.status());
+  }
+});
+
+Then('alguno de los intentos responde con estado {int}', async ({ world }, status: number) => {
+  expect(world.bruteForceResponses).toContain(status);
 });

@@ -127,10 +127,10 @@ export function AdminSidebarNav({ menu, mobile = false, userInfo }: AdminSidebar
             <div className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-[#0B1120] py-6 px-4 shadow-2xl">
               <div className="mb-6 flex items-center justify-between px-1">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-7 shrink-0">
+                  <div className="w-14 shrink-0">
                     <NativaGoLogo size="sm" />
                   </div>
-                  <span className="text-base font-extrabold tracking-tight text-white">CMS</span>
+                  <span className="text-xs font-extrabold tracking-tight text-white">CMS</span>
                 </div>
                 <button
                   type="button"
