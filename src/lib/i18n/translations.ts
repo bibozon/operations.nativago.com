@@ -131,6 +131,9 @@ export const T = {
     admin_colStatus:           'Estado',
     admin_published:           'Publicada',
     admin_noRecentExperiences: 'No hay experiencias recientes.',
+    admin_chartNewOperators:   'Operadores nuevos',
+    admin_chartBookings:       'Reservas',
+    admin_chartLast30Days:     'Últimos 30 días',
   },
   en: {
     tagline:        'Latin America awaits you',
@@ -243,6 +246,9 @@ export const T = {
     admin_colStatus:           'Status',
     admin_published:           'Published',
     admin_noRecentExperiences: 'No recent experiences.',
+    admin_chartNewOperators:   'New operators',
+    admin_chartBookings:       'Bookings',
+    admin_chartLast30Days:     'Last 30 days',
   },
   fr: {
     tagline:        'L\'Amérique Latine vous attend',
@@ -355,6 +361,9 @@ export const T = {
     admin_colStatus:           'Statut',
     admin_published:           'Publiée',
     admin_noRecentExperiences: 'Aucune expérience récente.',
+    admin_chartNewOperators:   'Nouveaux opérateurs',
+    admin_chartBookings:       'Réservations',
+    admin_chartLast30Days:     '30 derniers jours',
   },
   pt: {
     tagline:        'A América Latina te espera',
@@ -467,6 +476,9 @@ export const T = {
     admin_colStatus:           'Status',
     admin_published:           'Publicada',
     admin_noRecentExperiences: 'Nenhuma experiência recente.',
+    admin_chartNewOperators:   'Novos operadores',
+    admin_chartBookings:       'Reservas',
+    admin_chartLast30Days:     'Últimos 30 dias',
   },
 } as const satisfies Record<Locale, Record<string, string>>;
 

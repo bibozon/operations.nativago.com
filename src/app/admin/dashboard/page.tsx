@@ -3,29 +3,67 @@ import { requireStaffOrAbove } from '@/lib/requireRole';
 import { formatPrice } from '@/domain/entities/Money';
 import { ROLE_LABEL } from '@/lib/roleLabels';
 import { getT } from '@/lib/i18n/getLocale';
+import { DailyBarChart } from '@/components/admin/DailyBarChart';
+
+const CHART_DAYS = 30;
+
+// Los timestamps de Prisma y las funciones serverless de Vercel están en UTC,
+// así que se bucketiza por fecha UTC (toISOString) para que ambos coincidan.
+function bucketByDay(dates: Date[], since: Date) {
+  const days: { key: string; label: string; value: number }[] = [];
+  for (let i = 0; i < CHART_DAYS; i++) {
+    const d = new Date(since);
+    d.setUTCDate(since.getUTCDate() + i);
+    days.push({
+      key: d.toISOString().slice(0, 10),
+      label: d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', timeZone: 'UTC' }),
+      value: 0,
+    });
+  }
+  const byKey = new Map(days.map((d) => [d.key, d]));
+  for (const date of dates) {
+    const bucket = byKey.get(date.toISOString().slice(0, 10));
+    if (bucket) bucket.value++;
+  }
+  return days.map(({ label, value }) => ({ label, value }));
+}
 
 async function getDashboardData() {
-  const [experiencesCount, operatorsCount, citiesCount, recentExperiences] =
-    await Promise.all([
-      prisma.experience.count(),
-      prisma.operator.count(),
-      prisma.city.count(),
-      prisma.experience.findMany({
-        include: {
-          operator: { select: { name: true } },
-          city: { select: { name: true } },
-          country: { select: { defaultCurrency: { select: { code: true } } } },
-        },
-        orderBy: { id: 'desc' },
-        take: 5,
-      }),
-    ]);
+  const since = new Date();
+  since.setUTCDate(since.getUTCDate() - (CHART_DAYS - 1));
+  since.setUTCHours(0, 0, 0, 0);
+
+  const [
+    experiencesCount,
+    operatorsCount,
+    citiesCount,
+    recentExperiences,
+    recentOperators,
+    recentBookings,
+  ] = await Promise.all([
+    prisma.experience.count(),
+    prisma.operator.count(),
+    prisma.city.count(),
+    prisma.experience.findMany({
+      include: {
+        operator: { select: { name: true } },
+        city: { select: { name: true } },
+        country: { select: { defaultCurrency: { select: { code: true } } } },
+      },
+      orderBy: { id: 'desc' },
+      take: 5,
+    }),
+    prisma.operator.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
+    prisma.booking.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
+  ]);
 
   return {
     experiencesCount,
     operatorsCount,
     citiesCount,
     recentExperiences,
+    newOperatorsByDay: bucketByDay(recentOperators.map((o) => o.createdAt), since),
+    bookingsByDay: bucketByDay(recentBookings.map((b) => b.createdAt), since),
   };
 }
 
@@ -33,7 +71,7 @@ export default async function SuperadminDashboardPage() {
   const auth = await requireStaffOrAbove();
   const t = await getT();
 
-  const { experiencesCount, operatorsCount, citiesCount, recentExperiences } =
+  const { experiencesCount, operatorsCount, citiesCount, recentExperiences, newOperatorsByDay, bookingsByDay } =
     await getDashboardData();
 
   return (
@@ -98,6 +136,24 @@ export default async function SuperadminDashboardPage() {
               <p className="mt-1 text-xs text-slate-500">{t.admin_statSalesDesc}</p>
             </div>
           </section>
+
+          {/* Gráficas — solo Super Admin, no para el rol operador */}
+          {auth.role === 'SUPERADMIN' && (
+            <section className="mb-8 grid gap-4 md:grid-cols-2">
+              <DailyBarChart
+                title={t.admin_chartNewOperators}
+                subtitle={t.admin_chartLast30Days}
+                data={newOperatorsByDay}
+                color="#0d9488"
+              />
+              <DailyBarChart
+                title={t.admin_chartBookings}
+                subtitle={t.admin_chartLast30Days}
+                data={bookingsByDay}
+                color="#f97316"
+              />
+            </section>
+          )}
 
           {/* Recent experiences table */}
           <section className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
