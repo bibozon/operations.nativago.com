@@ -23,14 +23,13 @@ async function sendBooking(page: Page, world: World, guests: number, opts?: { wi
 }
 
 Given('que existe una experiencia publicada sin límite de cupo', async ({ page, world }) => {
-  const [catRes, cityRes, opRes] = await Promise.all([
-    page.request.get('/api/catalog/categories'),
-    page.request.get('/api/catalog/cities'),
-    page.request.get('/api/catalog/operator'),
-  ]);
-  const { categories } = await catRes.json();
-  const cities = await cityRes.json();
-  const operators = await opRes.json();
+  // La ciudad se toma del mismo operador — ver nota en control-cupo.steps.ts
+  // sobre por qué tomar listas independientes por índice [0] es frágil.
+  const category = await prisma.category.findFirstOrThrow();
+  const operator = await prisma.operator.findFirstOrThrow({
+    where: { verificationStatus: 'APPROVED' },
+    select: { id: true, cityId: true },
+  });
 
   const createRes = await page.request.post('/api/catalog/experience', {
     data: {
@@ -38,9 +37,9 @@ Given('que existe una experiencia publicada sin límite de cupo', async ({ page,
       description: 'Experiencia de prueba para validar el rango de personas.',
       price: 100_000,
       durationMinutes: 120,
-      categoryId: categories[0].id,
-      cityId: cities[0].id,
-      operatorId: operators[0].id,
+      categoryId: category.id,
+      cityId: operator.cityId,
+      operatorId: operator.id,
     },
   });
   expect(createRes.status()).toBe(201);
@@ -113,7 +112,7 @@ When('intento cancelarla de nuevo con mi email', async ({ page, world }) => {
 
 When('intento hacer check-in de esa reserva', async ({ page, world }) => {
   world.apiResponse = await page.request.post('/api/checkin', {
-    data: { bookingId: world.bookingId },
+    data: { bookingCode: world.bookingCode },
   });
 });
 

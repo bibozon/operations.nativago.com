@@ -1,10 +1,12 @@
 import { createBdd } from 'playwright-bdd';
 import { expect } from '@playwright/test';
 import type { APIResponse, Page } from '@playwright/test';
+import { PrismaClient } from '@prisma/client';
 import { test } from '../../fixtures';
 import type { World } from '../../fixtures';
 
 const { Given, When, Then } = createBdd(test);
+const prisma = new PrismaClient();
 
 async function sendBooking(page: Page, world: World, guests: number): Promise<APIResponse> {
   return page.request.post('/api/catalog/bookings', {
@@ -19,21 +21,17 @@ async function sendBooking(page: Page, world: World, guests: number): Promise<AP
 }
 
 Given('existe una experiencia publicada con cupo máximo de {int} personas', async ({ page, world }, capacity: number) => {
-  const [catRes, cityRes, opRes] = await Promise.all([
-    page.request.get('/api/catalog/categories'),
-    page.request.get('/api/catalog/cities'),
-    page.request.get('/api/catalog/operator'),
-  ]);
-  const { categories } = await catRes.json();
-  const cities     = await cityRes.json();
-  const operators  = await opRes.json();
-
-  const category = categories[0];
-  const city     = cities[0];
-  const operator = operators[0];
+  // La ciudad se toma DEL MISMO operador (no de una lista independiente) —
+  // tomar category[0]/city[0]/operator[0] de 3 fetches sin relación entre sí
+  // rompía en cuanto el orden de alguna lista cambiaba y dejaba de coincidir
+  // con el país del operador (assertCityBelongsToCountry lo rechaza con 400).
+  const category = await prisma.category.findFirstOrThrow();
+  const operator = await prisma.operator.findFirstOrThrow({
+    where: { verificationStatus: 'APPROVED' },
+    select: { id: true, cityId: true },
+  });
   expect(category, 'debe existir al menos una categoría').toBeTruthy();
-  expect(city, 'debe existir al menos una ciudad').toBeTruthy();
-  expect(operator, 'debe existir al menos un operador').toBeTruthy();
+  expect(operator, 'debe existir al menos un operador aprobado').toBeTruthy();
 
   const createRes = await page.request.post('/api/catalog/experience', {
     data: {
@@ -42,7 +40,7 @@ Given('existe una experiencia publicada con cupo máximo de {int} personas', asy
       price:           100_000,
       durationMinutes: 120,
       categoryId:      category.id,
-      cityId:          city.id,
+      cityId:          operator.cityId,
       operatorId:      operator.id,
     },
   });
