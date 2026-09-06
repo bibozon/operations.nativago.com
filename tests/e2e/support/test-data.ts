@@ -14,6 +14,7 @@ export const SEED_EXPERIENCE_TITLE = 'Tour de prueba E2E NativaGo';
 
 export function makeOperadorCO() {
   return {
+    country:        'co' as const,
     name:           `Caribe Aventuras ${uid()}`,
     email:          `op_co_${RUN}_${uid()}@e2e.nativago.com`,
     phone:          '+57 300 111 2222',
@@ -35,6 +36,7 @@ export function makeOperadorCO() {
 
 export function makeOperadorCONatural() {
   return {
+    country:        'co' as const,
     name:           `Diego Ramírez ${uid()}`,
     email:          `op_co_nat_${RUN}_${uid()}@e2e.nativago.com`,
     phone:          '+57 300 222 3333',
@@ -55,6 +57,7 @@ export function makeOperadorCONatural() {
 
 export function makeOperadorBR() {
   return {
+    country:        'br' as const,
     name:           `Amazônia Ecoturismo ${uid()}`,
     email:          `op_br_${RUN}_${uid()}@e2e.nativago.com`,
     phone:          '+55 92 99000-0001',
@@ -75,6 +78,7 @@ export function makeOperadorBR() {
 
 export function makeOperadorBRJuridica() {
   return {
+    country:        'br' as const,
     name:           `Amazônia Expedições ${uid()}`,
     email:          `op_br_agn_${RUN}_${uid()}@e2e.nativago.com`,
     phone:          '+55 92 98888-4444',

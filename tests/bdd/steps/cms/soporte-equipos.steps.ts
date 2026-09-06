@@ -60,6 +60,7 @@ Given('que tengo una cuenta de operador agencia aprobada y con contrato aceptado
   const op = makeOperadorCO(); // JURIDICA → AGENCY
   const registerPage = new OperatorRegisterPage(page);
   await registerPage.registerOperator({
+    country:        op.country,
     prestadorTipo:  op.prestadorTipo,
     categoria:      op.categoria,
     name:           op.name,

@@ -11,7 +11,7 @@ const CARD_SELECT = {
   images: true,
   price: true,
   durationMinutes: true,
-  category: { select: { id: true, name: true, slug: true } },
+  category: { select: { id: true, name: true, slug: true, depositRate: true } },
   city: { select: { id: true, name: true, country: true } },
   operator: { select: { id: true, name: true, phone: true } },
 } satisfies Prisma.ExperienceSelect;

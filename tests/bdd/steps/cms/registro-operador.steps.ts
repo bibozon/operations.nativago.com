@@ -53,6 +53,7 @@ When('completo el formulario de registro de operador con esos datos', async ({ p
   const op = world.operator as OperadorData;
   const registerPage = new OperatorRegisterPage(page);
   await registerPage.registerOperator({
+    country:        op.country,
     prestadorTipo:  op.prestadorTipo,
     categoria:      op.categoria,
     name:           op.name,
@@ -178,6 +179,7 @@ Given('que ya existe una cuenta de operador registrada', async ({ page, world })
   const base = makeOperadorCONatural();
   const registerPage = new OperatorRegisterPage(page);
   await registerPage.registerOperator({
+    country:        base.country,
     prestadorTipo:  base.prestadorTipo,
     categoria:      base.categoria,
     name:           base.name,

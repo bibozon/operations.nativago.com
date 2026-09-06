@@ -7,6 +7,7 @@ import prisma from '@/lib/db';
 import { signAuthToken } from '@/lib/auth';
 import { uploadImage } from '@/lib/blob';
 import { operatorTypeFromPrestadorTipo, type PrestadorTipo } from '@/lib/operatorRegistration';
+import { REGISTER_ERRORS } from '@/lib/registerI18n';
 
 export type RegisterState = { error: string } | null;
 
@@ -15,6 +16,9 @@ export async function registerOperator(
   _prevState: RegisterState,
   formData: FormData,
 ): Promise<RegisterState> {
+  const lang               = ((formData.get('lang') as string) ?? 'es') as 'es' | 'pt';
+  const err                = REGISTER_ERRORS[lang] ?? REGISTER_ERRORS.es;
+
   const name               = (formData.get('name') as string) ?? '';
   const email              = (formData.get('email') as string) ?? '';
   const phone              = (formData.get('phone') as string) ?? '';
@@ -29,21 +33,21 @@ export async function registerOperator(
   const file                   = formData.get('licenseDocument');
 
   if (!name || !email || !password || !cityId || !identityDocumentNumber || !liabilityAccepted) {
-    return { error: 'Completa todos los campos obligatorios.' };
+    return { error: err.required };
   }
 
   if (password.length < 8) {
-    return { error: 'La contraseña debe tener al menos 8 caracteres.' };
+    return { error: err.password };
   }
 
   const city = await prisma.city.findUnique({ where: { id: cityId }, select: { countryId: true } });
   if (!city?.countryId) {
-    return { error: 'Ciudad inválida. Selecciona otra.' };
+    return { error: err.city };
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    return { error: 'Este email ya está registrado. Inicia sesión en /login.' };
+    return { error: err.email };
   }
 
   // Subir documento de soporte directamente (sin pasar por /api/upload)

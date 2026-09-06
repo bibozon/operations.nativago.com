@@ -1,13 +1,25 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+const PAGE_TITLE_BY_COUNTRY: Record<string, string> = {
+  co: 'Registro de operador turístico',
+  br: 'Cadastro de operador turístico',
+  mx: 'Registro de operador turístico',
+};
+
 export class OperatorRegisterPage {
   constructor(private readonly page: Page) {}
 
-  async goto() {
-    await this.page.goto('/register/operator');
+  /**
+   * El registro es por país desde /register/operator (selector de país) →
+   * /register/{co|br|mx}/operator (formulario ya filtrado a ese país) — se
+   * navega directo a la ruta del país para no depender del click en la
+   * tarjeta, salvo que un escenario quiera probar el selector en sí.
+   */
+  async goto(country: 'co' | 'br' | 'mx' = 'co') {
+    await this.page.goto(`/register/${country}/operator`);
     await this.page.waitForLoadState('networkidle');
-    await expect(this.page.getByText('Registro de operador')).toBeVisible({ timeout: 8_000 });
+    await expect(this.page.getByText(PAGE_TITLE_BY_COUNTRY[country])).toBeVisible({ timeout: 8_000 });
   }
 
   async selectPrestadorTipo(tipo: 'NATURAL' | 'JURIDICA') {
@@ -81,6 +93,7 @@ export class OperatorRegisterPage {
 
   /** Flujo completo de registro. Devuelve cuando la página redirecciona a /operator/dashboard */
   async registerOperator(data: {
+    country?: 'co' | 'br' | 'mx';
     prestadorTipo: 'NATURAL' | 'JURIDICA';
     categoria: string;
     name: string;
@@ -92,7 +105,7 @@ export class OperatorRegisterPage {
     identityDoc: string;
     paymentAccount?: string;
   }) {
-    await this.goto();
+    await this.goto(data.country ?? 'co');
     await this.selectPrestadorTipo(data.prestadorTipo);
     await this.selectCategoria(data.categoria);
     await this.fillName(data.name);

@@ -40,6 +40,7 @@ export function prestadorTipoFromOperatorType(type: OperatorType): PrestadorTipo
 const LIABILITY_TEXT_BY_COUNTRY: Record<string, string> = {
   BR: 'Declaro que sou o prestador do serviço turístico descrito e que possuo todas as licenças exigidas pelas autoridades brasileiras. Entendo que o NativaGo cobra do cliente 15% do valor total da atividade como antecipação de reserva, e que eu cobro diretamente do cliente os 85% restantes no local da atividade. Esses 85% devem incluir todos os custos: guias, transporte, equipamentos, seguros e quaisquer despesas necessárias. O NativaGo não cobra nem intermedeia seguros. Aceito os Termos e Condições e a Política de Operadores.',
   CO: 'Declaro que soy el prestador del servicio turístico descrito y que cuento con todas las licencias exigidas por las autoridades colombianas. Entiendo que NativaGo cobra al cliente el 15% del valor total de la actividad como anticipo de reserva, y que yo cobro directamente al cliente el 85% restante en el lugar de la actividad. Ese 85% debe incluir todos los costos del servicio: guías, transporte, equipamiento, seguros y cualquier gasto necesario. NativaGo no cobra ni intermedia seguros. Acepto los Términos y Condiciones y la Política de Operadores.',
+  MX: 'Declaro que soy el prestador del servicio turístico descrito y que cuento con las licencias exigidas por las autoridades mexicanas, incluyendo RFC vigente y, cuando aplique, registro REPSE y SECTUR. Entiendo que NativaGo cobra al cliente el 15% del valor total de la actividad como anticipo de reserva, y que yo cobro directamente al cliente el 85% restante en el lugar de la actividad. Ese 85% debe incluir todos los costos del servicio: guías, transporte, equipamiento, seguros y cualquier gasto necesario. NativaGo no cobra ni intermedia seguros. Acepto los Términos y Condiciones y la Política de Operadores.',
 };
 
 const LIABILITY_TEXT_DEFAULT =
@@ -60,6 +61,9 @@ const DOCUMENT_AUDIENCE_BY_CODE: Record<string, OperatorType | 'BOTH'> = {
   CPF: 'FREELANCE',
   CADASTUR: 'BOTH',
   RNT: 'BOTH',
+  RFC: 'BOTH',
+  REPSE: 'AGENCY',
+  SECTUR: 'BOTH',
 };
 
 export function documentTypeAppliesTo(code: string, operatorType: OperatorType): boolean {

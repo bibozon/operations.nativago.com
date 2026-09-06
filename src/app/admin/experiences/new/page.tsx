@@ -4,6 +4,7 @@ import { createExperience } from '@/services/catalog/cms';
 import { listCitiesByCountry } from '@/services/catalog/cities';
 import { redirect } from 'next/navigation';
 import { BackLink } from '@/components/BackLink';
+import { TitleCategorySuggestFields } from '@/components/admin/TitleCategorySuggestFields';
 
 export default async function NewExperiencePage() {
   const { operator } = await requireOperatorContext();
@@ -85,11 +86,7 @@ export default async function NewExperiencePage() {
       <BackLink href="/admin/experiences" label="Experiencias" />
       <h1 className="mb-4 text-xl font-semibold">Crear experiencia</h1>
       <form action={createExp} className="space-y-3" encType="multipart/form-data">
-        <input
-          name="title"
-          placeholder="Título"
-          className="w-full rounded border px-2 py-2 text-sm"
-        />
+        <TitleCategorySuggestFields categories={categories} />
 
         <textarea
           name="description"
@@ -119,15 +116,6 @@ export default async function NewExperiencePage() {
         <select name="cityId" className="w-full rounded border px-2 py-2 text-sm">
           <option value="">Selecciona una ciudad</option>
           {cities.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-
-        <select name="categoryId" className="w-full rounded border px-2 py-2 text-sm">
-          <option value="">Selecciona una categoría</option>
-          {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>

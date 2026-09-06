@@ -3,11 +3,12 @@ import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
 import { redirect } from 'next/navigation';
 import { formatPrice } from '@/domain/entities/Money';
 import { getT } from '@/lib/i18n/getLocale';
+import { ExperienceFilters } from '@/components/admin/ExperienceFilters';
 
 export default async function ExperiencesPage({
   searchParams,
 }: {
-  searchParams?: { error?: string };
+  searchParams?: { error?: string; categoryId?: string; countryId?: string; cityId?: string };
 }) {
   const auth = await requireAuth();
   const staffOrAbove = isStaffOrAbove(auth.role);
@@ -20,16 +21,35 @@ export default async function ExperiencesPage({
     country: { select: { defaultCurrency: { select: { code: true } } } },
   } as const;
 
-  const experiences = staffOrAbove
-    ? await prisma.experience.findMany({
-        include,
-        orderBy: { id: 'desc' },
-      })
-    : await prisma.experience.findMany({
-        where: { operatorId: auth.operatorId ?? '' },
-        include,
-        orderBy: { id: 'desc' },
-      });
+  const { categoryId, countryId, cityId } = searchParams ?? {};
+  const filterWhere = {
+    ...(categoryId ? { categoryId } : {}),
+    ...(countryId ? { countryId } : {}),
+    ...(cityId ? { cityId } : {}),
+  };
+
+  const [experiences, categories, countries, cities] = await Promise.all([
+    staffOrAbove
+      ? prisma.experience.findMany({
+          where: filterWhere,
+          include,
+          orderBy: { id: 'desc' },
+        })
+      : prisma.experience.findMany({
+          where: { operatorId: auth.operatorId ?? '', ...filterWhere },
+          include,
+          orderBy: { id: 'desc' },
+        }),
+    staffOrAbove ? prisma.category.findMany({ orderBy: { name: 'asc' } }) : Promise.resolve([]),
+    staffOrAbove ? prisma.country.findMany({ orderBy: { name: 'asc' } }) : Promise.resolve([]),
+    staffOrAbove
+      ? prisma.city.findMany({
+          where: countryId ? { countryId } : undefined,
+          orderBy: { name: 'asc' },
+          select: { id: true, name: true, countryId: true },
+        })
+      : Promise.resolve([]),
+  ]);
 
   async function deleteExp(formData: FormData) {
     'use server';
@@ -87,6 +107,20 @@ export default async function ExperiencesPage({
           {t.admin_expNew}
         </a>
       </header>
+
+      {staffOrAbove && (
+        <ExperienceFilters
+          categories={categories}
+          countries={countries}
+          cities={cities}
+          labels={{
+            category: t.admin_filterCategory,
+            country: t.admin_filterCountry,
+            city: t.admin_filterCity,
+            clear: t.admin_filterClear,
+          }}
+        />
+      )}
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">

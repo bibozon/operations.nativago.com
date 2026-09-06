@@ -39,6 +39,9 @@ const ICONS = {
   shield: (
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M12 3c2.755 0 5.455.716 7.5 2.25 0 8.25-3.75 12.75-7.5 14.25-3.75-1.5-7.5-6-7.5-14.25C6.545 3.716 9.245 3 12 3Z" />
   ),
+  photo: (
+    <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+  ),
 } as const;
 
 function Icon({ name }: { name: AdminMenuItem['icon'] }) {

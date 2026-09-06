@@ -19,6 +19,7 @@ function menuForAuth(auth: AuthTokenPayload, t: Record<TranslationKey, string>):
       { label: t.admin_navOperators, href: "/admin/operators", icon: "users" },
       { label: t.admin_navCities, href: "/admin/cities", icon: "map" },
       { label: t.admin_navCategories, href: "/admin/categories", icon: "tag" },
+      { label: t.admin_navCountryVisual, href: "/admin/country-visual", icon: "photo" },
       { label: t.admin_navUsers, href: "/admin/users", icon: "shield" },
       { label: t.admin_navSettings, href: "/admin/settings", icon: "settings" },
     ];

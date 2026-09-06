@@ -38,6 +38,20 @@ export default async function CategoriesPage({
     revalidatePath('/admin/categories');
   }
 
+  async function updateDepositRate(formData: FormData) {
+    'use server';
+
+    await requireSuperadmin();
+
+    const id = (formData.get('id') as string) ?? '';
+    const raw = Number(formData.get('depositRate'));
+    if (!id || isNaN(raw)) return;
+
+    const rate = Math.min(0.5, Math.max(0.15, raw / 100));
+    await prisma.category.update({ where: { id }, data: { depositRate: rate } });
+    revalidatePath('/admin/categories');
+  }
+
   async function removeCategory(formData: FormData) {
     'use server';
 
@@ -95,6 +109,7 @@ export default async function CategoriesPage({
               <tr>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Nombre</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Slug</th>
+                <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">% Anticipo</th>
                 <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">Experiencias</th>
                 <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Acciones</th>
               </tr>
@@ -104,6 +119,26 @@ export default async function CategoriesPage({
                 <tr key={c.id} className="hover:bg-slate-50/70">
                   <td className="px-4 py-2.5 font-medium text-slate-900">{c.name}</td>
                   <td className="px-4 py-2.5 text-slate-500">{c.slug}</td>
+                  <td className="px-4 py-2.5 text-center">
+                    <form action={updateDepositRate} className="inline-flex items-center gap-1.5">
+                      <input type="hidden" name="id" value={c.id} />
+                      <select
+                        name="depositRate"
+                        defaultValue={Math.round((c.depositRate ?? 0.15) * 100)}
+                        className="rounded border border-slate-200 text-xs px-1.5 py-1 bg-white text-slate-700 focus:outline-none focus:border-teal-400"
+                      >
+                        {[15, 20, 25, 30, 35, 40, 45, 50].map(p => (
+                          <option key={p} value={p}>{p}%</option>
+                        ))}
+                      </select>
+                      <button
+                        type="submit"
+                        className="text-[10px] font-semibold text-teal-600 hover:underline"
+                      >
+                        Guardar
+                      </button>
+                    </form>
+                  </td>
                   <td className="px-4 py-2.5 text-center text-slate-900">{c._count.experiences}</td>
                   <td className="px-4 py-2.5 text-right">
                     {c._count.experiences === 0 ? (

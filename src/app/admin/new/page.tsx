@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BackLink } from '@/components/BackLink';
+import { suggestCategoryId } from '@/lib/categorySuggestion';
 
 type Option = { id: string; name: string };
 
@@ -16,6 +17,8 @@ export default function NewExperiencePage() {
   const [capacity, setCapacity] = useState('');
   const [image, setImage] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [categoryTouched, setCategoryTouched] = useState(false);
+  const [categorySuggested, setCategorySuggested] = useState(false);
   const [cityId, setCityId] = useState('');
   const [operatorId, setOperatorId] = useState('');
 
@@ -42,7 +45,7 @@ export default function NewExperiencePage() {
         opRes.json(),
       ]);
 
-      setCategories(Array.isArray(catData) ? catData : []);
+      setCategories(Array.isArray(catData?.categories) ? catData.categories : []);
       setCities(Array.isArray(cityData) ? cityData : []);
       setOperators(Array.isArray(opData) ? opData : []);
     } catch (err) {
@@ -54,6 +57,18 @@ export default function NewExperiencePage() {
   useEffect(() => {
     loadOptions();
   }, []);
+
+  // Sugiere categoría según el título mientras el operador no haya elegido
+  // una manualmente — reconoce palabras clave en ES/EN/PT/FR (ver
+  // src/lib/categorySuggestion.ts), sin depender de ningún servicio de IA.
+  useEffect(() => {
+    if (categoryTouched || categories.length === 0) return;
+    const suggested = suggestCategoryId(title, categories);
+    if (suggested) {
+      setCategoryId(suggested);
+      setCategorySuggested(true);
+    }
+  }, [title, categories, categoryTouched]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -141,11 +156,22 @@ export default function NewExperiencePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-600">Categoría</label>
+                  <label className="block text-xs font-medium text-slate-600">
+                    Categoría
+                    {categorySuggested && (
+                      <span className="ml-1.5 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                        Sugerida según el título
+                      </span>
+                    )}
+                  </label>
                   <select
                     className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                     value={categoryId}
-                    onChange={(e) => setCategoryId(e.target.value)}
+                    onChange={(e) => {
+                      setCategoryId(e.target.value);
+                      setCategoryTouched(true);
+                      setCategorySuggested(false);
+                    }}
                   >
                     <option value="">Selecciona…</option>
                     {categories.map((c) => (

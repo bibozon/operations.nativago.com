@@ -55,13 +55,13 @@ model User {
 }
 
 model Category {
-  id        String       @id @default(cuid())
-  name      String
-  slug      String       @unique
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  depositRate Float        @default(0.15) // anticipo: 0.15 = 15%, 0.50 = 50%
   experiences Experience[]
   translations      CategoryTranslation[]
   countryCategories CountryCategory[]
-    // Prevent deleting if used by Experience (enforce in backend)
 }
 
 model City {
@@ -228,6 +228,12 @@ enum PaymentType {
 // Multi-país (Fase 0/1 — ver plan de arquitectura NativaGo LatAm)
 // ─────────────────────────────────────────────────────────────────────────
 
+enum SlideType {
+  HERO         // Slider principal del hero (HomeHero)
+  PHOTO_SLIDER // Lugares icónicos por país (CountryPhotoSlider)
+  DESTINATION  // Tarjetas de ciudades/destinos (DestinationCards)
+}
+
 model Country {
   id                String   @id @default(cuid())
   code              String   @unique // ISO-3166 alpha-2: "CO", "BR"
@@ -253,6 +259,7 @@ model Country {
   documentTypes           DocumentType[]
   countryCategories       CountryCategory[]
   countryPaymentProviders CountryPaymentProvider[]
+  countrySlides           CountrySlide[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt
@@ -367,4 +374,23 @@ model CountryPaymentProvider {
   configRef         String?
 
   @@unique([countryId, paymentProviderId])
+}
+
+// Contenido visual por país (hero slides, foto-slider, destinos) —
+// gestionado desde /admin/country-visual y consumido por el marketplace.
+model CountrySlide {
+  id        String    @id @default(cuid())
+  countryId String
+  country   Country   @relation(fields: [countryId], references: [id])
+  type      SlideType
+  imageUrl  String
+  title     String    // ciudad (HERO/DESTINATION) o lugar (PHOTO_SLIDER)
+  subtitle  String?   // región (PHOTO_SLIDER); null en otros tipos
+  emoji     String?   // emoji (DESTINATION); null en otros tipos
+  sortOrder Int       @default(0)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([countryId, type])
 }

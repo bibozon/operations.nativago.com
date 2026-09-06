@@ -24,6 +24,7 @@ const LANGUAGES = [
 const TIMEZONES = [
   { ianaName: 'America/Bogota', label: 'Colombia (UTC-5)' },
   { ianaName: 'America/Sao_Paulo', label: 'Brasil - São Paulo (UTC-3)' },
+  { ianaName: 'America/Mexico_City', label: 'México - Ciudad de México (UTC-6)' },
 ];
 
 const PAYMENT_PROVIDERS = [
@@ -58,6 +59,18 @@ const COUNTRIES = [
     seoTitle: 'NativaGo Brasil — Experiências turísticas autênticas',
     seoDescription: 'Reserve experiências turísticas com operadores locais verificados no Brasil.',
   },
+  {
+    code: 'MX',
+    name: 'México',
+    domainSlug: 'mx',
+    currencyCode: 'MXN',
+    languageCode: 'es',
+    timezoneName: 'America/Mexico_City',
+    taxRatePercent: 16, // IVA México
+    commissionPercent: 15,
+    seoTitle: 'NativaGo México — Experiencias turísticas auténticas',
+    seoDescription: 'Reserva experiencias turísticas con operadores locales verificados en México.',
+  },
 ];
 
 // Documentos oficiales exigidos para verificar un operador, por país.
@@ -66,6 +79,10 @@ const DOCUMENT_TYPES = [
   { countryCode: 'BR', code: 'CNPJ', label: 'CNPJ (agência)', validationRegex: null },
   { countryCode: 'BR', code: 'CPF', label: 'CPF (freelancer)', validationRegex: null },
   { countryCode: 'BR', code: 'CADASTUR', label: 'CADASTUR', validationRegex: null },
+  // México: RFC (obligatorio para todos), REPSE (solo agencias con empleados), SECTUR (registro voluntario)
+  { countryCode: 'MX', code: 'RFC', label: 'RFC — Registro Federal de Contribuyentes', validationRegex: '^[A-Z&Ñ]{3,4}\\d{6}[A-Z0-9]{3}$' },
+  { countryCode: 'MX', code: 'REPSE', label: 'REPSE — Registro de Prestadores de Servicios Especializados', validationRegex: null },
+  { countryCode: 'MX', code: 'SECTUR', label: 'Registro SECTUR (voluntario)', validationRegex: null },
 ];
 
 async function main() {

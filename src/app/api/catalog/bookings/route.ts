@@ -15,6 +15,12 @@ class CapacityError extends Error {
   }
 }
 
+class OverlapError extends Error {
+  constructor(public conflictTitle: string, public conflictDate: Date) {
+    super('Schedule overlap');
+  }
+}
+
 // Reserva pública + inicio de pago. Consumido por el marketplace (o
 // cualquier otro cliente de cara al público) — el CMS es la única fuente
 // de verdad para reservas, ver plan de arquitectura "CMS como fuente
@@ -55,7 +61,7 @@ export async function POST(req: NextRequest) {
     include: {
       country: { include: { defaultCurrency: true } },
       operator: { select: { name: true, email: true, phone: true } },
-      category: { select: { slug: true } },
+      category: { select: { slug: true, depositRate: true } },
     },
   });
 
@@ -67,15 +73,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Experience has no country configured' }, { status: 500 });
   }
 
-  const safeGuests = Math.max(1, Math.min(50, Number(guests) || 1));
-  const price = Number(exp.price);
-  const total = price * safeGuests;
-  // Buceo exige anticipo del 50% (no el 15% estándar) por los costos
-  // operativos previos a la salida (equipo, embarcación, personal) que el
-  // operador asume antes de que la actividad ocurra. De ese 50%, el 15% del
-  // valor total sigue siendo la comisión de NativaGo — el 35% restante es
-  // un adelanto al operador, no una comisión adicional.
-  const depositRate = exp.category?.slug === 'buceo' ? 0.5 : 0.15;
+  const safeGuests      = Math.max(1, Math.min(50, Number(guests) || 1));
+  const price           = Number(exp.price);
+  const total           = price * safeGuests;
+  const normalizedEmail = customerEmail.toLowerCase().trim();
+  // El porcentaje de anticipo es configurable por categoría en el CMS admin
+  // (campo Category.depositRate). Por defecto es 15%; Buceo usa 50% por
+  // los costos operativos previos a la actividad.
+  const depositRate = exp.category?.depositRate ?? 0.15;
   const deposit = total * depositRate;
   const remaining = total - deposit;
   const currencyCode = exp.country.defaultCurrency.code;
@@ -94,6 +99,7 @@ export async function POST(req: NextRequest) {
   let booking;
   try {
     booking = await prisma.$transaction(async (tx) => {
+      // ── Capacity check (per-experience) ───────────────────────────────────
       if (exp.capacity > 0) {
         const existing = await tx.booking.aggregate({
           _sum: { guests: true },
@@ -109,6 +115,41 @@ export async function POST(req: NextRequest) {
           throw new CapacityError(remainingSpots);
         }
       }
+
+      // ── Overlap check (per-traveler) ───────────────────────────────────────
+      // Two activities overlap when their time windows intersect:
+      //   newStart < existEnd  AND  newEnd > existStart
+      // We compute newEnd from durationMinutes; for existing bookings we join
+      // through experience to get their durationMinutes too.
+      const newEnd = new Date(bookingDate.getTime() + exp.durationMinutes * 60_000);
+
+      const nearbyBookings = await tx.booking.findMany({
+        where: {
+          customerEmail: normalizedEmail,
+          status: { not: 'CANCELLED' },
+          // Keep the query tight: only fetch bookings whose start falls before
+          // the new activity ends (first half of the overlap condition).
+          // The second half (existEnd > newStart) is evaluated in JS below.
+          date: {
+            gte: new Date(bookingDate.getTime() - 24 * 60 * 60_000), // conservative lower bound
+            lte: newEnd,
+          },
+        },
+        select: {
+          date: true,
+          experience: { select: { title: true, durationMinutes: true } },
+        },
+      });
+
+      for (const b of nearbyBookings) {
+        const existStart = b.date;
+        const existEnd   = new Date(existStart.getTime() + b.experience.durationMinutes * 60_000);
+        // Full overlap test
+        if (bookingDate < existEnd && newEnd > existStart) {
+          throw new OverlapError(b.experience.title, existStart);
+        }
+      }
+      // ── End overlap check ──────────────────────────────────────────────────
 
       return tx.booking.create({
         data: {
@@ -136,6 +177,19 @@ export async function POST(req: NextRequest) {
             error.remainingSpots > 0
               ? `Cupo insuficiente para esta fecha. Quedan ${error.remainingSpots} lugar(es) disponibles.`
               : 'No quedan cupos disponibles para esta fecha.',
+        },
+        { status: 409 },
+      );
+    }
+    if (error instanceof OverlapError) {
+      const timeStr = error.conflictDate.toLocaleTimeString('es-CO', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'America/Bogota',
+      });
+      return NextResponse.json(
+        {
+          error: `Ya tienes una reserva para "${error.conflictTitle}" que se superpone con este horario (${timeStr}). Por favor elige otra fecha u hora.`,
         },
         { status: 409 },
       );
