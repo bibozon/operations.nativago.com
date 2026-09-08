@@ -18,10 +18,3 @@ export async function resolveCountryId(countryCode: string | undefined | null): 
   const map = await loadCache();
   return map.get(countryCode.toUpperCase()) ?? null;
 }
-
-export async function getCountryByCode(countryCode: string) {
-  return prisma.country.findUnique({
-    where: { code: countryCode.toUpperCase() },
-    include: { defaultCurrency: true, defaultLanguage: true, timezone: true },
-  });
-}
