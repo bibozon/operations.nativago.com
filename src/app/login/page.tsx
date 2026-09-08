@@ -2,9 +2,11 @@
 
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLang } from '@/lib/i18n/LanguageContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLang();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export default function LoginPage() {
         <div className="rounded-2xl border border-slate-100 bg-white px-8 py-8 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
           <div className="mb-6 text-center">
             <div className="inline-flex items-center justify-center rounded-full bg-emerald-50 px-4 py-1 text-sm font-semibold text-emerald-700">
-              NativaGo
+              {t('admin_loginBadge')}
             </div>
             <h1 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900">
               Iniciar sesión

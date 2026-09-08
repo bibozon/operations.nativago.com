@@ -394,3 +394,29 @@ model CountrySlide {
 
   @@index([countryId, type])
 }
+
+// Intake del formulario de onboarding de operadores (arquitectura genérica
+// 6 países) — POST /api/auth/register-operator. Se mantiene como tabla
+// propia en vez de forzar taxId/tourismLicense/professionalCredentialNumber
+// dentro de Operator: ese modelo no tiene esos campos y además exige
+// cityId, que este formulario no recolecta (solo país). Cuando el equipo
+// de NativaGo revisa y aprueba una submission, un proceso aparte la
+// convierte en un Operator real con su ciudad correspondiente.
+model OperatorOnboardingSubmission {
+  id                            String   @id @default(cuid())
+  operatorKind                  String   // 'EMPRESA' | 'INDEPENDIENTE'
+  country                       String   // 'CO' | 'BR' | 'MX' | 'CL' | 'AR' | 'PE'
+  legalName                     String
+  email                         String
+  phone                         String
+  taxId                         String
+  tourismLicense                String
+  professionalCredentialNumber  String?
+  legalDocumentUrl              String?
+  status                        String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  reviewNotes                   String?
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
+
+  @@index([status])
+}
