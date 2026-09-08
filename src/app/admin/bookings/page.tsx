@@ -1,9 +1,15 @@
 import prisma from '@/lib/db';
+import { redirect } from 'next/navigation';
 import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
 
-export default async function BookingsPage() {
+export default async function BookingsPage({
+  searchParams,
+}: {
+  searchParams?: { error?: string };
+}) {
   const auth = await requireAuth();
   const staffOrAbove = isStaffOrAbove(auth.role);
+  const isSuperadmin = auth.role === 'SUPERADMIN';
 
   const bookings = staffOrAbove
     ? await prisma.booking.findMany({
@@ -49,9 +55,37 @@ export default async function BookingsPage() {
     });
   }
 
+  async function deleteBooking(formData: FormData) {
+    'use server';
+
+    // A diferencia de confirmar/cancelar (staff u operador dueño), borrar
+    // una reserva es irreversible y no deja rastro — se restringe a
+    // SUPERADMIN, no a "staff" en general.
+    const authInAction = await requireAuth();
+    if (authInAction.role !== 'SUPERADMIN') return;
+
+    const idRaw = formData.get('id');
+    const id = typeof idRaw === 'string' ? Number(idRaw) : NaN;
+    if (!Number.isFinite(id)) return;
+
+    try {
+      await prisma.booking.delete({ where: { id } });
+    } catch {
+      redirect('/admin/bookings?error=delete-failed');
+    }
+
+    redirect('/admin/bookings');
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <h1 className="mb-4 text-xl font-semibold">Reservas</h1>
+
+      {searchParams?.error === 'delete-failed' && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          No se pudo eliminar la reserva. Intenta de nuevo.
+        </div>
+      )}
 
       <table className="w-full border text-sm">
         <thead className="bg-slate-50">
@@ -91,6 +125,16 @@ export default async function BookingsPage() {
                   >
                     Confirmar
                   </button>
+                  {isSuperadmin && b.status === 'CONFIRMED' && (
+                    <button
+                      type="submit"
+                      name="status"
+                      value="PENDING"
+                      className="text-xs font-medium text-amber-700 hover:underline"
+                    >
+                      Desaprobar
+                    </button>
+                  )}
                   <button
                     type="submit"
                     name="status"
@@ -100,6 +144,17 @@ export default async function BookingsPage() {
                     Cancelar
                   </button>
                 </form>
+                {isSuperadmin && (
+                  <form action={deleteBooking} className="ml-2 inline">
+                    <input type="hidden" name="id" value={b.id} />
+                    <button
+                      type="submit"
+                      className="text-xs font-medium text-red-800 hover:underline"
+                    >
+                      Eliminar
+                    </button>
+                  </form>
+                )}
               </td>
             </tr>
           ))}
