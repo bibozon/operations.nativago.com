@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import QRCode from 'qrcode';
 import prisma from '@/lib/db';
 import { getActivePaymentProvider } from '@/infrastructure/payments/PaymentProviderRegistry';
@@ -19,6 +20,31 @@ class OverlapError extends Error {
   constructor(public conflictTitle: string, public conflictDate: Date) {
     super('Schedule overlap');
   }
+}
+
+const MAX_SERIALIZATION_RETRIES = 3;
+
+// Postgres aborta una transacción Serializable si detecta que su resultado
+// no sería equivalente a correrla antes/después de otra transacción
+// concurrente (código 40001 — Prisma lo expone como P2034). No es un error
+// de negocio: es la señal de que hay que reintentar desde cero.
+function isSerializationConflict(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2034';
+}
+
+async function runSerializable<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+  for (let attempt = 1; attempt <= MAX_SERIALIZATION_RETRIES; attempt++) {
+    try {
+      return await prisma.$transaction(fn, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    } catch (error) {
+      if (isSerializationConflict(error) && attempt < MAX_SERIALIZATION_RETRIES) {
+        continue;
+      }
+      throw error;
+    }
+  }
+  // Inalcanzable — el loop siempre retorna o lanza en su última iteración.
+  throw new Error('runSerializable: retries exhausted unexpectedly');
 }
 
 // Reserva pública + inicio de pago. Consumido por el marketplace (o
@@ -92,13 +118,16 @@ export async function POST(req: NextRequest) {
   // permite que la suma de guests de reservas activas para la misma fecha/hora
   // exceda ese cupo. capacity === 0 (default) se trata como "sin límite
   // configurado" para no romper experiencias que nunca lo definieron.
-  // El conteo + creación corren en una transacción para acotar la ventana de
-  // sobreventa por solicitudes concurrentes (no elimina el race condition por
-  // completo sin aislamiento serializable, pero cierra el hueco de "cero
-  // validación" reportado en la auditoría).
+  // El conteo + creación corren en una transacción Serializable (no el
+  // default Read Committed de Postgres): dos requests concurrentes para el
+  // último cupo ya no pueden leer el mismo "alreadyBooked" y pasar ambas la
+  // validación — Postgres aborta una de las dos con 40001/P2034, y
+  // runSerializable() la reintenta desde cero (hasta 3 veces) en vez de
+  // dejar pasar la sobreventa. Cierra el hueco de aislamiento que quedó
+  // documentado en la auditoría de negocio de esta sesión.
   let booking;
   try {
-    booking = await prisma.$transaction(async (tx) => {
+    booking = await runSerializable(async (tx) => {
       // ── Capacity check (per-experience) ───────────────────────────────────
       if (exp.capacity > 0) {
         const existing = await tx.booking.aggregate({
