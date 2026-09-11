@@ -2,9 +2,8 @@
 
 import { useFormState } from 'react-dom';
 import { useMemo, useState } from 'react';
-import { operatorTypeFromPrestadorTipo, type PrestadorTipo } from '@/lib/operatorRegistration';
-import { documentTypeAppliesToOperator, type RegisterI18n } from '@/lib/registerI18n';
-import { getLiabilityText } from '@/lib/operatorRegistration';
+import { operatorTypeFromPrestadorTipo, documentTypeAppliesTo, getLiabilityText, type PrestadorTipo } from '@/lib/operatorRegistration';
+import type { RegisterI18n } from '@/lib/registerI18n';
 import type { RegisterState } from '../../operator/actions';
 
 type CityOption = { id: string; name: string; countryId: string | null; countryCode: string | null };
@@ -37,7 +36,7 @@ export function CountryOperatorRegisterForm({ i18n, cities, documentTypes, regis
   const relevantDocumentTypes = useMemo(() => {
     if (!selectedCity?.countryId) return [];
     return documentTypes.filter(
-      (dt) => dt.countryId === selectedCity.countryId && documentTypeAppliesToOperator(dt.code, operatorType),
+      (dt) => dt.countryId === selectedCity.countryId && documentTypeAppliesTo(dt.code, operatorType),
     );
   }, [documentTypes, selectedCity, operatorType]);
 

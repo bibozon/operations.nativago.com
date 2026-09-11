@@ -1,5 +1,3 @@
-import type { OperatorType } from '@prisma/client';
-
 export type RegisterCategory = { value: string; label: string };
 
 export type RegisterI18n = {
@@ -238,18 +236,5 @@ export const REGISTER_ERRORS: Record<string, Record<string, string>> = {
   },
 };
 
-// Map operator type to audience for document filtering
-export const DOCUMENT_AUDIENCE_BY_CODE: Record<string, OperatorType | 'BOTH'> = {
-  CNPJ: 'AGENCY',
-  CPF: 'FREELANCE',
-  CADASTUR: 'BOTH',
-  RNT: 'BOTH',
-  RFC: 'BOTH',
-  REPSE: 'AGENCY',
-  SECTUR: 'BOTH',
-};
-
-export function documentTypeAppliesToOperator(code: string, operatorType: OperatorType): boolean {
-  const audience = DOCUMENT_AUDIENCE_BY_CODE[code] ?? 'BOTH';
-  return audience === 'BOTH' || audience === operatorType;
-}
+// documentTypeAppliesTo() vive en @/lib/operatorRegistration — es la misma
+// regla de audiencia por tipo de operador, sin duplicarla aquí.

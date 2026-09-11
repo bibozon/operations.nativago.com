@@ -13,6 +13,7 @@ const CURRENCIES = [
   { code: 'MXN', symbol: '$', decimalDigits: 2 },
   { code: 'CLP', symbol: '$', decimalDigits: 0 },
   { code: 'PEN', symbol: 'S/', decimalDigits: 2 },
+  { code: 'ARS', symbol: '$', decimalDigits: 2 },
 ];
 
 const LANGUAGES = [
@@ -25,6 +26,9 @@ const TIMEZONES = [
   { ianaName: 'America/Bogota', label: 'Colombia (UTC-5)' },
   { ianaName: 'America/Sao_Paulo', label: 'Brasil - São Paulo (UTC-3)' },
   { ianaName: 'America/Mexico_City', label: 'México - Ciudad de México (UTC-6)' },
+  { ianaName: 'America/Santiago', label: 'Chile - Santiago (UTC-4)' },
+  { ianaName: 'America/Argentina/Buenos_Aires', label: 'Argentina - Buenos Aires (UTC-3)' },
+  { ianaName: 'America/Lima', label: 'Perú - Lima (UTC-5)' },
 ];
 
 const PAYMENT_PROVIDERS = [
@@ -71,6 +75,42 @@ const COUNTRIES = [
     seoTitle: 'NativaGo México — Experiencias turísticas auténticas',
     seoDescription: 'Reserva experiencias turísticas con operadores locales verificados en México.',
   },
+  {
+    code: 'CL',
+    name: 'Chile',
+    domainSlug: 'cl',
+    currencyCode: 'CLP',
+    languageCode: 'es',
+    timezoneName: 'America/Santiago',
+    taxRatePercent: 19, // IVA Chile
+    commissionPercent: 15,
+    seoTitle: 'NativaGo Chile — Experiencias turísticas auténticas',
+    seoDescription: 'Reserva experiencias turísticas con operadores locales verificados en Chile.',
+  },
+  {
+    code: 'AR',
+    name: 'Argentina',
+    domainSlug: 'ar',
+    currencyCode: 'ARS',
+    languageCode: 'es',
+    timezoneName: 'America/Argentina/Buenos_Aires',
+    taxRatePercent: 21, // IVA Argentina
+    commissionPercent: 15,
+    seoTitle: 'NativaGo Argentina — Experiencias turísticas auténticas',
+    seoDescription: 'Reserva experiencias turísticas con operadores locales verificados en Argentina.',
+  },
+  {
+    code: 'PE',
+    name: 'Perú',
+    domainSlug: 'pe',
+    currencyCode: 'PEN',
+    languageCode: 'es',
+    timezoneName: 'America/Lima',
+    taxRatePercent: 18, // IGV Perú
+    commissionPercent: 15,
+    seoTitle: 'NativaGo Perú — Experiencias turísticas auténticas',
+    seoDescription: 'Reserva experiencias turísticas con operadores locales verificados en Perú.',
+  },
 ];
 
 // Documentos oficiales exigidos para verificar un operador, por país.
@@ -83,6 +123,31 @@ const DOCUMENT_TYPES = [
   { countryCode: 'MX', code: 'RFC', label: 'RFC — Registro Federal de Contribuyentes', validationRegex: '^[A-Z&Ñ]{3,4}\\d{6}[A-Z0-9]{3}$' },
   { countryCode: 'MX', code: 'REPSE', label: 'REPSE — Registro de Prestadores de Servicios Especializados', validationRegex: null },
   { countryCode: 'MX', code: 'SECTUR', label: 'Registro SECTUR (voluntario)', validationRegex: null },
+  // Chile: RUT obligatorio para todos. SERNATUR es opcional en general, pero
+  // se vuelve obligatorio para operadores con experiencias en categorías de
+  // turismo aventura (no hay categoría "alojamiento" en este marketplace de
+  // experiencias, así que se mapea a las categorías de mayor riesgo físico).
+  { countryCode: 'CL', code: 'RUT', label: 'RUT — Rol Único Tributario', validationRegex: '^\\d{7,8}-[\\dkK]$', isRequired: true },
+  {
+    countryCode: 'CL',
+    code: 'SERNATUR',
+    label: 'Registro Nacional de Prestadores Turísticos (SERNATUR)',
+    validationRegex: null,
+    isRequired: false,
+    requiredForCategorySlugs: ['aventura', 'buceo', 'senderismo'],
+  },
+  // Argentina: CUIT obligatorio para todos + Registro Ley 18.829 (Registro de
+  // Agentes de Viaje) para quienes intermedian venta de servicios turísticos.
+  { countryCode: 'AR', code: 'CUIT', label: 'CUIT — Clave Única de Identificación Tributaria', validationRegex: '^\\d{2}-\\d{8}-\\d{1}$', isRequired: true },
+  { countryCode: 'AR', code: 'LEY_18829', label: 'Registro de Agentes de Viaje (Ley 18.829)', validationRegex: null, isRequired: true },
+  // Perú: RUC obligatorio para todos + DIRCETUR, que se otorga por región
+  // (gobierno regional), no a nivel nacional. Set inicial de regiones con
+  // mayor actividad turística — revisar y ampliar con el listado oficial
+  // completo de gobiernos regionales antes de habilitar el resto del país.
+  { countryCode: 'PE', code: 'RUC', label: 'RUC — Registro Único de Contribuyentes', validationRegex: '^\\d{11}$', isRequired: true },
+  { countryCode: 'PE', code: 'DIRCETUR', label: 'DIRCETUR Lima — Autorización regional de operador', validationRegex: null, isRequired: true, region: 'LIMA' },
+  { countryCode: 'PE', code: 'DIRCETUR', label: 'DIRCETUR Cusco — Autorización regional de operador', validationRegex: null, isRequired: true, region: 'CUSCO' },
+  { countryCode: 'PE', code: 'DIRCETUR', label: 'DIRCETUR Arequipa — Autorización regional de operador', validationRegex: null, isRequired: true, region: 'AREQUIPA' },
 ];
 
 async function main() {
@@ -176,14 +241,25 @@ async function main() {
 
   for (const dt of DOCUMENT_TYPES) {
     const country = countryByCode[dt.countryCode];
+    const region = dt.region ?? '';
+    const isRequired = dt.isRequired ?? true;
+    const requiredForCategorySlugs = dt.requiredForCategorySlugs ?? [];
     await prisma.documentType.upsert({
-      where: { countryId_code: { countryId: country.id, code: dt.code } },
-      update: { label: dt.label, validationRegex: dt.validationRegex },
+      where: { countryId_code_region: { countryId: country.id, code: dt.code, region } },
+      update: {
+        label: dt.label,
+        validationRegex: dt.validationRegex,
+        isRequired,
+        requiredForCategorySlugs,
+      },
       create: {
         countryId: country.id,
         code: dt.code,
         label: dt.label,
         validationRegex: dt.validationRegex,
+        isRequired,
+        region,
+        requiredForCategorySlugs,
       },
     });
   }

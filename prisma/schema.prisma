@@ -328,16 +328,25 @@ model CountryCategory {
 // (RNT en CO, CNPJ/CPF+CADASTUR en BR, RFC en MX...). Configurable desde
 // datos, no desde código.
 model DocumentType {
-  id                String             @id @default(cuid())
-  countryId         String
-  country           Country            @relation(fields: [countryId], references: [id])
-  code              String // "RNT", "CNPJ", "CPF", "CADASTUR", "RFC"...
-  label             String
-  validationRegex   String?
-  isRequired        Boolean            @default(true)
-  operatorDocuments OperatorDocument[]
+  id                       String             @id @default(cuid())
+  countryId                String
+  country                  Country            @relation(fields: [countryId], references: [id])
+  code                     String // "RNT", "CNPJ", "CPF", "CADASTUR", "RFC"...
+  label                    String
+  validationRegex          String?
+  isRequired               Boolean            @default(true)
+  // "" = documento de nivel nacional. Un valor no vacío (ej. "LIMA") marca un
+  // documento regional (ej. DIRCETUR Perú), que solo aplica a operadores de esa
+  // región. Se usa string vacío en vez de null porque en Postgres NULL nunca es
+  // igual a NULL, lo que rompería el unique constraint entre filas regionales.
+  region                   String             @default("")
+  // Lista de slugs de categoría que activan la obligatoriedad de este documento
+  // aunque isRequired sea false (ej. SERNATUR en Chile: obligatorio solo para
+  // alojamiento/aventura). Vacío = el comportamiento lo gobierna isRequired solo.
+  requiredForCategorySlugs String[]           @default([])
+  operatorDocuments        OperatorDocument[]
 
-  @@unique([countryId, code])
+  @@unique([countryId, code, region])
 }
 
 model OperatorDocument {
