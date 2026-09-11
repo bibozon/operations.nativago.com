@@ -26,14 +26,14 @@ export default function LoginPage() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        setError(data.error ?? 'Error iniciando sesión');
+        setError(data.error ?? t('login_errorDefault'));
         setLoading(false);
         return;
       }
 
       router.push('/admin');
     } catch (e) {
-      setError('No se pudo conectar con el servidor');
+      setError(t('login_errorNetwork'));
       setLoading(false);
     }
   };
@@ -47,10 +47,10 @@ export default function LoginPage() {
               {t('admin_loginBadge')}
             </div>
             <h1 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900">
-              Iniciar sesión
+              {t('login_title')}
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Accede al panel de administración de experiencias.
+              {t('login_subtitle')}
             </p>
           </div>
 
@@ -62,7 +62,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-600">Email</label>
+              <label className="block text-xs font-medium text-slate-600">{t('login_email')}</label>
               <input
                 type="email"
                 value={email}
@@ -74,7 +74,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-600">Contraseña</label>
+              <label className="block text-xs font-medium text-slate-600">{t('login_password')}</label>
               <input
                 type="password"
                 value={password}
@@ -90,7 +90,7 @@ export default function LoginPage() {
               disabled={loading}
               className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
             >
-              {loading ? 'Iniciando sesión…' : 'Iniciar sesión'}
+              {loading ? t('login_submitting') : t('login_submit')}
             </button>
 
             <div className="pt-2 text-center">
@@ -98,7 +98,7 @@ export default function LoginPage() {
                 type="button"
                 className="text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:underline"
               >
-                ¿Olvidaste tu contraseña?
+                {t('login_forgotPassword')}
               </button>
             </div>
           </form>
