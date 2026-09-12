@@ -73,9 +73,15 @@ export async function createExperience(data: {
 
   await assertCityBelongsToCountry(data.cityId, operator.countryId);
 
+  // Toda experiencia nueva entra en revisión (RN-EXP-09) — solo soporte o
+  // superadmin pueden pasarla a PUBLISHED desde /admin/experiences.
   return prisma.experience.create({
-    data: { ...data, images: data.images ?? [], countryId: operator.countryId },
+    data: { ...data, images: data.images ?? [], countryId: operator.countryId, status: 'PENDING' },
   });
+}
+
+export async function setExperienceStatus(id: string, status: 'PUBLISHED' | 'REJECTED' | 'PENDING') {
+  return prisma.experience.update({ where: { id }, data: { status } });
 }
 
 export async function updateExperience(id: string, data: Partial<{

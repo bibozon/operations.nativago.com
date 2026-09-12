@@ -86,6 +86,38 @@ export default async function ExperiencesPage({
     redirect('/admin/experiences');
   }
 
+  async function setStatus(formData: FormData) {
+    'use server';
+
+    // Aprobar/rechazar es una decisión de moderación (RN-EXP-09) — solo
+    // soporte/superadmin, no el operador dueño de la experiencia.
+    const authInAction = await requireAuth();
+    if (!isStaffOrAbove(authInAction.role)) return;
+
+    const idRaw = formData.get('id');
+    const id = typeof idRaw === 'string' ? idRaw : '';
+    const statusRaw = formData.get('status');
+    const status = statusRaw === 'PUBLISHED' || statusRaw === 'REJECTED' ? statusRaw : null;
+    if (!id || !status) return;
+
+    await prisma.experience.update({ where: { id }, data: { status } });
+
+    redirect('/admin/experiences');
+  }
+
+  const statusStyles: Record<string, string> = {
+    PENDING: 'bg-amber-50 text-amber-700',
+    PUBLISHED: 'bg-emerald-50 text-emerald-700',
+    REJECTED: 'bg-red-50 text-red-700',
+    DRAFT: 'bg-slate-100 text-slate-600',
+  };
+  const statusLabels: Record<string, string> = {
+    PENDING: t.admin_expStatusPending,
+    PUBLISHED: t.admin_expStatusPublished,
+    REJECTED: t.admin_expStatusRejected,
+    DRAFT: t.admin_expStatusDraft,
+  };
+
   return (
     <div>
       {searchParams?.error === 'has-bookings' && (
@@ -132,6 +164,7 @@ export default async function ExperiencesPage({
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{t.admin_colCity}</th>
                 <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">{t.admin_colPrice}</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{t.admin_expColOperator}</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{t.admin_expColStatus}</th>
                 <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">{t.admin_expActions}</th>
               </tr>
             </thead>
@@ -155,8 +188,39 @@ export default async function ExperiencesPage({
                     {formatPrice(Number(exp.price), exp.country?.defaultCurrency.code ?? 'COP')}
                   </td>
                   <td className="px-4 py-2.5 text-slate-600">{exp.operator?.name}</td>
+                  <td className="px-4 py-2.5">
+                    <span className={`inline-flex rounded-full px-2 py-1 text-[11px] font-medium ${statusStyles[exp.status] ?? statusStyles.DRAFT}`}>
+                      {statusLabels[exp.status] ?? exp.status}
+                    </span>
+                  </td>
                   <td className="px-4 py-2.5 text-right">
                     <div className="inline-flex items-center gap-3">
+                      {staffOrAbove && exp.status !== 'PUBLISHED' && (
+                        <form action={setStatus} className="inline">
+                          <input type="hidden" name="id" value={exp.id} />
+                          <button
+                            type="submit"
+                            name="status"
+                            value="PUBLISHED"
+                            className="text-xs font-medium text-emerald-700 hover:underline"
+                          >
+                            {t.admin_approve}
+                          </button>
+                        </form>
+                      )}
+                      {staffOrAbove && exp.status !== 'REJECTED' && (
+                        <form action={setStatus} className="inline">
+                          <input type="hidden" name="id" value={exp.id} />
+                          <button
+                            type="submit"
+                            name="status"
+                            value="REJECTED"
+                            className="text-xs font-medium text-amber-700 hover:underline"
+                          >
+                            {t.admin_reject}
+                          </button>
+                        </form>
+                      )}
                       <a
                         href={`/admin/experiences/${exp.id}/edit`}
                         className="text-xs font-medium text-teal-700 hover:underline"
@@ -185,7 +249,7 @@ export default async function ExperiencesPage({
               {experiences.length === 0 && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-4 py-6 text-center text-sm text-slate-500"
                   >
                     {t.admin_expEmpty}

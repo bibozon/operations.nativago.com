@@ -119,7 +119,7 @@ export default function NewExperiencePage() {
                 Crear experiencia
               </h1>
               <p className="mt-1 text-sm text-slate-500">
-                Publica nuevas experiencias turísticas en el marketplace de NativaGo.
+                La experiencia queda pendiente de revisión y no aparece en el marketplace hasta que soporte o superadmin la aprueben desde el listado.
               </p>
             </header>
 

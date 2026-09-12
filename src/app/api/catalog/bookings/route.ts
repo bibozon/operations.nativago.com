@@ -91,7 +91,10 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  if (!exp) {
+  // 404 en vez de 403: una experiencia PENDING/REJECTED no debe ser
+  // reservable ni siquiera conociendo su id directamente (RN-EXP-09) — el
+  // mismo código que "no existe" evita confirmar que el id es válido.
+  if (!exp || exp.status !== 'PUBLISHED') {
     return NextResponse.json({ error: 'Experience not found' }, { status: 404 });
   }
 

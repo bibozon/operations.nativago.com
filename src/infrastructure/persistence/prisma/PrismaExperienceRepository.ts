@@ -20,12 +20,15 @@ export class PrismaExperienceRepository implements ExperienceRepository {
   async findMany(countryId: string | null, filters: ExperienceFilters): Promise<ExperienceCardDTO[]> {
     const { citySlug, categorySlug, page = 1, limit = 20, operatorId } = filters;
 
-    // Catálogo público — solo experiencias de operadores ya aprobados. Sin
-    // este filtro, un operador DRAFT/PENDING/REJECTED que publica llamando
-    // la API directamente (sin pasar por la UI del CMS) aparecía igual en
-    // el marketplace real.
+    // Catálogo público — solo experiencias de operadores ya aprobados y que
+    // además pasaron su propia revisión (RN-EXP-09). Sin el primer filtro,
+    // un operador DRAFT/PENDING/REJECTED que publica llamando la API
+    // directamente (sin pasar por la UI del CMS) aparecía igual en el
+    // marketplace real; sin el segundo, cualquier experiencia recién creada
+    // quedaba visible antes de que soporte/superadmin la revisara.
     const where: Prisma.ExperienceWhereInput = {
       operator: { verificationStatus: 'APPROVED' },
+      status: 'PUBLISHED',
     };
 
     if (countryId) {
@@ -76,6 +79,7 @@ export class PrismaExperienceRepository implements ExperienceRepository {
       where: {
         id,
         operator: { verificationStatus: 'APPROVED' },
+        status: 'PUBLISHED',
         ...(countryId ? { countryId } : {}),
       },
       select: CARD_SELECT,

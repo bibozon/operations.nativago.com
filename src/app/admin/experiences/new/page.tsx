@@ -84,7 +84,10 @@ export default async function NewExperiencePage() {
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
       <BackLink href="/admin/experiences" label="Experiencias" />
-      <h1 className="mb-4 text-xl font-semibold">Crear experiencia</h1>
+      <h1 className="mb-1 text-xl font-semibold">Crear experiencia</h1>
+      <p className="mb-4 text-sm text-slate-500">
+        Quedará pendiente de revisión y no será visible en el marketplace hasta que el equipo de soporte la apruebe.
+      </p>
       <form action={createExp} className="space-y-3" encType="multipart/form-data">
         <TitleCategorySuggestFields categories={categories} />
 

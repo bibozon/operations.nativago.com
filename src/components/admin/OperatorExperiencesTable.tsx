@@ -1,6 +1,19 @@
 import type { OperatorExperienceRow } from '@/services/operator/dashboard';
 import { formatPrice } from '@/domain/entities/Money';
 
+const STATUS_STYLES: Record<string, string> = {
+  PENDING: 'bg-amber-50 text-amber-700',
+  PUBLISHED: 'bg-emerald-50 text-emerald-700',
+  REJECTED: 'bg-red-50 text-red-700',
+  DRAFT: 'bg-slate-100 text-slate-600',
+};
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Pendiente de revisión',
+  PUBLISHED: 'Publicada',
+  REJECTED: 'Rechazada',
+  DRAFT: 'Borrador',
+};
+
 export function OperatorExperiencesTable({
   experiences,
   currencyCode,
@@ -39,8 +52,8 @@ export function OperatorExperiencesTable({
                 {formatPrice(Number(exp.price), currencyCode)}
               </td>
               <td className="px-3 py-2 text-center text-xs">
-                <span className="inline-flex rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700">
-                  Activa
+                <span className={`inline-flex rounded-full px-2 py-1 text-[11px] font-medium ${STATUS_STYLES[exp.status] ?? STATUS_STYLES.DRAFT}`}>
+                  {STATUS_LABELS[exp.status] ?? exp.status}
                 </span>
               </td>
               <td className="px-3 py-2 text-right text-xs">
