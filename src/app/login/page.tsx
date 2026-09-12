@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLang } from '@/lib/i18n/LanguageContext';
+import { NativaGoLogo } from '@/components/NativaGoLogo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,47 +40,51 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#0B1120] px-4">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-slate-100 bg-white px-8 py-8 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+        <div className="mb-6 flex justify-center">
+          <NativaGoLogo size="md" context="onDark" />
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-8 py-8 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur-sm">
           <div className="mb-6 text-center">
-            <div className="inline-flex items-center justify-center rounded-full bg-emerald-50 px-4 py-1 text-sm font-semibold text-emerald-700">
+            <div className="inline-flex items-center justify-center rounded-full bg-teal-500/15 px-4 py-1 text-sm font-semibold text-teal-300">
               {t('admin_loginBadge')}
             </div>
-            <h1 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900">
+            <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
               {t('login_title')}
             </h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-400">
               {t('login_subtitle')}
             </p>
           </div>
 
           {error && (
-            <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="mb-4 rounded-md border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-600">{t('login_email')}</label>
+              <label className="block text-xs font-medium text-slate-300">{t('login_email')}</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white shadow-sm placeholder:text-slate-500 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 placeholder="tú@ejemplo.com"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-600">{t('login_password')}</label>
+              <label className="block text-xs font-medium text-slate-300">{t('login_password')}</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white shadow-sm placeholder:text-slate-500 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 placeholder="••••••••"
                 required
               />
@@ -96,7 +101,7 @@ export default function LoginPage() {
             <div className="pt-2 text-center">
               <button
                 type="button"
-                className="text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:underline"
+                className="text-xs font-medium text-teal-400 hover:text-teal-300 hover:underline"
               >
                 {t('login_forgotPassword')}
               </button>

@@ -113,7 +113,7 @@ export function AdminSidebarNav({ menu, mobile = false, userInfo }: AdminSidebar
           onClick={() => setOpen(true)}
           aria-label="Abrir menú"
           aria-expanded={open}
-          className="flex md:hidden h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 active:bg-slate-200"
+          className="flex md:hidden h-9 w-9 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 active:bg-white/15"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-6 w-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />

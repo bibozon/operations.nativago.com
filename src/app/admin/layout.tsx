@@ -63,7 +63,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const menu = auth ? menuForAuth(auth, t) : [];
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-[#0B1120]">
       {/* Sidebar — hidden on mobile, visible on desktop */}
       <aside className="hidden md:flex w-64 shrink-0 flex-col bg-[#0B1120] py-6 px-4 sticky top-0 h-screen">
         <div className="mb-8 px-1">
@@ -83,18 +83,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen min-w-0">
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-white border-b border-slate-200 flex items-center justify-between h-16 px-6">
+        <header className="sticky top-0 z-10 bg-[#0B1120] border-b border-white/10 flex items-center justify-between h-16 px-6">
           {/* Mobile: hamburger que abre el menú completo */}
           <AdminSidebarNav menu={menu} mobile userInfo={{ initial, displayName, roleLabel }} />
           <div className="ml-auto flex items-center gap-3">
-            <LanguageSwitcher variant="light" />
-            <div className="hidden sm:flex h-9 w-9 items-center justify-center rounded-full bg-teal-50 text-sm font-semibold text-teal-700">
+            <LanguageSwitcher variant="dark" />
+            <div className="hidden sm:flex h-9 w-9 items-center justify-center rounded-full bg-teal-500/15 text-sm font-semibold text-teal-300">
               {initial}
             </div>
             <LogoutButton />
           </div>
         </header>
-        <main className="flex-1 p-6 md:p-8">{children}</main>
+        <main className="flex-1 bg-slate-50 p-6 md:p-8">{children}</main>
       </div>
     </div>
   );
