@@ -81,13 +81,17 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
     // updateExperience valida server-side que la nueva cityId (si cambió)
     // pertenezca al mismo país que la experiencia — evita reasignarla a
     // una ciudad de otro país aunque el <select> haya sido manipulado.
-    await updateExperience(id, {
-      title: (formData.get('title') as string) ?? '',
-      price: Number(formData.get('price')),
-      cityId: (formData.get('cityId') as string) ?? '',
-      categoryId: (formData.get('categoryId') as string) ?? '',
-      images,
-    });
+    await updateExperience(
+      id,
+      {
+        title: (formData.get('title') as string) ?? '',
+        price: Number(formData.get('price')),
+        cityId: (formData.get('cityId') as string) ?? '',
+        categoryId: (formData.get('categoryId') as string) ?? '',
+        images,
+      },
+      { userId: authInAction.userId, email: authInAction.email, role: authInAction.role },
+    );
 
     redirect('/admin/experiences');
   }

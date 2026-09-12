@@ -66,16 +66,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const experience = await createExperience({
-      title,
-      description,
-      price: Number(price),
-      durationMinutes: Number(durationMinutes),
-      images: image ? [image as string] : [],
-      categoryId: (categoryId as string) ?? '',
-      cityId: (cityId as string) ?? '',
-      operatorId: (finalOperatorId as string) ?? '',
-    });
+    const experience = await createExperience(
+      {
+        title,
+        description,
+        price: Number(price),
+        durationMinutes: Number(durationMinutes),
+        images: image ? [image as string] : [],
+        categoryId: (categoryId as string) ?? '',
+        cityId: (cityId as string) ?? '',
+        operatorId: (finalOperatorId as string) ?? '',
+      },
+      { userId: authUser.userId, email: authUser.email, role: authUser.role },
+    );
 
     return NextResponse.json(experience, { status: 201 });
   } catch (error) {
@@ -124,7 +127,11 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const updated = await updateExperience(experienceId, data);
+    const updated = await updateExperience(experienceId, data, {
+      userId: authUser.userId,
+      email: authUser.email,
+      role: authUser.role,
+    });
     return NextResponse.json(updated);
   } catch (error) {
     return NextResponse.json(

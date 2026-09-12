@@ -17,7 +17,7 @@ export default async function NewExperiencePage() {
   async function createExp(formData: FormData) {
     'use server';
 
-    const { operator } = await requireOperatorContext();
+    const { auth, operator } = await requireOperatorContext();
 
     const title = (formData.get('title') as string) ?? '';
     const description = (formData.get('description') as string) ?? '';
@@ -54,16 +54,19 @@ export default async function NewExperiencePage() {
     // createExperience valida server-side que cityId pertenezca al país
     // del operador — rechaza cualquier intento de publicar fuera de él,
     // aunque el <select> del form haya sido manipulado.
-    await createExperience({
-      title,
-      description,
-      durationMinutes,
-      price,
-      cityId,
-      categoryId,
-      operatorId: operator.id,
-      images,
-    });
+    await createExperience(
+      {
+        title,
+        description,
+        durationMinutes,
+        price,
+        cityId,
+        categoryId,
+        operatorId: operator.id,
+        images,
+      },
+      { userId: auth.userId, email: auth.email, role: auth.role },
+    );
 
     redirect('/admin/experiences');
   }

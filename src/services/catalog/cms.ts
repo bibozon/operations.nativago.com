@@ -1,4 +1,5 @@
 import prisma from '@/lib/db';
+import { logExperienceChange, diffFields, type AuditActor } from '@/lib/auditLog';
 
 export async function createCategory(data: { name: string; slug: string }) {
   return prisma.category.create({ data });
@@ -53,16 +54,19 @@ async function assertCityBelongsToCountry(cityId: string, countryId: string) {
 // nunca se acepta del cliente. Frontera de aislamiento multi-país: un
 // operador de Colombia no puede crear una experiencia en una ciudad de
 // Brasil, ni pasando el cityId a mano.
-export async function createExperience(data: {
-  title: string;
-  description: string;
-  price: number;
-  durationMinutes: number;
-  images?: string[];
-  categoryId: string;
-  cityId: string;
-  operatorId: string;
-}) {
+export async function createExperience(
+  data: {
+    title: string;
+    description: string;
+    price: number;
+    durationMinutes: number;
+    images?: string[];
+    categoryId: string;
+    cityId: string;
+    operatorId: string;
+  },
+  actor: AuditActor,
+) {
   const operator = await prisma.operator.findUnique({
     where: { id: data.operatorId },
     select: { countryId: true },
@@ -75,29 +79,69 @@ export async function createExperience(data: {
 
   // Toda experiencia nueva entra en revisión (RN-EXP-09) — solo soporte o
   // superadmin pueden pasarla a PUBLISHED desde /admin/experiences.
-  return prisma.experience.create({
+  const experience = await prisma.experience.create({
     data: { ...data, images: data.images ?? [], countryId: operator.countryId, status: 'PENDING' },
   });
-}
 
-export async function setExperienceStatus(id: string, status: 'PUBLISHED' | 'REJECTED' | 'PENDING') {
-  return prisma.experience.update({ where: { id }, data: { status } });
-}
-
-export async function updateExperience(id: string, data: Partial<{
-  title: string;
-  description: string;
-  price: number;
-  durationMinutes: number;
-  images: string[];
-  categoryId: string;
-  cityId: string;
-  operatorId: string;
-}>) {
-  const existing = await prisma.experience.findUnique({
-    where: { id },
-    select: { operatorId: true, countryId: true },
+  await logExperienceChange({
+    experienceId: experience.id,
+    action: 'CREATE',
+    changes: { title: data.title, price: data.price, categoryId: data.categoryId, cityId: data.cityId, operatorId: data.operatorId },
+    actor,
   });
+
+  return experience;
+}
+
+export async function setExperienceStatus(
+  id: string,
+  status: 'PUBLISHED' | 'REJECTED' | 'PENDING',
+  actor: AuditActor,
+) {
+  const existing = await prisma.experience.findUnique({ where: { id }, select: { status: true } });
+  const updated = await prisma.experience.update({ where: { id }, data: { status } });
+
+  await logExperienceChange({
+    experienceId: id,
+    action: 'STATUS_CHANGE',
+    changes: { status: { from: existing?.status ?? null, to: status } },
+    actor,
+  });
+
+  return updated;
+}
+
+export async function deleteExperience(id: string, actor: AuditActor) {
+  const existing = await prisma.experience.findUnique({ where: { id } });
+  if (!existing) return null;
+
+  await prisma.experience.delete({ where: { id } });
+
+  await logExperienceChange({
+    experienceId: id,
+    action: 'DELETE',
+    changes: { title: existing.title, operatorId: existing.operatorId, status: existing.status },
+    actor,
+  });
+
+  return existing;
+}
+
+export async function updateExperience(
+  id: string,
+  data: Partial<{
+    title: string;
+    description: string;
+    price: number;
+    durationMinutes: number;
+    images: string[];
+    categoryId: string;
+    cityId: string;
+    operatorId: string;
+  }>,
+  actor: AuditActor,
+) {
+  const existing = await prisma.experience.findUnique({ where: { id } });
   if (!existing) {
     throw new Error(`Experience ${id} not found`);
   }
@@ -115,10 +159,17 @@ export async function updateExperience(id: string, data: Partial<{
     await assertCityBelongsToCountry(data.cityId, targetCountryId);
   }
 
-  return prisma.experience.update({
+  const updated = await prisma.experience.update({
     where: { id },
     data: { ...data, countryId: targetCountryId },
   });
+
+  const changes = diffFields(existing as unknown as Record<string, unknown>, data as Record<string, unknown>);
+  if (Object.keys(changes).length > 0) {
+    await logExperienceChange({ experienceId: id, action: 'UPDATE', changes, actor });
+  }
+
+  return updated;
 }
 
 export async function createSlot(data: {

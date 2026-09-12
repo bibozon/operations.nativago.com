@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { formatPrice } from '@/domain/entities/Money';
 import { getT } from '@/lib/i18n/getLocale';
 import { ExperienceFilters } from '@/components/admin/ExperienceFilters';
+import { setExperienceStatus, deleteExperience } from '@/services/catalog/cms';
 
 export default async function ExperiencesPage({
   searchParams,
@@ -81,7 +82,11 @@ export default async function ExperiencesPage({
       redirect('/admin/experiences?error=has-bookings');
     }
 
-    await prisma.experience.delete({ where: { id } });
+    await deleteExperience(id, {
+      userId: authInAction.userId,
+      email: authInAction.email,
+      role: authInAction.role,
+    });
 
     redirect('/admin/experiences');
   }
@@ -100,7 +105,11 @@ export default async function ExperiencesPage({
     const status = statusRaw === 'PUBLISHED' || statusRaw === 'REJECTED' ? statusRaw : null;
     if (!id || !status) return;
 
-    await prisma.experience.update({ where: { id }, data: { status } });
+    await setExperienceStatus(id, status, {
+      userId: authInAction.userId,
+      email: authInAction.email,
+      role: authInAction.role,
+    });
 
     redirect('/admin/experiences');
   }
@@ -227,6 +236,14 @@ export default async function ExperiencesPage({
                       >
                         {t.admin_edit}
                       </a>
+                      {staffOrAbove && (
+                        <a
+                          href={`/admin/experiences/${exp.id}/history`}
+                          className="text-xs font-medium text-slate-600 hover:underline"
+                        >
+                          {t.admin_history}
+                        </a>
+                      )}
                       <a
                         href={`/admin/experiences/${exp.id}/availability`}
                         className="text-xs font-medium text-sky-700 hover:underline"
