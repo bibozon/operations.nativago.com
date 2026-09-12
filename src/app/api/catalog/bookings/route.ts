@@ -288,8 +288,15 @@ export async function GET(req: NextRequest) {
   const wantsAll = req.nextUrl.searchParams.get('all') === 'true';
 
   if (wantsAll) {
-    const key = req.headers.get('x-internal-api-key');
-    if (!key || key !== process.env.INTERNAL_API_KEY) {
+    // Acepta dos esquemas por compatibilidad: el header interno legado
+    // (x-internal-api-key + INTERNAL_API_KEY) y el Bearer token que el
+    // marketplace ya usa para /api/orders (CMS_ORDERS_API_KEY) — mismo
+    // secreto conceptual, dos nombres, hasta que se unifiquen.
+    const legacyKey = req.headers.get('x-internal-api-key');
+    const bearerKey = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+    const validLegacy = Boolean(legacyKey && process.env.INTERNAL_API_KEY && legacyKey === process.env.INTERNAL_API_KEY);
+    const validBearer = Boolean(bearerKey && process.env.CMS_ORDERS_API_KEY && bearerKey === process.env.CMS_ORDERS_API_KEY);
+    if (!validLegacy && !validBearer) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
