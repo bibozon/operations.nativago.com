@@ -5,11 +5,16 @@ import { usePathname } from 'next/navigation';
 import { NativaGoLogo } from '@/components/NativaGoLogo';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
-// /admin y /operator ya tienen su propio header (con logout, etc.) —
-// este header genérico solo aplica a páginas públicas (login, registro...).
+// /admin y /operator ya tienen su propio header (con logout, etc.), y
+// /login tiene su propio logo y CTA de "Iniciar sesión" en la tarjeta —
+// este header genérico solo aplica al resto de páginas públicas (registro...).
 export function SiteHeader() {
   const pathname = usePathname();
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/operator')) {
+  if (
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/operator') ||
+    pathname?.startsWith('/login')
+  ) {
     return null;
   }
 
