@@ -4,6 +4,7 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLang } from '@/lib/i18n/LanguageContext';
 import { NativaGoLogo } from '@/components/NativaGoLogo';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,7 +41,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0B1120] px-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-[#0B1120] px-4">
+      <div className="absolute right-4 top-4">
+        <LanguageSwitcher variant="dark" />
+      </div>
+
       <div className="w-full max-w-md">
         <div className="mb-6 flex justify-center">
           <NativaGoLogo size="md" context="onDark" />
