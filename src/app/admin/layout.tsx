@@ -18,6 +18,7 @@ function menuForAuth(auth: AuthTokenPayload, t: Record<TranslationKey, string>):
       { label: t.admin_navCheckin, href: "/admin/checkin", icon: "qrcode" },
       { label: t.admin_navOperators, href: "/admin/operators", icon: "users" },
       { label: t.admin_navCommissions, href: "/admin/commissions", icon: "tag" },
+      { label: t.admin_navReviews, href: "/admin/reviews", icon: "star" },
       { label: t.admin_navCities, href: "/admin/cities", icon: "map" },
       { label: t.admin_navCategories, href: "/admin/categories", icon: "tag" },
       { label: t.admin_navCountryVisual, href: "/admin/country-visual", icon: "photo" },
@@ -46,6 +47,7 @@ function menuForAuth(auth: AuthTokenPayload, t: Record<TranslationKey, string>):
     { label: t.admin_navExperiences, href: "/admin/experiences", icon: "sparkle" },
     { label: t.admin_navBookings, href: "/admin/bookings", icon: "calendar" },
     { label: t.admin_navCheckin, href: "/admin/checkin", icon: "qrcode" },
+    { label: t.admin_navReviews, href: "/admin/reviews", icon: "star" },
   ];
 
   if (auth.role === "OPERATOR_AGENCY" && auth.operatorRole === "ADMIN") {

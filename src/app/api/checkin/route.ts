@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
+import { sendReviewRequestEmail } from '@/lib/mailer';
 
 // El QR generado en la reserva codifica "NATIVAGO:<bookingCode>" (ver
 // src/app/api/catalog/bookings/route.ts) — bookingCode es el identificador
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest) {
     include: {
       experience: {
         select: {
+          title: true,
           operatorId: true,
           operator: { select: { isPioneer: true, firstActivatedBookingDate: true } },
         },
@@ -67,6 +69,20 @@ export async function POST(req: NextRequest) {
     await prisma.operator.update({
       where: { id: booking.experience.operatorId },
       data: { firstActivatedBookingDate: new Date() },
+    });
+  }
+
+  // Pide la valoración después del check-in — best-effort: si falla el
+  // envío del correo, no se revierte el check-in ni se muestra error al staff.
+  if (booking.customerEmail) {
+    const mvpBaseUrl = process.env.MVP_PUBLIC_URL ?? 'https://nativago.com';
+    sendReviewRequestEmail({
+      guestEmail: booking.customerEmail,
+      guestName: booking.customerName,
+      experienceTitle: booking.experience.title,
+      reviewUrl: `${mvpBaseUrl}/calificar/${bookingCode}`,
+    }).catch((err) => {
+      console.error('[checkin] no se pudo enviar correo de valoracion:', err);
     });
   }
 
