@@ -196,8 +196,11 @@ export async function POST(req: NextRequest) {
           amount: total,
           depositAmount: deposit,
           remainingAmount: remaining,
-          paymentStatus: 'PENDING',
-          paymentType: 'DEPOSIT',
+          // Piloto: sin anticipo (deposit === 0) la reserva no pasa por
+          // pasarela de pago — el 100% se paga en persona al operador y
+          // queda registrado como NOT_REQUIRED/FREE en vez de PENDING/DEPOSIT.
+          paymentStatus: deposit > 0 ? 'PENDING' : 'NOT_REQUIRED',
+          paymentType: deposit > 0 ? 'DEPOSIT' : 'FREE',
         },
       });
     });
@@ -239,22 +242,26 @@ export async function POST(req: NextRequest) {
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3001';
   let redirectUrl: string | null = null;
-  try {
-    const paymentProvider = await getActivePaymentProvider(exp.country.id);
+  // Piloto: sin anticipo no hay nada que cobrar — no se crea sesión de pago.
+  // (deposit === 0 para toda categoría/país mientras dure el piloto.)
+  if (deposit > 0) {
+    try {
+      const paymentProvider = await getActivePaymentProvider(exp.country.id);
 
-    const session = await paymentProvider.createCheckoutSession({
-      amount: { amount: deposit, currencyCode },
-      description: exp.title,
-      successUrl: successUrl ?? `${base}/success?booking=${booking.id}`,
-      cancelUrl: cancelUrl ?? `${base}/cancel`,
-      metadata: { bookingId: booking.id.toString(), bookingCode, customerEmail: booking.customerEmail },
-    });
-    redirectUrl = session.redirectUrl;
-  } catch (error) {
-    console.error('Failed to create checkout session', error);
-    // No es fatal: la reserva ya quedó registrada (status PENDING). El
-    // caller decide cómo coordinar el pago si no hay pasarela disponible
-    // (p.ej. el marketplace hoy coordina el depósito por WhatsApp).
+      const session = await paymentProvider.createCheckoutSession({
+        amount: { amount: deposit, currencyCode },
+        description: exp.title,
+        successUrl: successUrl ?? `${base}/success?booking=${booking.id}`,
+        cancelUrl: cancelUrl ?? `${base}/cancel`,
+        metadata: { bookingId: booking.id.toString(), bookingCode, customerEmail: booking.customerEmail },
+      });
+      redirectUrl = session.redirectUrl;
+    } catch (error) {
+      console.error('Failed to create checkout session', error);
+      // No es fatal: la reserva ya quedó registrada (status PENDING). El
+      // caller decide cómo coordinar el pago si no hay pasarela disponible
+      // (p.ej. el marketplace hoy coordina el depósito por WhatsApp).
+    }
   }
 
   return NextResponse.json(

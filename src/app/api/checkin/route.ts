@@ -21,7 +21,12 @@ export async function POST(req: NextRequest) {
   const booking = await prisma.booking.findUnique({
     where: { bookingCode },
     include: {
-      experience: { select: { operatorId: true } },
+      experience: {
+        select: {
+          operatorId: true,
+          operator: { select: { isPioneer: true, firstActivatedBookingDate: true } },
+        },
+      },
     },
   });
 
@@ -54,6 +59,16 @@ export async function POST(req: NextRequest) {
     where: { bookingCode },
     data: { status: 'CONFIRMED' },
   });
+
+  // Primera reserva con check-in confirmado de un operador pionero: queda
+  // registrada como su fecha de activación para el piloto (no se
+  // sobrescribe en check-ins posteriores).
+  if (booking.experience.operator.isPioneer && !booking.experience.operator.firstActivatedBookingDate) {
+    await prisma.operator.update({
+      where: { id: booking.experience.operatorId },
+      data: { firstActivatedBookingDate: new Date() },
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

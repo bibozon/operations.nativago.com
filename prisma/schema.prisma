@@ -58,7 +58,7 @@ model Category {
   id          String       @id @default(cuid())
   name        String
   slug        String       @unique
-  depositRate Float        @default(0.15) // anticipo: 0.15 = 15%, 0.50 = 50%
+  depositRate Float        @default(0) // piloto: reserva gratis, 100% se paga al operador. Legacy: 0.15 = 15%, 0.50 = 50%
   experiences Experience[]
   translations      CategoryTranslation[]
   countryCategories CountryCategory[]
@@ -111,6 +111,14 @@ model Operator {
   members     OperatorMember[]
   experiences Experience[]
     // Prevent deleting if used by Experience (enforce in backend)
+
+  // -- Piloto Region de los Lagos -- tracking de operadores fundadores --
+  isPioneer                 Boolean    @default(false)
+  firstActivatedBookingDate DateTime?
+  referredByOperatorId      String?
+  referredByOperator        Operator?  @relation("OperatorReferrals", fields: [referredByOperatorId], references: [id])
+  referredOperators         Operator[] @relation("OperatorReferrals")
+
   createdAt DateTime @default(now())
   updatedAt DateTime? @updatedAt
 }
@@ -235,10 +243,12 @@ enum PaymentStatus {
   PENDING
   PAID
   FAILED
+  NOT_REQUIRED // reserva sin anticipo (piloto): no hay pago que procesar en el checkout
 }
 
 enum PaymentType {
   DEPOSIT
+  FREE // piloto: reserva gratis, 100% se paga en persona al operador
 }
 
 // ─────────────────────────────────────────────────────────────────────────

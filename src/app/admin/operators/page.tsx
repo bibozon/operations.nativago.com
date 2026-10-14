@@ -5,7 +5,11 @@ import { requireStaffOrAbove } from '@/lib/requireRole';
 
 async function getOperatorsData() {
   const operators = await prisma.operator.findMany({
-    include: {
+    select: {
+      id: true,
+      name: true,
+      verificationStatus: true,
+      isPioneer: true,
       user: {
         select: {
           role: true,
@@ -67,6 +71,28 @@ export default async function OperatorsPage() {
     revalidatePath('/admin/operators');
   }
 
+  // Marca/desmarca al operador como "pionero" del piloto (Región de los
+  // Lagos) — determina si aparece en /admin/commissions y, al activarse
+  // Fase 2, si corre bajo las reglas de pionero (10%/15% según valoración)
+  // en vez de la tarifa estándar de operadores nuevos.
+  async function togglePioneer(formData: FormData) {
+    'use server';
+
+    await requireStaffOrAbove();
+
+    const id = (formData.get('id') as string) ?? '';
+    const nextIsPioneer = formData.get('nextIsPioneer') === 'true';
+    if (!id) return;
+
+    await prisma.operator.update({
+      where: { id },
+      data: { isPioneer: nextIsPioneer },
+    });
+
+    revalidatePath('/admin/operators');
+    revalidatePath('/admin/commissions');
+  }
+
   return (
     <div>
       <header className="mb-6 flex items-center justify-between gap-4">
@@ -103,6 +129,9 @@ export default async function OperatorsPage() {
                 <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Estado
                 </th>
+                <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Pionero
+                </th>
                 <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Acciones
                 </th>
@@ -126,6 +155,21 @@ export default async function OperatorsPage() {
                     >
                       {STATUS_LABEL[op.verificationStatus] ?? op.verificationStatus}
                     </span>
+                  </td>
+                  <td className="px-3 py-2 text-center text-xs">
+                    <form action={togglePioneer}>
+                      <input type="hidden" name="id" value={op.id} />
+                      <input type="hidden" name="nextIsPioneer" value={(!op.isPioneer).toString()} />
+                      <button
+                        type="submit"
+                        className={`inline-flex rounded-full px-2 py-1 text-[11px] font-medium ${
+                          op.isPioneer ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                        }`}
+                        title={op.isPioneer ? 'Quitar estatus de pionero' : 'Marcar como operador pionero'}
+                      >
+                        {op.isPioneer ? '★ Pionero' : 'Marcar'}
+                      </button>
+                    </form>
                   </td>
                   <td className="px-3 py-2 text-right text-xs">
                     <div className="inline-flex items-center gap-2">
@@ -174,7 +218,7 @@ export default async function OperatorsPage() {
               {operators.length === 0 && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-3 py-6 text-center text-sm text-slate-500"
                   >
                     No hay operadores registrados todavía.
