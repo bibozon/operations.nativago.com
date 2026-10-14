@@ -37,7 +37,14 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/api/private/')
   ) {
     if (!hasValidTokenShape(request)) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      // nextUrl.clone() respeta basePath (ver next.config.js: '/cms') —
+      // construir con `new URL('/login', request.url)` NO lo respeta y
+      // produciria un redirect roto cuando este proyecto se sirve detras
+      // del rewrite del MVP (Vercel Multi-Zones).
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = '/login';
+      loginUrl.search = '';
+      return NextResponse.redirect(loginUrl);
     }
   }
 
