@@ -1,13 +1,14 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useLang } from '@/lib/i18n/LanguageContext';
+import { apiPath } from '@/lib/apiPath';
 
 export function LogoutButton() {
   const router = useRouter();
   const { t } = useLang();
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await fetch(apiPath('/api/auth/logout'), { method: 'POST' });
     router.push('/login');
   }
 

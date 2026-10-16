@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useLang } from '@/lib/i18n/LanguageContext';
 import { NativaGoLogo } from '@/components/NativaGoLogo';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { apiPath } from '@/lib/apiPath';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(apiPath('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

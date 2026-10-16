@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { apiPath } from '@/lib/apiPath';
 import { FormInput } from './FormInput';
 import { FormSelect } from './FormSelect';
 import { FormFileInput } from './FormFileInput';
@@ -116,7 +117,7 @@ export function OperatorOnboardingForm() {
         payload.set('legalDocument', form.legalDocument);
       }
 
-      const res = await fetch('/api/auth/register-operator', {
+      const res = await fetch(apiPath('/api/auth/register-operator'), {
         method: 'POST',
         body: payload,
       });

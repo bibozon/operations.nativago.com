@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import { apiPath } from '@/lib/apiPath';
 
 type ScanStatus = '' | 'OK' | 'ERROR';
 
@@ -103,7 +104,7 @@ export default function CheckinPage() {
       // es una respuesta válida que no debe "resolverse" con la caché local.
       let res: Response;
       try {
-        res = await fetch('/api/checkin', {
+        res = await fetch(apiPath('/api/checkin'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ bookingCode }),
@@ -165,7 +166,7 @@ export default function CheckinPage() {
 
         for (const bookingCode of pending) {
           try {
-            const res = await fetch('/api/checkin', {
+            const res = await fetch(apiPath('/api/checkin'), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ bookingCode }),

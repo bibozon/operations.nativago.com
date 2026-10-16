@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BackLink } from '@/components/BackLink';
 import { suggestCategoryId } from '@/lib/categorySuggestion';
+import { apiPath } from '@/lib/apiPath';
 
 type Option = { id: string; name: string };
 
@@ -34,9 +35,9 @@ export default function NewExperiencePage() {
       setError(null);
 
       const [catRes, cityRes, opRes] = await Promise.all([
-        fetch('/api/catalog/categories'),
-        fetch('/api/catalog/cities'),
-        fetch('/api/catalog/operator'),
+        fetch(apiPath('/api/catalog/categories')),
+        fetch(apiPath('/api/catalog/cities')),
+        fetch(apiPath('/api/catalog/operator')),
       ]);
 
       const [catData, cityData, opData] = await Promise.all([
@@ -81,7 +82,7 @@ export default function NewExperiencePage() {
       setLoading(true);
       setError(null);
 
-      const res = await fetch('/api/catalog/experience', {
+      const res = await fetch(apiPath('/api/catalog/experience'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

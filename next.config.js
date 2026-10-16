@@ -7,6 +7,12 @@ const nextConfig = {
   // falta cambiar las rutas internas (/admin/bookings sigue siendo
   // /admin/bookings en el codigo; el navegador la ve en /cms/admin/bookings).
   basePath: '/cms',
+  // Expone el mismo basePath al cliente para que fetch() (que, a diferencia
+  // de <Link>/router.push, Next.js NO reescribe automáticamente) pueda
+  // anteponerlo vía src/lib/apiPath.ts.
+  env: {
+    NEXT_PUBLIC_BASE_PATH: '/cms',
+  },
 };
 
 module.exports = nextConfig;
