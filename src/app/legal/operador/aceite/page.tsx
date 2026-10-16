@@ -7,7 +7,7 @@ export default async function OperatorAgreementAcceptPage() {
 
   const operator = await prisma.operator.findFirst({
     where: { userId: auth.userId },
-    select: { id: true, contractAccepted: true },
+    select: { id: true, contractAccepted: true, verificationStatus: true },
   });
 
   if (!operator) {
@@ -18,6 +18,30 @@ export default async function OperatorAgreementAcceptPage() {
     redirect('/admin');
   }
 
+  // El contrato de intermediacion solo se puede aceptar una vez NativaGo
+  // aprobo los documentos del operador. Antes de este chequeo, cualquier
+  // operador recien registrado (status DRAFT/PENDING) podia navegar
+  // directo a esta URL y "firmar" el contrato sin revision -- ver
+  // auditoria tecnica, hallazgo #4 (severidad alta, orden legal/negocio
+  // roto). La creacion de experiencias ya estaba protegida correctamente
+  // (admin/experiences/new); este era el unico punto sin el mismo chequeo.
+  if (operator.verificationStatus !== 'APPROVED') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+        <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white px-6 py-8 shadow-sm text-center">
+          <h1 className="text-xl font-semibold text-slate-900">
+            Seu cadastro ainda está em revisão
+          </h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Antes de aceitar o Contrato de Intermediação, a equipe NativaGo
+            precisa revisar e aprovar seus documentos. Você receberá um
+            aviso quando a aprovação for concluída.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   async function acceptAgreement() {
     'use server';
 
@@ -25,11 +49,18 @@ export default async function OperatorAgreementAcceptPage() {
 
     const op = await prisma.operator.findFirst({
       where: { userId: authInAction.userId },
-      select: { id: true },
+      select: { id: true, verificationStatus: true },
     });
 
     if (!op) {
       redirect('/register/operator');
+    }
+
+    // Chequeo server-side obligatorio (no solo en el render de la
+    // pagina): sin esto, un POST directo al server action podia
+    // saltarselo igual que el GET de la pagina.
+    if (op.verificationStatus !== 'APPROVED') {
+      redirect('/legal/operador/aceite');
     }
 
     await prisma.operator.update({

@@ -20,7 +20,10 @@ export async function registerOperator(
   const err                = REGISTER_ERRORS[lang] ?? REGISTER_ERRORS.es;
 
   const name               = (formData.get('name') as string) ?? '';
-  const email              = (formData.get('email') as string) ?? '';
+  // Normalizado (.trim().toLowerCase()) para que el check de duplicado
+  // y el @unique de Postgres realmente detecten 'Juan@mail.com' ==
+  // 'juan@mail.com' -- antes se comparaba el valor crudo del form.
+  const email              = ((formData.get('email') as string) ?? '').trim().toLowerCase();
   const phone              = (formData.get('phone') as string) ?? '';
   const password           = (formData.get('password') as string) ?? '';
   const cityId             = (formData.get('cityId') as string) ?? '';
@@ -64,44 +67,57 @@ export async function registerOperator(
   const role         = operatorType === 'AGENCY' ? ('OPERATOR_AGENCY' as const) : ('OPERATOR_FREELANCE' as const);
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  const { user, operator } = await prisma.$transaction(async (tx) => {
-    const user = await tx.user.create({
-      data: {
-        name,
-        email,
-        password:               hashedPassword,
-        role,
-        operatorTermsAccepted:    true,
-        operatorTermsAcceptedAt:  new Date(),
-      },
-    });
+  let user, operator;
+  try {
+    ({ user, operator } = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name,
+          email,
+          password:               hashedPassword,
+          role,
+          operatorTermsAccepted:    true,
+          operatorTermsAcceptedAt:  new Date(),
+        },
+      });
 
-    const operator = await tx.operator.create({
-      data: {
-        name,
-        email,
-        phone:               phone || null,
-        cityId,
-        countryId:           city.countryId,
-        type:                operatorType,
-        verificationStatus:  'DRAFT',
-        licenseNumber:       identityDocumentNumber,
-        licenseDocument:     licenseDocumentUrl,
-        categoria:           categoria || null,
-        legalRepresentative: legalRepresentative || null,
-        paymentAccount:      paymentAccount || null,
-        liabilityAccepted:   true,
-        liabilityAcceptedAt: new Date(),
-        userId:              user.id,
-      },
-    });
+      const operator = await tx.operator.create({
+        data: {
+          name,
+          email,
+          phone:               phone || null,
+          cityId,
+          countryId:           city.countryId,
+          type:                operatorType,
+          verificationStatus:  'DRAFT',
+          licenseNumber:       identityDocumentNumber,
+          licenseDocument:     licenseDocumentUrl,
+          categoria:           categoria || null,
+          legalRepresentative: legalRepresentative || null,
+          paymentAccount:      paymentAccount || null,
+          liabilityAccepted:   true,
+          liabilityAcceptedAt: new Date(),
+          userId:              user.id,
+        },
+      });
 
-    await tx.operatorMember.create({
-      data: { operatorId: operator.id, userId: user.id, role: 'ADMIN' },
-    });
+      await tx.operatorMember.create({
+        data: { operatorId: operator.id, userId: user.id, role: 'ADMIN' },
+      });
 
-    return { user, operator };
-  });
+      return { user, operator };
+    }));
+  } catch (e) {
+    // P2002 = violacion de @unique (email duplicado). Antes esto se
+    // propagaba como un 500 crudo del server action -- el check previo
+    // (findUnique) no cierra la condicion de carrera entre dos registros
+    // simultaneos con el mismo email. Devolvemos el mismo error amigable
+    // que el check adelantado, en vez de un error sin manejar.
+    if (typeof e === 'object' && e !== null && (e as { code?: string }).code === 'P2002') {
+      return { error: err.email };
+    }
+    throw e;
+  }
 
   // Documentos dinámicos por país+tipo
   const relevantTypes = await prisma.documentType.findMany({ where: { countryId: city.countryId } });
