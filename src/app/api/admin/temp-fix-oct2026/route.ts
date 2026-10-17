@@ -1,26 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 
-// Endpoint temporal de un solo uso (auditoria oct2026, round 4): corrige dos
-// problemas detectados por el diagnostico anterior:
-//  1) Un CountrySlide tipo HERO para Brasil con un path local de Windows
-//     como imageUrl (dato invalido, ciudad "Foz do Iguazu" fuera del piloto)
-//     que estaba tapando el fallback correcto del hero del Marketplace.
-//  2) El endpoint de catalogo (temp-brazil-catalog-oct2026) se ejecuto dos
-//     veces -- cada uno de los 6 operadores [PRUEBA] quedo con 90
-//     actividades en vez de 45 (titulos duplicados exactos). Este endpoint
-//     deja solo 1 copia de cada titulo por operador.
+// Endpoint temporal de un solo uso (auditoria oct2026, round 5): deja la
+// base de datos de PRODUCCION sin ningun dato de prueba, como paso previo
+// a separar Preview de Produccion en bases de datos distintas.
+//
+// A pedido explicito del usuario (confirmado en chat): se borra TODO el
+// catalogo actual (operadores + experiencias + sus reservas/resenas/cupos),
+// incluido el operador y las 3 experiencias preexistentes de Armacao dos
+// Buzios (confirmadas por el usuario como datos de prueba/semilla, no
+// clientes reales) -- no solo lo marcado [PRUEBA]. Tambien corrige el
+// CountrySlide de Brasil con un path local de Windows como imageUrl
+// ("Foz do Iguazu", fuera del piloto).
+//
+// No se tocan: Category, City, Country (datos de configuracion, no de
+// prueba) ni User/Session (por si algun usuario de operador debe
+// reutilizarse mas adelante -- quedan huerfanos pero inofensivos).
+//
 // Protegido por token fijo. Se elimina de este repo en cuanto termine su uso.
-const ONE_TIME_TOKEN = 'dK8vQnR3-xL6mWtY2-pJ9cHzUb4e';
-
-const OPERATOR_IDS = [
-  'cmvadp0vn00017sdt2pimqsor', // Operador de prueba Cabo Frio
-  'cmvaf45br0001w968ufheky6d', // Operador 2 de Cabo Frio
-  'cmvadp13800057sdttamdtc5u', // Operador de prueba Arraial do Cabo
-  'cmvaf45u3002lw968nyu7cfgr', // Operador 2 de Arraial do Cabo
-  'cmru68wzk009ikf7g0og2uxiu', // Búzios Transportes Turísticos Ltda
-  'cmvaf468x0055w968pmta2ho7', // Operador 2 de Armação dos Búzios
-];
+const ONE_TIME_TOKEN = 'wZ3mNq7T-pL9vXsB2-rD6kGhY4c';
 
 const BROKEN_HERO_SLIDE_ID = 'cmtuchney000114ispt3zb6or';
 
@@ -32,35 +30,41 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 
-  // Agrupa las experiencias de los 6 operadores por (operatorId, title) para
-  // encontrar duplicados exactos.
-  const experiences = await prisma.experience.findMany({
-    where: { operatorId: { in: OPERATOR_IDS } },
-    select: { id: true, title: true, operatorId: true, createdAt: true },
+  const [operatorCount, experienceCount, bookingCount, reviewCount, slotCount, availCount, memberCount, docCount] =
+    await Promise.all([
+      prisma.operator.count(),
+      prisma.experience.count(),
+      prisma.booking.count(),
+      prisma.review.count(),
+      prisma.slot.count(),
+      prisma.availabilitySlot.count(),
+      prisma.operatorMember.count(),
+      prisma.operatorDocument.count(),
+    ]);
+
+  const operators = await prisma.operator.findMany({
+    select: { id: true, name: true, email: true, cityId: true, city: { select: { name: true } } },
     orderBy: { createdAt: 'asc' },
   });
-
-  const groups = new Map<string, typeof experiences>();
-  for (const exp of experiences) {
-    const key = `${exp.operatorId}__${exp.title}`;
-    const arr = groups.get(key) ?? [];
-    arr.push(exp);
-    groups.set(key, arr);
-  }
-
-  const duplicateGroups = [...groups.entries()].filter(([, arr]) => arr.length > 1);
-  const idsToDelete = duplicateGroups.flatMap(([, arr]) => arr.slice(1).map((e) => e.id)); // conserva el mas antiguo (idx 0)
 
   const brokenSlide = await prisma.countrySlide.findUnique({ where: { id: BROKEN_HERO_SLIDE_ID } });
 
   if (mode === 'plan') {
     return NextResponse.json({
       mode: 'plan',
-      totalExperiencesForThese6Operators: experiences.length,
-      duplicateTitleGroups: duplicateGroups.length,
-      experiencesToDelete: idsToDelete.length,
-      expectedAfterCleanupPerOperator: 'deberia quedar como maximo 1 experiencia seed vieja + 45 de categorias por operador',
+      willDeleteEntirely: {
+        operators: operatorCount,
+        experiences: experienceCount,
+        bookings: bookingCount,
+        reviews: reviewCount,
+        slots: slotCount,
+        availabilitySlots: availCount,
+        operatorMembers: memberCount,
+        operatorDocuments: docCount,
+      },
+      operatorsList: operators.map((o) => ({ id: o.id, name: o.name, email: o.email, city: o.city?.name })),
       brokenHeroSlide: brokenSlide,
+      willNotTouch: ['Category', 'City', 'Country', 'User', 'Session'],
       note: 'Esto es solo un plan (no se borro ni cambio nada). Llama con &mode=apply&confirm=YES para ejecutar.',
     });
   }
@@ -77,23 +81,32 @@ export async function GET(req: NextRequest) {
       slideDeleted = true;
     }
 
-    const reviewsDeleted = await prisma.review.deleteMany({ where: { experienceId: { in: idsToDelete } } });
-    const bookingsDeleted = await prisma.booking.deleteMany({ where: { experienceId: { in: idsToDelete } } });
-    const availDeleted = await prisma.availabilitySlot.deleteMany({ where: { experienceId: { in: idsToDelete } } });
-    const slotsDeleted = await prisma.slot.deleteMany({ where: { experienceId: { in: idsToDelete } } });
-    const expDeleted = await prisma.experience.deleteMany({ where: { id: { in: idsToDelete } } });
+    // Limpia la auto-referencia de "referido por" antes de borrar operadores.
+    await prisma.operator.updateMany({ data: { referredByOperatorId: null } });
+
+    const reviewsDeleted = await prisma.review.deleteMany({});
+    const bookingsDeleted = await prisma.booking.deleteMany({});
+    const availDeleted = await prisma.availabilitySlot.deleteMany({});
+    const slotsDeleted = await prisma.slot.deleteMany({});
+    const experiencesDeleted = await prisma.experience.deleteMany({});
+    const membersDeleted = await prisma.operatorMember.deleteMany({});
+    const docsDeleted = await prisma.operatorDocument.deleteMany({});
+    const operatorsDeleted = await prisma.operator.deleteMany({});
 
     return NextResponse.json({
       ok: true,
       brokenHeroSlideDeleted: slideDeleted,
-      duplicateExperiencesDeleted: expDeleted.count,
-      relatedRowsDeleted: {
+      deleted: {
         reviews: reviewsDeleted.count,
         bookings: bookingsDeleted.count,
-        availability: availDeleted.count,
+        availabilitySlots: availDeleted.count,
         slots: slotsDeleted.count,
+        experiences: experiencesDeleted.count,
+        operatorMembers: membersDeleted.count,
+        operatorDocuments: docsDeleted.count,
+        operators: operatorsDeleted.count,
       },
-      message: 'Listo. Borra este endpoint ahora.',
+      message: 'Base de datos sin catalogo de prueba. Borra este endpoint ahora.',
     });
   }
 
