@@ -11,6 +11,14 @@ const CARD_SELECT = {
   images: true,
   price: true,
   durationMinutes: true,
+  // capacity/riskLevel/createdAt ya existían en el modelo Experience pero
+  // nunca se seleccionaban aquí, así que el marketplace solo veía los
+  // defaults (capacity=20, riskLevel=LOW) para TODAS las actividades,
+  // incluidas las de riesgo real — el aviso de riesgo de la ficha nunca se
+  // activaba. Se agregan para exponer los valores reales del CMS.
+  capacity: true,
+  riskLevel: true,
+  createdAt: true,
   category: { select: { id: true, name: true, slug: true, depositRate: true } },
   city: { select: { id: true, name: true, country: true } },
   operator: { select: { id: true, name: true, phone: true } },

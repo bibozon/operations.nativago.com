@@ -5,6 +5,9 @@ export type ExperienceCardDTO = {
   image: string | null;
   price: number;
   durationMinutes: number;
+  capacity: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  createdAt: Date;
   city: { id: string; name: string; country: string };
   category: { id: string; name: string; slug: string; depositRate: number };
   operator: { id: string; name: string; phone: string | null };
