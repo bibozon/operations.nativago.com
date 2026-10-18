@@ -117,10 +117,11 @@ export async function POST(req: NextRequest) {
 
   const bookingCode = await generateUniqueBookingCode();
 
-  // Control de cupo: si el operador definió Experience.capacity (> 0), no se
-  // permite que la suma de guests de reservas activas para la misma fecha/hora
-  // exceda ese cupo. capacity === 0 (default) se trata como "sin límite
-  // configurado" para no romper experiencias que nunca lo definieron.
+  // Control de cupo: no se permite que la suma de guests de reservas activas
+  // para el mismo día calendario exceda el cupo del día (ver detalle del
+  // cálculo de dayCapacity más abajo). capacity === 0 y sin AvailabilitySlot
+  // definido se trata como "sin límite configurado", para no romper
+  // experiencias que nunca lo definieron.
   // El conteo + creación corren en una transacción Serializable (no el
   // default Read Committed de Postgres): dos requests concurrentes para el
   // último cupo ya no pueden leer el mismo "alreadyBooked" y pasar ambas la
@@ -131,19 +132,42 @@ export async function POST(req: NextRequest) {
   let booking;
   try {
     booking = await runSerializable(async (tx) => {
-      // ── Capacity check (per-experience) ───────────────────────────────────
-      if (exp.capacity > 0) {
+      // ── Capacity check (per día calendario) ─────────────────────────────
+      // Antes esto comparaba `date` por IGUALDAD EXACTA de timestamp, así
+      // que dos reservas del mismo día pero con minutos distintos (el
+      // marketplace deja elegir hora libremente, ver experiences/[id]/reservar)
+      // nunca se sumaban entre sí — cada una obtenía su propio cupo completo
+      // de exp.capacity. Se agrupa por día calendario para cerrar ese hueco.
+      //
+      // Si el operador configuró AvailabilitySlot para ese día (pantalla
+      // /admin/experiences/[id]/availability — ya existía, pero ningún otro
+      // código la leía), esa capacidad manda sobre exp.capacity; si no hay
+      // slot para el día, se usa exp.capacity como antes (compatibilidad
+      // con operadores que no usan cupos por día).
+      const dayStart = new Date(bookingDate);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+
+      const daySlots = await tx.availabilitySlot.findMany({
+        where: { experienceId: exp.id, date: { gte: dayStart, lt: dayEnd } },
+      });
+      const dayCapacity = daySlots.length > 0
+        ? daySlots.reduce((sum, s) => sum + s.capacity, 0)
+        : exp.capacity;
+
+      if (dayCapacity > 0) {
         const existing = await tx.booking.aggregate({
           _sum: { guests: true },
           where: {
             experienceId: exp.id,
-            date: bookingDate,
+            date: { gte: dayStart, lt: dayEnd },
             status: { not: 'CANCELLED' },
           },
         });
         const alreadyBooked = existing._sum.guests ?? 0;
-        if (alreadyBooked + safeGuests > exp.capacity) {
-          const remainingSpots = Math.max(0, exp.capacity - alreadyBooked);
+        if (alreadyBooked + safeGuests > dayCapacity) {
+          const remainingSpots = Math.max(0, dayCapacity - alreadyBooked);
           throw new CapacityError(remainingSpots);
         }
       }

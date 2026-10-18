@@ -255,10 +255,10 @@ export default async function OperatorDashboardPage() {
 
         {/* Nota del modelo de negocio */}
         <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-500">
-          <strong className="font-semibold text-slate-600">Recuerda:</strong> NativaGo cobra al cliente el 15% del valor
-          total como anticipo de reserva. Tú cobras el 85% restante directamente al cliente en el lugar de la
-          actividad — ese 85% debe cubrir todos los costos del servicio, incluyendo seguros y equipamiento.
-          NativaGo no cobra ni intermedia seguros.
+          <strong className="font-semibold text-slate-600">Recuerda:</strong> Durante el piloto la reserva es
+          gratis para el cliente — no se cobra ningún anticipo en la plataforma. El cliente te paga el 100% del
+          valor directo a ti, en persona, al momento del check-in. NativaGo factura por separado una comisión del
+          10% sobre cada reserva con check-in confirmado. NativaGo no cobra ni intermedia seguros.
         </div>
       </main>
     </div>

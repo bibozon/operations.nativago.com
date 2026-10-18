@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { verifyAuthToken, type AuthTokenPayload } from '@/lib/auth';
 import { getOperatorDashboardData } from '@/services/operator/dashboard';
 import { OperatorExperiencesTable } from '@/components/admin/OperatorExperiencesTable';
+import { OperatorBookingsTable } from '@/components/admin/OperatorBookingsTable';
 import { TrustLevelCard } from '@/components/admin/TrustLevelCard';
 import { formatPrice } from '@/domain/entities/Money';
 
@@ -27,7 +28,7 @@ export default async function AgencyDashboardPage() {
     redirect('/admin');
   }
 
-  const { experiences, experiencesCount, bookingsThisMonth, currencyCode, trustLevel } =
+  const { experiences, experiencesCount, bookingsThisMonth, upcomingBookings, currencyCode, trustLevel } =
     await getOperatorDashboardData(auth.operatorId);
   const revenueThisMonth = 0;
 
@@ -74,7 +75,7 @@ export default async function AgencyDashboardPage() {
               <p className="mt-2 text-2xl font-semibold text-slate-900">
                 {bookingsThisMonth}
               </p>
-              <p className="mt-1 text-xs text-slate-500">Integración de reservas pendiente</p>
+              <p className="mt-1 text-xs text-slate-500">Reservas creadas este mes</p>
             </div>
 
             <div className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
@@ -90,6 +91,17 @@ export default async function AgencyDashboardPage() {
 
           <section className="mb-8 grid gap-4 md:grid-cols-3">
             <TrustLevelCard trustLevel={trustLevel} />
+          </section>
+
+          {/* Próximas reservas */}
+          <section className="mb-8 rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-slate-900">
+                Próximas reservas
+              </h2>
+              <span className="text-xs text-slate-400">{upcomingBookings.length} por venir</span>
+            </div>
+            <OperatorBookingsTable bookings={upcomingBookings} currencyCode={currencyCode} />
           </section>
 
           {/* Mis experiencias table */}

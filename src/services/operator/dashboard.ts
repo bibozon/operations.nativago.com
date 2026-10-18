@@ -2,8 +2,37 @@ import prisma from '@/lib/db';
 import { computeTrustLevel } from '@/lib/operatorTrustLevel';
 import { documentTypeAppliesTo } from '@/lib/operatorRegistration';
 
+// Reservas que le llegan a ESTE operador (join por Experience.operatorId,
+// no por un campo directo en Booking). "upcoming" son las que todavía no
+// pasaron y no están canceladas — lo primero que un operador necesita ver
+// al entrar al panel. bookingsThisMonth cuenta por fecha de creación de la
+// reserva (cuándo se reservó), no por fecha de la actividad.
+export async function getOperatorBookings(operatorId: string) {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [allBookings, bookingsThisMonth] = await Promise.all([
+    prisma.booking.findMany({
+      where: { experience: { operatorId } },
+      include: { experience: { select: { title: true, durationMinutes: true } } },
+      orderBy: { date: 'asc' },
+      take: 100,
+    }),
+    prisma.booking.count({
+      where: { experience: { operatorId }, createdAt: { gte: monthStart } },
+    }),
+  ]);
+
+  const upcoming = allBookings.filter((b) => b.status !== 'CANCELLED' && b.date >= now);
+  const past = allBookings.filter((b) => b.status === 'CANCELLED' || b.date < now);
+
+  return { upcoming, past, bookingsThisMonth };
+}
+
+export type OperatorBookingRow = Awaited<ReturnType<typeof getOperatorBookings>>['upcoming'][number];
+
 export async function getOperatorDashboardData(operatorId: string) {
-  const [experiences, experiencesCount, operator, documentTypes] = await Promise.all([
+  const [experiences, experiencesCount, operator, documentTypes, bookingsData] = await Promise.all([
     prisma.experience.findMany({
       where: { operatorId },
       include: {
@@ -28,6 +57,7 @@ export async function getOperatorDashboardData(operatorId: string) {
       },
     }),
     prisma.documentType.findMany(),
+    getOperatorBookings(operatorId),
   ]);
 
   const requiredForCountry = operator?.countryId
@@ -52,7 +82,9 @@ export async function getOperatorDashboardData(operatorId: string) {
   return {
     experiences,
     experiencesCount,
-    bookingsThisMonth: 0,
+    bookingsThisMonth: bookingsData.bookingsThisMonth,
+    upcomingBookings: bookingsData.upcoming,
+    pastBookings: bookingsData.past,
     currencyCode: operator?.country?.defaultCurrency.code ?? 'COP',
     trustLevel,
   };
