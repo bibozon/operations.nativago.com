@@ -60,9 +60,13 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
       return;
     }
 
+    // Antes: si no se elegia un archivo nuevo, "images" quedaba en [] y
+    // updateExperience BORRABA las fotos existentes en cada guardado. Ahora
+    // "images" se omite del update (undefined) cuando no hay archivo nuevo,
+    // asi que las fotos existentes se conservan — igual criterio se aplica
+    // a la foto del punto de encuentro.
     const file = formData.get('image');
-
-    let images: string[] = [];
+    let images: string[] | undefined = undefined;
     if (file && file instanceof File && file.size > 0) {
       const uploadData = new FormData();
       uploadData.append('file', file);
@@ -78,6 +82,25 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
       }
     }
 
+    const meetingPhotoFile = formData.get('meetingPointPhoto');
+    let meetingPointPhoto: string | undefined = undefined;
+    if (meetingPhotoFile && meetingPhotoFile instanceof File && meetingPhotoFile.size > 0) {
+      const uploadData = new FormData();
+      uploadData.append('file', meetingPhotoFile);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadData,
+      });
+      if (res.ok) {
+        const json = (await res.json()) as { url?: string };
+        if (json.url) {
+          meetingPointPhoto = json.url;
+        }
+      }
+    }
+
+    const meetingPointRaw = (formData.get('meetingPoint') as string) ?? '';
+
     // updateExperience valida server-side que la nueva cityId (si cambió)
     // pertenezca al mismo país que la experiencia — evita reasignarla a
     // una ciudad de otro país aunque el <select> haya sido manipulado.
@@ -88,7 +111,9 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
         price: Number(formData.get('price')),
         cityId: (formData.get('cityId') as string) ?? '',
         categoryId: (formData.get('categoryId') as string) ?? '',
-        images,
+        ...(images !== undefined ? { images } : {}),
+        meetingPoint: meetingPointRaw.trim() || null,
+        ...(meetingPointPhoto !== undefined ? { meetingPointPhoto } : {}),
       },
       { userId: authInAction.userId, email: authInAction.email, role: authInAction.role },
     );
@@ -143,12 +168,42 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
           ))}
         </select>
 
-        <input
-          type="file"
-          name="image"
-          accept="image/*"
-          className="w-full rounded border px-2 py-2 text-sm"
-        />
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-slate-700">
+            Foto de la experiencia {exp.images.length > 0 ? '(ya tiene una — subir una nueva la reemplaza)' : ''}
+          </label>
+          <input
+            type="file"
+            name="image"
+            accept="image/*"
+            className="w-full rounded border px-2 py-2 text-sm"
+          />
+        </div>
+
+        <div className="space-y-1 border-t pt-3 mt-1">
+          <label className="block text-sm font-medium text-slate-700">
+            Punto de encuentro (para el voucher del cliente)
+          </label>
+          <textarea
+            name="meetingPoint"
+            defaultValue={exp.meetingPoint ?? ''}
+            placeholder="Ej: Muelle municipal, al lado de la caseta de informacion turistica"
+            rows={2}
+            className="w-full rounded border px-2 py-2 text-sm"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-slate-700">
+            Foto del punto de encuentro {exp.meetingPointPhoto ? '(ya tiene una — subir una nueva la reemplaza)' : '(opcional)'}
+          </label>
+          <input
+            type="file"
+            name="meetingPointPhoto"
+            accept="image/*"
+            className="w-full rounded border px-2 py-2 text-sm"
+          />
+        </div>
 
         <button
           type="submit"

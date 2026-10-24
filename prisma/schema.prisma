@@ -150,6 +150,12 @@ model Experience {
   coverageDescription String?
   riskLevel   RiskLevel @default(LOW)
 
+  // Punto de encuentro para el voucher offline del cliente (PWA): texto libre
+  // con direccion/indicaciones y una foto de referencia del lugar. Ambos
+  // opcionales -- el operador los completa desde /admin/experiences/[id]/edit.
+  meetingPoint String?
+  meetingPointPhoto String?
+
     operatorId String
     cityId String
     categoryId String

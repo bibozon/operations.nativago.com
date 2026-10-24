@@ -18,7 +18,15 @@ export async function GET(
   const booking = await prisma.booking.findUnique({
     where: { bookingCode: code },
     include: {
-      experience: { select: { title: true, images: true } },
+      experience: {
+        select: {
+          title: true,
+          images: true,
+          meetingPoint: true,
+          meetingPointPhoto: true,
+          operator: { select: { phone: true } },
+        },
+      },
       country: { select: { defaultCurrency: { select: { code: true } } } },
     },
   });
@@ -41,5 +49,8 @@ export async function GET(
     currency: booking.country?.defaultCurrency.code ?? 'COP',
     qrCode: booking.qrCode,
     createdAt: booking.createdAt,
+    meetingPoint: booking.experience.meetingPoint,
+    meetingPointPhoto: booking.experience.meetingPointPhoto,
+    operatorPhone: booking.experience.operator.phone,
   });
 }

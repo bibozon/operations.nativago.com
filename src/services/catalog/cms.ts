@@ -138,6 +138,8 @@ export async function updateExperience(
     categoryId: string;
     cityId: string;
     operatorId: string;
+    meetingPoint: string | null;
+    meetingPointPhoto: string | null;
   }>,
   actor: AuditActor,
 ) {
