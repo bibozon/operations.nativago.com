@@ -240,6 +240,10 @@ model Booking {
   paymentType    PaymentType   @default(DEPOSIT)
   qrCode         String?
   cancelReason   String?
+  // Momento real del check-in por QR (asistencia confirmada). Es la señal que
+  // cuenta para la comisión del piloto y la meta de 100 reservas — distinta de
+  // status=CONFIRMED, que también se marca a mano desde el panel.
+  checkedInAt    DateTime?
   countryId      String?
   createdAt      DateTime      @default(now())
 
@@ -483,4 +487,61 @@ model Review {
 
   @@index([operatorId])
   @@index([experienceId])
+}
+
+// ── Historial de reservas y cola de avisos (piloto) ─────────────────────────
+// Ambas tablas guardan bookingId como entero simple, SIN foreign key: si un
+// SUPERADMIN borra una reserva, el historial y los avisos pendientes no se
+// pierden en cascada (el procesador marca EXPIRED los avisos huérfanos).
+
+enum BookingEventType {
+  CREATED
+  STATUS_CHANGED
+  CHECKED_IN
+}
+
+model BookingEvent {
+  id          Int              @id @default(autoincrement())
+  bookingId   Int
+  bookingCode String?
+  type        BookingEventType
+  fromStatus  BookingStatus?
+  toStatus    BookingStatus?
+  actorRole   String? // SUPERADMIN | SUPPORT | OPERATOR_* | CUSTOMER | SYSTEM
+  actorUserId Int?
+  reason      String?
+  createdAt   DateTime         @default(now())
+
+  @@index([bookingId, createdAt])
+}
+
+enum NotificationChannel {
+  EMAIL
+  WHATSAPP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  EXPIRED
+}
+
+model NotificationOutbox {
+  id            Int                 @id @default(autoincrement())
+  bookingId     Int
+  event         String // BOOKING_CREATED | BOOKING_CONFIRMED | BOOKING_CANCELLED | REVIEW_REQUEST
+  recipientRole String // GUEST | OPERATOR
+  channel       NotificationChannel @default(EMAIL)
+  // bookingId:event:recipientRole:channel — evita enviar dos veces el mismo aviso.
+  dedupeKey     String              @unique
+  status        NotificationStatus  @default(PENDING)
+  attempts      Int                 @default(0)
+  nextAttemptAt DateTime            @default(now())
+  lastError     String?
+  sentAt        DateTime?
+  createdAt     DateTime            @default(now())
+
+  @@index([status, nextAttemptAt])
+  @@index([bookingId])
 }

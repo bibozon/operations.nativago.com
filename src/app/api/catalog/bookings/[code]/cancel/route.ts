@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+import { changeBookingStatus } from '@/services/booking/transitions';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -34,10 +35,15 @@ export async function POST(
     );
   }
 
-  await prisma.booking.update({
-    where: { bookingCode: code },
-    data: { status: 'CANCELLED', cancelReason: (body?.reason as string | undefined) ?? null },
+  const result = await changeBookingStatus({
+    bookingCode: code,
+    to: 'CANCELLED',
+    actor: { role: 'CUSTOMER' },
+    reason: typeof body?.reason === 'string' ? body.reason : null,
   });
+  if (!result.ok) {
+    return NextResponse.json({ error: 'No se pudo cancelar la reserva' }, { status: 409 });
+  }
 
   return NextResponse.json({ ok: true });
 }

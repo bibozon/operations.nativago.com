@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
-import { sendReviewRequestEmail } from '@/lib/mailer';
+import { recordCheckIn } from '@/services/booking/transitions';
 
 // El QR generado en la reserva codifica "NATIVAGO:<bookingCode>" (ver
 // src/app/api/catalog/bookings/route.ts) — bookingCode es el identificador
@@ -57,10 +57,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  await prisma.booking.update({
-    where: { bookingCode },
-    data: { status: 'CONFIRMED' },
+  const checkIn = await recordCheckIn({
+    bookingCode,
+    actor: { role: auth.role, userId: auth.userId },
   });
+  if (!checkIn.ok) {
+    return NextResponse.json(
+      { error: checkIn.reason === 'cancelled' ? 'Esta reserva fue cancelada — no se puede hacer check-in' : 'Reserva no encontrada' },
+      { status: checkIn.reason === 'cancelled' ? 409 : 404 },
+    );
+  }
 
   // Primera reserva con check-in confirmado de un operador pionero: queda
   // registrada como su fecha de activación para el piloto (no se
@@ -72,19 +78,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Pide la valoración después del check-in — best-effort: si falla el
-  // envío del correo, no se revierte el check-in ni se muestra error al staff.
-  if (booking.customerEmail) {
-    const mvpBaseUrl = process.env.MVP_PUBLIC_URL ?? 'https://nativago.com';
-    sendReviewRequestEmail({
-      guestEmail: booking.customerEmail,
-      guestName: booking.customerName,
-      experienceTitle: booking.experience.title,
-      reviewUrl: `${mvpBaseUrl}/calificar/${bookingCode}`,
-    }).catch((err) => {
-      console.error('[checkin] no se pudo enviar correo de valoracion:', err);
-    });
-  }
+  // La solicitud de valoración al viajero la envía la cola de avisos (recordCheckIn la encola).
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, alreadyCheckedIn: checkIn.alreadyCheckedIn });
 }

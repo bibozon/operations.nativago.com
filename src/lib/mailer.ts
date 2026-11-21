@@ -9,6 +9,10 @@ interface MailOptions {
   html: string;
 }
 
+export function isEmailConfigured(): boolean {
+  return (process.env.RESEND_API_KEY ?? '').trim().length > 0;
+}
+
 export async function sendEmail(opts: MailOptions): Promise<void> {
   const resendKey = (process.env.RESEND_API_KEY ?? '').trim();
   if (!resendKey) {

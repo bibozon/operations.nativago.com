@@ -1,3 +1,4 @@
+import { enqueueNotifications, flushForBooking } from '@/services/notifications/outbox';
 import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import QRCode from 'qrcode';
@@ -207,7 +208,7 @@ export async function POST(req: NextRequest) {
       }
       // ── End overlap check ──────────────────────────────────────────────────
 
-      return tx.booking.create({
+      const created = await tx.booking.create({
         data: {
           bookingCode,
           experienceId: exp.id,
@@ -227,6 +228,23 @@ export async function POST(req: NextRequest) {
           paymentType: deposit > 0 ? 'DEPOSIT' : 'FREE',
         },
       });
+
+      // Historial + avisos (viajero y operador) en la misma transacción que
+      // crea la reserva: si la reserva se guarda, los avisos quedan en cola.
+      await tx.bookingEvent.create({
+        data: {
+          bookingId: created.id,
+          bookingCode,
+          type: 'CREATED',
+          toStatus: created.status,
+          actorRole: 'CUSTOMER',
+        },
+      });
+      await enqueueNotifications(tx, created.id, [
+        { event: 'BOOKING_CREATED', recipientRole: 'GUEST' },
+        { event: 'BOOKING_CREATED', recipientRole: 'OPERATOR' },
+      ]);
+      return created;
     });
   } catch (error) {
     if (error instanceof CapacityError) {
@@ -263,6 +281,9 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Failed to generate QR code for booking', error);
   }
+
+  // Envío inmediato best-effort de los avisos; lo que no salga lo reintenta el cron.
+  await flushForBooking(booking.id);
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3001';
   let redirectUrl: string | null = null;

@@ -1,6 +1,8 @@
 import prisma from '@/lib/db';
 import { redirect } from 'next/navigation';
 import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
+import { changeBookingStatus } from '@/services/booking/transitions';
+import type { BookingStatus } from '@prisma/client';
 
 export default async function BookingsPage({
   searchParams,
@@ -49,9 +51,15 @@ export default async function BookingsPage({
       return;
     }
 
-    await prisma.booking.update({
-      where: { id },
-      data: { status: statusStr as any },
+    // Solo estados válidos; el cambio pasa por el servicio de transiciones
+    // (valida, deja historial y encola los avisos al viajero/operador).
+    const allowedStatuses: BookingStatus[] = ['PENDING', 'CONFIRMED', 'CANCELLED'];
+    if (!allowedStatuses.includes(statusStr as BookingStatus)) return;
+
+    await changeBookingStatus({
+      bookingId: id,
+      to: statusStr as BookingStatus,
+      actor: { role: authInAction.role, userId: authInAction.userId },
     });
   }
 
