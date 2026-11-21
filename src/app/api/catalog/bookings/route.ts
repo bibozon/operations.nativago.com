@@ -336,6 +336,19 @@ export async function POST(req: NextRequest) {
 // por email" que ya usaba el marketplace (sin login del lado del CMS).
 // Con `?all=true` + header x-internal-api-key correcto, devuelve todas las
 // reservas (uso interno: paneles admin/ventas del marketplace).
+// Autenticación servidor-a-servidor (el Marketplace). Acepta el header interno
+// legado y el Bearer CMS_ORDERS_API_KEY. Sin ninguna clave configurada solo se
+// permite fuera de producción (para no bloquear pruebas locales/preview).
+function hasValidServerKey(req: NextRequest): boolean {
+  const legacyKey = req.headers.get('x-internal-api-key');
+  const bearerKey = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+  const validLegacy = Boolean(legacyKey && process.env.INTERNAL_API_KEY && legacyKey === process.env.INTERNAL_API_KEY);
+  const validBearer = Boolean(bearerKey && process.env.CMS_ORDERS_API_KEY && bearerKey === process.env.CMS_ORDERS_API_KEY);
+  if (validLegacy || validBearer) return true;
+  const anyKeyConfigured = Boolean(process.env.INTERNAL_API_KEY || process.env.CMS_ORDERS_API_KEY);
+  return !anyKeyConfigured && process.env.VERCEL_ENV !== 'production';
+}
+
 export async function GET(req: NextRequest) {
   const wantsAll = req.nextUrl.searchParams.get('all') === 'true';
 
@@ -344,11 +357,7 @@ export async function GET(req: NextRequest) {
     // (x-internal-api-key + INTERNAL_API_KEY) y el Bearer token que el
     // marketplace ya usa para /api/orders (CMS_ORDERS_API_KEY) — mismo
     // secreto conceptual, dos nombres, hasta que se unifiquen.
-    const legacyKey = req.headers.get('x-internal-api-key');
-    const bearerKey = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-    const validLegacy = Boolean(legacyKey && process.env.INTERNAL_API_KEY && legacyKey === process.env.INTERNAL_API_KEY);
-    const validBearer = Boolean(bearerKey && process.env.CMS_ORDERS_API_KEY && bearerKey === process.env.CMS_ORDERS_API_KEY);
-    if (!validLegacy && !validBearer) {
+    if (!hasValidServerKey(req)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -378,6 +387,13 @@ export async function GET(req: NextRequest) {
         createdAt: b.createdAt,
       })),
     );
+  }
+
+  // Listar por correo devuelve códigos de reserva y montos: solo el servidor
+  // del Marketplace (que ya autentica al viajero) puede pedirlo, no cualquiera
+  // que conozca un correo.
+  if (!hasValidServerKey(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const email = req.nextUrl.searchParams.get('email')?.toLowerCase().trim();

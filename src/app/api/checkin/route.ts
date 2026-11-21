@@ -7,6 +7,9 @@ import { recordCheckIn } from '@/services/booking/transitions';
 // src/app/api/catalog/bookings/route.ts) — bookingCode es el identificador
 // real, no el id numérico interno.
 const CHECKIN_WINDOW_MS = 2 * 60 * 60 * 1000; // 2 horas después del inicio de la actividad
+// Tampoco antes de tiempo: el check-in es la señal real de asistencia (cuenta para
+// la comisión y para las 100 reservas), no puede marcarse semanas antes.
+const CHECKIN_EARLY_MS = 2 * 60 * 60 * 1000; // desde 2 horas antes del inicio
 
 export async function POST(req: NextRequest) {
   const auth = await requireAuth();
@@ -45,6 +48,13 @@ export async function POST(req: NextRequest) {
   if (booking.status === 'CANCELLED') {
     return NextResponse.json(
       { error: 'Esta reserva fue cancelada — no se puede hacer check-in' },
+      { status: 409 },
+    );
+  }
+
+  if (Date.now() < booking.date.getTime() - CHECKIN_EARLY_MS) {
+    return NextResponse.json(
+      { error: 'Todavía es muy pronto — el check-in se habilita 2 horas antes del inicio de la actividad' },
       { status: 409 },
     );
   }
