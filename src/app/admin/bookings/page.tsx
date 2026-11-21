@@ -1,7 +1,8 @@
 import prisma from '@/lib/db';
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { requireAuth, isStaffOrAbove } from '@/lib/requireRole';
-import { changeBookingStatus } from '@/services/booking/transitions';
+import { changeBookingStatus, canTransition } from '@/services/booking/transitions';
 import type { BookingStatus } from '@prisma/client';
 
 export default async function BookingsPage({
@@ -61,6 +62,9 @@ export default async function BookingsPage({
       to: statusStr as BookingStatus,
       actor: { role: authInAction.role, userId: authInAction.userId },
     });
+
+    // Sin esto la tabla seguía mostrando el estado anterior hasta recargar.
+    revalidatePath('/admin/bookings');
   }
 
   async function deleteBooking(formData: FormData) {
@@ -123,16 +127,21 @@ export default async function BookingsPage({
               <td className="border px-2 py-1 text-right">{b.guests}</td>
               <td className="border px-2 py-1">{b.status}</td>
               <td className="border px-2 py-1 text-center">
+                {b.status === 'CANCELLED' ? (
+                  <span className="text-xs text-slate-400">Cancelada</span>
+                ) : (
                 <form action={updateStatus} className="inline-flex gap-2">
                   <input type="hidden" name="id" value={b.id} />
-                  <button
-                    type="submit"
-                    name="status"
-                    value="CONFIRMED"
-                    className="text-xs font-medium text-emerald-700 hover:underline"
-                  >
-                    Confirmar
-                  </button>
+                  {canTransition(b.status, 'CONFIRMED') && (
+                    <button
+                      type="submit"
+                      name="status"
+                      value="CONFIRMED"
+                      className="text-xs font-medium text-emerald-700 hover:underline"
+                    >
+                      Confirmar
+                    </button>
+                  )}
                   {isSuperadmin && b.status === 'CONFIRMED' && (
                     <button
                       type="submit"
@@ -143,15 +152,18 @@ export default async function BookingsPage({
                       Desaprobar
                     </button>
                   )}
-                  <button
-                    type="submit"
-                    name="status"
-                    value="CANCELLED"
-                    className="text-xs font-medium text-red-600 hover:underline"
-                  >
-                    Cancelar
-                  </button>
+                  {canTransition(b.status, 'CANCELLED') && (
+                    <button
+                      type="submit"
+                      name="status"
+                      value="CANCELLED"
+                      className="text-xs font-medium text-red-600 hover:underline"
+                    >
+                      Cancelar
+                    </button>
+                  )}
                 </form>
+                )}
                 {isSuperadmin && (
                   <form action={deleteBooking} className="ml-2 inline">
                     <input type="hidden" name="id" value={b.id} />
